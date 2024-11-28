@@ -1,6 +1,8 @@
 # ImportContentFromJson Module
 
-The **ImportContentFromJson** module facilitates importing content into a JCR (Java Content Repository) structure from a JSON file. It simplifies content creation by mapping JSON fields to JCR properties based on the selected content type.
+The **ImportContentFromJson** module facilitates importing content into Jahia JCR (Java Content Repository) structure from a JSON file. It simplifies content creation by mapping JSON fields to JCR properties based on the selected content type.
+
+***This is a Jahia V8+ module***
 
 ---
 
@@ -52,7 +54,7 @@ The **ImportContentFromJson** module facilitates importing content into a JCR (J
 
 ## Usage
 
-1. Access the module’s UI within the CMS interface.
+1. Access the module’s UI within the CMS interface (jContent -> Additional).
 2. Follow these steps to import content:
     - **Select the base content path.**
     - **Choose a content type.**
