@@ -71,7 +71,9 @@ The **ImportContentFromJson** module facilitates importing content into a JCR (J
         }
     ]
     ```
-
+---
+## Screenshots
+![picture](./src/main/resources/images/importContentFromJson.png)
 ---
 
 ## Configuration
@@ -199,3 +201,6 @@ This project is licensed under the MIT License.
 - Ensure the JSON file adheres to the structure required by the selected content type.
 - Use the sample JSON preview to verify file content before importing.
 - For advanced configurations, consult the module documentation or support team.
+
+
+
