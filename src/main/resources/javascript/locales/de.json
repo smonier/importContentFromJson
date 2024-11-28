@@ -1,0 +1,19 @@
+{
+  "label": {
+    "buttonAction": "Inhalte aus JSON in JCR importieren",
+    "header": "Inhalte aus JSON in JCR importieren - Seite {{siteInfo}}",
+    "importFromJson": "Aus JSON importieren",
+    "selectContentType": "Wählen Sie einen Inhaltstyp zum Importieren aus",
+    "properties": "Verfügbare Eigenschaften",
+    "loadingContentTypes": "Wird geladen ...",
+    "noProperties": "Wählen Sie einen Inhaltstyp, um die Eigenschaften anzuzeigen",
+    "selectPlaceholder": "Wählen ...",
+    "uploadFile": "JSON-Datei hochladen",
+    "chooseFile": "Datei auswählen",
+    "sampleData": "Hochgeladenes JSON-Beispiel",
+    "invalidFile": "Ungültiger Dateityp. Bitte laden Sie eine JSON-Datei hoch.",
+    "processingFile": "JSON-Datei wird verarbeitet...",
+    "path": "Inhaltspfad",
+    "enterPathSuffix": "Geben Sie das Inhaltspfad-Suffix ein"
+  }
+}

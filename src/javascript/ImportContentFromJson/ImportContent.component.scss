@@ -1,0 +1,221 @@
+@use "sass:color";
+
+// Define Material UI color variables
+$primary-color: #00a0e3;
+$secondary-color: #424242;
+$accent-color: #f50057;
+$background-color: #f5f5f5;
+$border-color: rgba(0, 0, 0, 0.12);
+
+// Define spacing and typography
+$spacing-unit: 8px;
+$border-radius: 4px;
+$font-family: 'Roboto', sans-serif;
+
+// General Container
+.configContainer {
+    display: flex;
+    flex-direction: column;
+
+
+    border-radius: $border-radius;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+.container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 200px); /* Adjust based on the header height */
+    margin-top: 16px;
+    margin: $spacing-unit * 2;
+    padding: $spacing-unit * 4;
+    border-radius: $border-radius;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.leftPanel {
+    flex: 1;
+    padding: 16px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.rightPanel {
+    flex: 2;
+    padding: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.heading {
+    margin-bottom: 16px;
+}
+
+.scrollableProperties {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    background-color: #f9f9f9;
+}
+
+.propertyItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.customDropdown {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    padding: 8px;
+    background-color: #ffffff;
+    margin-bottom: 16px; /* Adds spacing at the bottom */
+
+
+    .moonstone-dropdown__control {
+        border: none;
+        font-size: 14px;
+        color: #666666;
+    }
+
+    .moonstone-dropdown__placeholder {
+        color: #999999;
+        font-style: italic;
+    }
+
+    .moonstone-dropdown__menu {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.customInput {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    padding: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 16px; /* Adds spacing at the bottom */
+    width: 100%; /* Ensures consistent sizing with the dropdown */
+}
+
+.customInput::placeholder {
+    color: #999999;
+    font-style: italic;
+}
+
+.customInput:focus {
+    outline: none;
+    border-color: #999999; /* Optional: Adds focus effect similar to dropdown */
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.separatorLine {
+    border: 0;
+    height: 1px;
+    background-color: #cccccc; /* Light gray color for the line */
+    margin: 8px 0; /* Space around the line */
+}
+
+.rightPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align items to the start of the container */
+    padding: 16px;
+}
+
+
+.fileUpload {
+    display: flex;
+    align-items: center; /* Align the label and button vertically */
+    gap: 12px; /* Add spacing between the label and the button */
+    margin-top: 12px;
+}
+
+.fileInput {
+    display: none; /* Hide the default file input */
+}
+
+.fileLabel {
+    padding: 8px 16px;
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.fileLabel:hover {
+    background: var(--color-accent);
+}
+
+.sampleContainer {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f9f9f9; /* Light background for better readability */
+    border: 1px solid #ddd; /* Border for emphasis */
+    border-radius: 4px; /* Rounded corners */
+}
+
+.sampleHeading {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px; /* Space between heading and content */
+}
+
+.sampleContent {
+    font-family: "Courier New", Courier, monospace; /* Monospace font for JSON */
+    font-size: 14px;
+    color: var(--color-accent); /* Primary color for JSON */
+    background: #fefefe; /* White background for JSON content */
+    padding: 10px; /* Padding around JSON text */
+    border-radius: 4px;
+    overflow-x: auto; /* Enable horizontal scrolling for long JSON lines */
+    white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+    line-height: 1.5; /* Better readability for JSON lines */
+}
+
+.pathInput {
+    margin-bottom: 16px;
+    width: 100%; /* Adjust width as needed */
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.pathContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between base path and input */
+    margin-bottom: 16px; /* Add spacing below the container */
+    padding: 8px; /* Optional padding for the container */
+    background-color: #f9f9f9; /* Light background for better visibility */
+    border: 1px solid #ddd; /* Subtle border to frame the path section */
+    border-radius: 4px; /* Rounded corners for a polished look */
+}
+
+.basePath {
+    color: #555; /* Slightly darker text for base path */
+    font-weight: 500; /* Make base path text stand out */
+    font-size: 14px; /* Match font size with input */
+}
+
+.pathSuffixInput {
+    flex: 1; /* Allow the input to take up available space */
+    max-width: 300px; /* Optional: Limit the maximum width of the input */
+    border: 1px solid #ccc; /* Border to distinguish the input */
+    border-radius: 4px; /* Rounded corners for the input */
+    padding: 4px 8px; /* Spacing inside the input */
+    font-size: 14px; /* Match font size with base path */
+}
+
+.pathSuffixInput:focus {
+    border-color: var(--color-accent); /* Highlight border on focus */
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.5); /* Add subtle focus effect */
+}

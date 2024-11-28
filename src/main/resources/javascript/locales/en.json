@@ -1,0 +1,19 @@
+{
+  "label": {
+    "buttonAction": "Import Content to JCR from JSON",
+    "header": "Import Content to JCR from JSON - Site {{siteInfo}}",
+    "importFromJson": "Import From JSON",
+    "selectContentType": "Select a Content Type to Import",
+    "properties": "Available properties",
+    "loadingContentTypes": "Loading ...",
+    "noProperties": "Select a Content Type to display the properties",
+    "selectPlaceholder": "Select ...",
+    "uploadFile": "Upload JSON File",
+    "chooseFile": "Choose File",
+    "sampleData": "Uploaded JSON Sample",
+    "invalidFile": "Invalid file type. Please upload a JSON file.",
+    "processingFile": "Processing JSON file...",
+    "path": "Content Path",
+    "enterPathSuffix": "Enter the content path"
+  }
+}

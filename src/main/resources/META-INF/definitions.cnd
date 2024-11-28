@@ -1,0 +1,22 @@
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<jmix = 'http://www.jahia.org/jahia/mix/1.0'>
+<jsonimportnt = 'http://modules.se.jahia.org/jsonimport/nt/1.0'>
+<jsonimportmix = 'http://modules.se.jahia.org/jsonimport/mix/1.0'>
+<jsonimport = 'http://modules.se.jahia.org/jsonimport/1.0'>
+
+[jsonimportmix:ugap] > jmix:droppableContent, jmix:editorialContent mixin
+
+[jsonimportnt:tile] > jnt:content, jsonimportmix:ugap, mix:title
+ - jcr:title (string) i18n primary mandatory
+ - jsonimport:description (string, textarea) i18n
+ - jsonimport:image (string)
+ - jsonimport:link (string)
+ - jsonimport:background_color (string)
+
+ [jsonimportnt:lastTile] > jnt:content, jmix:list, mix:title, jmix:cache, jsonimportmix:ugap
+  - teaser (string, richtext[ckeditor.toolbar='Tinny',ckeditor.customConfig='$context/modules/industrial/javascript/ckeditor/config/small.js']) internationalized
+  - maxItems (long) = 3 indexed=no
+  - folder (weakreference, picker[type='contentfolder'])
+  - filter (weakreference, category[autoSelectParent=false])
+  - j:subNodesView (string, choicelist[templates=jsonimportnt:tile,resourceBundle,image]) nofulltext itemtype = layout
