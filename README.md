@@ -63,21 +63,21 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
     - **Choose a content type.**
     - **Upload a valid JSON file.**
     - **Click “Import From JSON”** to initiate the process.
-3. Ensure the JSON file follows the structure below and matches the name of the properties of the selected Content Type:
+   3. Ensure the JSON file follows the structure below and matches the name of the properties of the selected Content Type:
 
-    ```json
-[
-    {
-        "jcr:title": "L'intelligence artificielle au service de l'achat public",
-        "teaser": "Découvrez comment l'IA transforme les processus d'achat public en offrant des gains de temps et d'efficacité.",
-        "body": "L'intelligence artificielle est en train de révolutionner le secteur des achats publics. Grâce à des algorithmes avancés, les administrations peuvent analyser des volumes massifs de données pour identifier les meilleures offres et prévoir les besoins futurs. Par exemple, l'automatisation des tâches répétitives, comme l'analyse des soumissions, libère du temps pour se concentrer sur des tâches stratégiques. Les initiatives dans ce domaine montrent déjà des économies significatives tout en améliorant la transparence des processus.",
-		"date": "2024-11-01",
-		"image": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg",
-		"images": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg,https://st3.depositphotos.com/2189145/17529/i/450/depositphotos_175291112-stock-photo-hilly-field-beautiful-sky-hilly.jpg"
-		
-    }
-]
-    ```
+```json
+       [
+           {
+               "jcr:title": "L'intelligence artificielle au service de l'achat public",
+               "teaser": "Découvrez comment l'IA transforme les processus d'achat public en offrant des gains de temps et d'efficacité.",
+               "body": "L'intelligence artificielle est en train de révolutionner le secteur des achats publics. Grâce à des algorithmes avancés, les administrations peuvent analyser des volumes massifs de données pour identifier les meilleures offres et prévoir les besoins futurs. Par exemple, l'automatisation des tâches répétitives, comme l'analyse des soumissions, libère du temps pour se concentrer sur des tâches stratégiques. Les initiatives dans ce domaine montrent déjà des économies significatives tout en améliorant la transparence des processus.",
+               "date": "2024-11-01",
+               "image": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg",
+               "images": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg,https://st3.depositphotos.com/2189145/17529/i/450/depositphotos_175291112-stock-photo-hilly-field-beautiful-sky-hilly.jpg"
+            
+           }
+       ]
+ ```
 ---
 ## Screenshots
 ![picture](./src/main/resources/images/importContentFromJson.png)
