@@ -185,11 +185,15 @@ export default () => {
                                 // Check if the property is multiple
                                 if (propertyDefinition.multiple) {
                                     // Split the value into an array of URLs
-                                    const urls = value.split(",").map((url) => url.trim());
+                                    const urls = Array.isArray(value) ? value.map((item) => item.url?.trim()).filter(Boolean) : [];
                                     const uuids = [];
 
                                     for (const [index, url] of urls.entries()) {
                                         try {
+                                            if (!url) {
+                                                console.warn(`Image URL missing for item at index ${index}. Skipping.`);
+                                                continue;
+                                            }
                                             // Extract the file name from the URL
                                             const fileName = url.substring(url.lastIndexOf("/") + 1) || `image_${index + 1}`;
                                             console.log(`Extracted file name: ${fileName}`);
@@ -244,7 +248,10 @@ export default () => {
                                 } else {
                                     // Single image handling
                                     // Extract the file name from the URL
-                                    const fileName = value.substring(value.lastIndexOf("/") + 1) || `image_${index + 1}`;
+                                    const url = value.url.trim();
+
+                                    // Extract the file name from the URL
+                                    const fileName = url.substring(url.lastIndexOf("/") + 1) || `image_1`;
                                     console.log(`Extracted file name: ${fileName}`);
                                     const imagePath = `/sites/${siteKey}/files/importedFiles/${fileName}`;
 
@@ -259,7 +266,7 @@ export default () => {
                                         value = existingNode.uuid;
                                     } else {
 
-                                        const proxiedUrl = `${proxyServer}${encodeURIComponent(value)}`;
+                                        const proxiedUrl = `${proxyServer}${encodeURIComponent(value.url)}`;
                                         const binaryResponse = await fetch(proxiedUrl);
 
                                         if (!binaryResponse.ok) {
