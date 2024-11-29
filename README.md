@@ -122,20 +122,24 @@ query SiteContentTypesQuery($siteKey: String!, $language:String!) {
 
 ### Fetch Properties for Selected Content Type
 ```graphql
-query GetContentPropertiesQuery($type: String!, $language: String!) {
-    jcr {
-        nodeTypes(filter: {includeTypes: [$type]}) {
-            nodes {
-                properties(fieldFilter: {filters: [{fieldName: "hidden", value: "false"}]}) {
-                    name
-                    hidden
-                    displayName(language: $language)
-                    internationalized
-                }
+      query GetContentPropertiesQuery($type: String!, $language: String!) {
+         jcr {
+            nodeTypes(filter: {includeTypes: [$type]}) {
+               nodes {
+                  properties(fieldFilter: {filters: [{fieldName: "hidden", value: "false"}]}) {
+                     name
+                     hidden
+                     displayName(language: $language)
+                     internationalized
+                     mandatory
+                     requiredType
+                     constraints
+                     multiple
+                  }
+               }
             }
-        }
-    }
-}
+         }
+      }   
 ```
 
 ### Create Content Folder
