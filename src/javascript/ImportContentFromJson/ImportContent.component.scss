@@ -170,13 +170,16 @@ $font-family: 'Roboto', sans-serif;
 .sampleContent {
     font-family: "Courier New", Courier, monospace; /* Monospace font for JSON */
     font-size: 14px;
-    color: var(--color-accent); /* Primary color for JSON */
+    color: var(--color-dark); /* Primary color for JSON */
     background: #fefefe; /* White background for JSON content */
     padding: 10px; /* Padding around JSON text */
     border-radius: 4px;
     overflow-x: auto; /* Enable horizontal scrolling for long JSON lines */
+    overflow-y: auto; /* Enable vertical scrolling for large JSON content */
     white-space: pre-wrap; /* Preserve whitespace and wrap lines */
     line-height: 1.5; /* Better readability for JSON lines */
+    max-height: 600px; /* Set a maximum height for scrollable content */
+    border: 1px solid #ddd; /* Optional border for better visibility */
 }
 
 .pathInput {
