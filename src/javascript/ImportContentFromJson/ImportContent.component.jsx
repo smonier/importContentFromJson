@@ -5,7 +5,9 @@ import {
     GetContentPropertiesQuery,
     CheckPathQuery,
     CreatePathMutation,
-    CreateContentMutation
+    CreateContentMutation,
+    CreateFileMutation,
+    CheckImageExists
 } from './ImportContent.gql-queries.js';
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 import styles from './ImportContent.component.scss';
@@ -40,7 +42,8 @@ export default () => {
     const [checkPath] = useLazyQuery(CheckPathQuery, {fetchPolicy: 'network-only'});
     const [createPath] = useMutation(CreatePathMutation);
     const [createContent] = useMutation(CreateContentMutation);
-
+    const [addFileToJcr] = useMutation(CreateFileMutation);
+    const [checkImageExists, {data: imageExistsData}] = useLazyQuery(CheckImageExists);
 
     useEffect(() => {
         fetchContentTypes();
@@ -66,6 +69,11 @@ export default () => {
     };
 
     const handleFileUpload = (file) => {
+        // Clear previous file state
+        setUploadedFileName("");
+        setUploadedFileContent(null);
+        setUploadedFileSample(null);
+
         if (!file) {
             console.error("No file selected");
             return;
@@ -77,9 +85,10 @@ export default () => {
             return;
         }
 
-        setUploadedFileName(file.name);
+        setUploadedFileName(file.name); // Set the new file name
 
         const reader = new FileReader();
+
         reader.onload = (event) => {
             try {
                 const jsonData = JSON.parse(event.target.result);
@@ -90,7 +99,7 @@ export default () => {
                     ? jsonData.slice(0, 5)
                     : Object.entries(jsonData).slice(0, 5);
 
-                setUploadedFileSample(sample);
+                setUploadedFileSample(sample); // Update the sample
             } catch (error) {
                 console.error("Error parsing JSON file:", error);
                 alert("Invalid JSON file. Please check the file contents.");
@@ -102,7 +111,7 @@ export default () => {
             alert("Error reading file. Please try again.");
         };
 
-        reader.readAsText(file);
+        reader.readAsText(file); // Read the content of the new file
     };
 
     const handleImport = async () => {
@@ -115,10 +124,23 @@ export default () => {
             const {data: pathCheckData} = await checkPath({variables: {path: fullPath}});
             if (!pathCheckData?.jcr?.nodeByPath) {
                 console.log("Path does not exist. Creating...");
-                await createPath({variables: {path: basePath, name: pathSuffix}});
+                await createPath({variables: {path: basePath, name: pathSuffix, nodeType: "jnt:contentFolder"}});
                 console.log("Folder created successfully.");
             } else {
                 console.log("Path exists.");
+            }
+
+            const baseFilePath = `/sites/${siteKey}/files`;
+            const fileSuffix = "importedFiles";
+            const fullFilePath = `${baseFilePath}/${fileSuffix.trim()}`;
+
+            const {data: pathCheckFile} = await checkPath({variables: {path: fullFilePath}});
+            if (!pathCheckFile?.jcr?.nodeByPath) {
+                console.log("Files Path does not exist. Creating...");
+                await createPath({variables: {path: baseFilePath, name: fileSuffix, nodeType: "jnt:folder"}});
+                console.log("Files Folder created successfully.");
+            } else {
+                console.log("Files Path exists.");
             }
 
             // Step 2: Validate JSON keys against the node type properties
@@ -130,18 +152,164 @@ export default () => {
             const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
 
             // Step 3: Import nodes
+            // Step 3: Import nodes
             for (const entry of uploadedFileContent) {
-                const propertiesToSend = Object.keys(entry).map((key) => {
-                    const propertyDefinition = propertyDefinitions.find(
-                        (prop) => prop.name === key
-                    );
+                const propertiesToSend = await Promise.all(
+                    Object.keys(entry).map(async (key) => {
+                        const propertyDefinition = propertyDefinitions.find(
+                            (prop) => prop.name === key
+                        );
 
-                    return {
-                        name: `${key}`, // Use the "json" namespace for properties
-                        value: entry[key],
-                        language: propertyDefinition?.internationalized ? language : undefined,
-                    };
-                });
+                        if (!propertyDefinition) {
+                            console.warn(`Property ${key} does not match the content type definition.`);
+                            return null;
+                        }
+
+                        let value = entry[key];
+
+                        // Handle DATE properties
+                        if (propertyDefinition.requiredType === "DATE" && value) {
+                            const date = new Date(value);
+                            if (!isNaN(date.getTime())) {
+                                value = date.toISOString(); // Convert to 'YYYY-MM-DDTHH:mm:ss.sssZ'
+                            } else {
+                                console.warn(`Invalid date format for property ${key}: ${value}`);
+                            }
+                        }
+
+                        // Handle binary properties (e.g., images)
+                        if (propertyDefinition.constraints?.includes("{http://www.jahia.org/jahia/mix/1.0}image") && value) {
+                            try {
+                                const proxyServer = "/image-proxy?url="; // Replace with your actual proxy server URL
+
+                                // Check if the property is multiple
+                                if (propertyDefinition.multiple) {
+                                    // Split the value into an array of URLs
+                                    const urls = value.split(",").map((url) => url.trim());
+                                    const uuids = [];
+
+                                    for (const [index, url] of urls.entries()) {
+                                        try {
+                                            // Extract the file name from the URL
+                                            const fileName = url.substring(url.lastIndexOf("/") + 1) || `image_${index + 1}`;
+                                            console.log(`Extracted file name: ${fileName}`);
+                                            const imagePath = `/sites/${siteKey}/files/importedFiles/${fileName}`;
+                                            const {data} = await checkImageExists({variables: {path: imagePath}});
+
+                                            const existingNode = data?.jcr?.nodeByPath;
+                                            if (existingNode) {
+                                                    // Use the UUID of the jcr:content node
+                                                    console.log(
+                                                        `Image exists: ${existingNode.name}. Using jcr:content UUID: ${existingNode.uuid}`);
+
+                                                    uuids.push(existingNode.uuid);
+                                                    continue; // Skip to the next URL since the image exists
+                                            }
+
+                                            const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
+                                            console.log(`Processing image ${index + 1}: ${proxiedUrl}`);
+                                            const binaryResponse = await fetch(proxiedUrl);
+
+                                            if (!binaryResponse.ok) {
+                                                console.warn(`Failed to fetch image ${index + 1} at URL: ${url}. Response status: ${binaryResponse.status}`);
+                                                continue;
+                                            }
+
+                                            const binaryBlob = await binaryResponse.blob();
+                                            const mimeType = binaryBlob.type || "application/octet-stream";
+                                            const fileHandle = new File([binaryBlob], key, {type: mimeType});
+                                            const uploadPath = `/sites/${siteKey}/files/importedFiles`;
+
+                                            const {data: uploadResponse} = await addFileToJcr({
+                                                variables: {
+                                                    nameInJCR: fileName, // Generate a unique name for the file
+                                                    path: uploadPath,
+                                                    mimeType: mimeType,
+                                                    fileHandle: fileHandle,
+                                                },
+                                            });
+
+                                            if (uploadResponse?.jcr?.addNode?.uuid) {
+                                                console.log(`Successfully uploaded image ${index + 1}. UUID: ${uploadResponse.jcr.addNode.uuid}`);
+                                                uuids.push(uploadResponse.jcr.addNode.uuid);
+                                            } else {
+                                                console.warn(`Failed to get UUID for image ${index + 1} at URL: ${url}`);
+                                            }
+                                        } catch (error) {
+                                            console.error(`Error processing image ${index + 1}: ${url}`, error);
+                                        }
+                                    }
+
+                                    value = uuids; // Set the value as an array of UUIDs
+                                } else {
+                                    // Single image handling
+                                    // Extract the file name from the URL
+                                    const fileName = value.substring(value.lastIndexOf("/") + 1) || `image_${index + 1}`;
+                                    console.log(`Extracted file name: ${fileName}`);
+                                    const imagePath = `/sites/${siteKey}/files/importedFiles/${fileName}`;
+
+                                    const {data} = await checkImageExists({variables: {path: imagePath}});
+
+                                    const existingNode = data?.jcr?.nodeByPath;
+                                    if (existingNode) {
+                                        // Use the UUID of the jcr:content node
+                                        console.log(
+                                            `Image exists: ${existingNode.name}. Using jcr:content UUID: ${existingNode.uuid}`);
+
+                                        value = existingNode.uuid;
+                                    } else {
+
+                                        const proxiedUrl = `${proxyServer}${encodeURIComponent(value)}`;
+                                        const binaryResponse = await fetch(proxiedUrl);
+
+                                        if (!binaryResponse.ok) {
+                                            console.warn(`Failed to fetch binary content for ${key}: ${value}`);
+                                            return null;
+                                        }
+
+                                        const binaryBlob = await binaryResponse.blob();
+                                        const mimeType = binaryBlob.type || "application/octet-stream";
+                                        const fileHandle = new File([binaryBlob], key, {type: mimeType});
+                                        const uploadPath = `/sites/${siteKey}/files/importedFiles`;
+
+                                        // Use the addFileToJcr mutation to upload the file and get the UUID
+                                        const {data: uploadResponse} = await addFileToJcr({
+                                            variables: {
+                                                nameInJCR: fileName, // Generate a unique name for the file
+                                                path: uploadPath,
+                                                mimeType: mimeType,
+                                                fileHandle: fileHandle,
+                                            },
+                                        });
+
+                                        if (uploadResponse?.jcr?.addNode?.uuid) {
+                                            value = uploadResponse.jcr.addNode.uuid; // Use the UUID for the property
+                                        } else {
+                                            console.warn(`Failed to get UUID for binary content ${key}: ${value}`);
+                                            return null;
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.error(`Error uploading binary content for ${key}: ${value}`, error);
+                                return null;
+                            }
+                        }
+
+                        // Return structure based on "multiple" flag
+                        return propertyDefinition.multiple
+                            ? {
+                                name: key,
+                                values: value, // Use 'values' for arrays
+                                language: propertyDefinition?.internationalized ? language : undefined,
+                            }
+                            : {
+                                name: key,
+                                value: value, // Use 'value' for single values
+                                language: propertyDefinition?.internationalized ? language : undefined,
+                            };
+                    })
+                ).then((results) => results.filter(Boolean)); // Filter out invalid properties
 
                 const contentName = entry["jcr:title"]
                     ? entry["jcr:title"].replace(/\s+/g, "_").toLowerCase()
@@ -154,7 +322,7 @@ export default () => {
                         variables: {
                             path: fullPath,
                             name: contentName,
-                            primaryNodeType: "jsonimportnt:tile", // Use your custom node type
+                            primaryNodeType: selectedContentType, // Use your custom node type
                             properties: propertiesToSend,
                         },
                     });
@@ -251,7 +419,7 @@ export default () => {
                             {properties.map((property) => (
                                 <div key={property.name} className={styles.propertyItem}>
                                     <Typography variant="body" className={styles.propertyText}>
-                                        {property.displayName} - ({property.name})
+                                        {property.displayName} - ({property.name} - {property.requiredType})
                                     </Typography>
                                 </div>
                             ))}

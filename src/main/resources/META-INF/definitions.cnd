@@ -20,3 +20,4 @@
   - folder (weakreference, picker[type='contentfolder'])
   - filter (weakreference, category[autoSelectParent=false])
   - j:subNodesView (string, choicelist[templates=jsonimportnt:tile,resourceBundle,image]) nofulltext itemtype = layout
+

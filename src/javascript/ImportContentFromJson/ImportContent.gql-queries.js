@@ -24,6 +24,10 @@ export const GetContentPropertiesQuery = gql`
                         hidden
                         displayName(language: $language)
                         internationalized
+                        mandatory
+                        requiredType
+                        constraints
+                        multiple
                     }
                 }
             }
@@ -62,12 +66,12 @@ export const CheckPathQuery = gql`
     }
 `;
 export const CreatePathMutation = gql`
-    mutation CreatePathMutation($path: String!, $name: String!) {
+    mutation CreatePathMutation($path: String!, $name: String!, $nodeType: String!) {
         jcr (workspace: EDIT){
             addNode(
                 name: $name
                 parentPathOrId: $path
-                primaryNodeType: "jnt:contentFolder"
+                primaryNodeType: $nodeType
             ){
                 uuid
                 node {
@@ -101,3 +105,38 @@ export const CreateContentMutation = gql`
             }
         }
     }`;
+
+export const CreateFileMutation = gql`
+    mutation uploadFile($nameInJCR: String!, $path: String!, $mimeType: String!, $fileHandle: String!) {
+    jcr {
+        addNode(name: $nameInJCR, parentPathOrId: $path, primaryNodeType: "jnt:file") {
+            addChild(name: "jcr:content", primaryNodeType: "jnt:resource") {
+                content: mutateProperty(name: "jcr:data") {
+                    setValue(type: BINARY, value: $fileHandle)
+                }
+                contentType: mutateProperty(name: "jcr:mimeType") {
+                    setValue(value: $mimeType)
+                }
+            }
+            createVersion
+            uuid
+        }
+    }
+}`;
+
+export const CheckImageExists = gql`
+query CheckImageExists($path: String!) {
+    jcr {
+        nodeByPath(path: $path) {
+            uuid
+            name
+            path
+            children {
+                nodes {
+                    name
+                    uuid
+                }
+            }
+        }
+    }
+}`;
