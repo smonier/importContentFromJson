@@ -13,6 +13,7 @@
  - jsonimport:image (string)
  - jsonimport:link (string)
  - jsonimport:background_color (string)
+ - jsonimport:taxo (string) multiple
 
  [jsonimportnt:lastTile] > jnt:content, jmix:list, mix:title, jmix:cache, jsonimportmix:ugap
   - teaser (string, richtext[ckeditor.toolbar='Tinny',ckeditor.customConfig='$context/modules/industrial/javascript/ckeditor/config/small.js']) internationalized

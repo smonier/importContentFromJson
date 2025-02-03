@@ -36,7 +36,13 @@ export const GetContentPropertiesQuery = gql`
 `;
 
 export const FetchContentForCSVQuery = gql`
-    query getContentsByContentType($path: String!, $language: String!, $type: String!, $workspace: Workspace!, $properties: [String]) {
+    query getContentsByContentType(
+        $path: String!, 
+        $language: String!, 
+        $type: String!, 
+        $workspace: Workspace!, 
+        $properties: [String]
+    ) {
         jcr(workspace: $workspace) {
             result: nodeByPath(path: $path) {
                 value: uuid
@@ -107,36 +113,54 @@ export const CreateContentMutation = gql`
     }`;
 
 export const CreateFileMutation = gql`
-    mutation uploadFile($nameInJCR: String!, $path: String!, $mimeType: String!, $fileHandle: String!) {
-    jcr {
-        addNode(name: $nameInJCR, parentPathOrId: $path, primaryNodeType: "jnt:file") {
-            addChild(name: "jcr:content", primaryNodeType: "jnt:resource") {
-                content: mutateProperty(name: "jcr:data") {
-                    setValue(type: BINARY, value: $fileHandle)
+    mutation uploadFile(
+        $nameInJCR: String!, 
+        $path: String!, 
+        $mimeType: String!, 
+        $fileHandle: String!
+    ) {
+        jcr {
+            addNode(name: $nameInJCR, parentPathOrId: $path, primaryNodeType: "jnt:file") {
+                addChild(name: "jcr:content", primaryNodeType: "jnt:resource") {
+                    content: mutateProperty(name: "jcr:data") {
+                        setValue(type: BINARY, value: $fileHandle)
+                    }
+                    contentType: mutateProperty(name: "jcr:mimeType") {
+                        setValue(value: $mimeType)
+                    }
                 }
-                contentType: mutateProperty(name: "jcr:mimeType") {
-                    setValue(value: $mimeType)
-                }
+                createVersion
+                uuid
             }
-            createVersion
-            uuid
         }
-    }
-}`;
+    }`;
 
 export const CheckImageExists = gql`
-query CheckImageExists($path: String!) {
-    jcr {
-        nodeByPath(path: $path) {
-            uuid
-            name
-            path
-            children {
-                nodes {
-                    name
-                    uuid
+    query CheckImageExists($path: String!) {
+        jcr {
+            nodeByPath(path: $path) {
+                uuid
+                name
+                path
+                children {
+                    nodes {
+                        name
+                        uuid
+                    }
                 }
             }
         }
-    }
-}`;
+    }`;
+
+
+export const AddTags = gql`
+    mutation addTags($path:String!, $tags:[String]!) {
+        jcr {
+            mutateNode(pathOrId: $path) {
+                addMixins(mixins:["jmix:tagged"])
+                mutateProperty(name:"j:tagList") {
+                    setValues(values:$tags)
+                }
+            }
+        }
+    }`;

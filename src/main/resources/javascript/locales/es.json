@@ -14,6 +14,7 @@
     "invalidFile": "Tipo de archivo no válido. Por favor, cargue un archivo JSON.",
     "processingFile": "Procesando archivo JSON...",
     "path": "Ruta del contenido",
-    "enterPathSuffix": "Introduzca el sufijo de la ruta del contenido"
+    "enterPathSuffix": "Introduzca el sufijo de la ruta del contenido",
+    "enterPathSuffixHelp": "Se permiten directorios recursivos, como /news/202501."
   }
 }

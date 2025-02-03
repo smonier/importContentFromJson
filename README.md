@@ -86,6 +86,39 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
          }
        ]
  ```
+
+Multiple values declared for the property images (WeakReference)
+```json
+       [
+         {
+            ...,
+            "images": [
+               {
+                  "url": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg"
+               },
+               {
+                  "url": "https://st3.depositphotos.com/2189145/17529/i/450/depositphotos_175291112-stock-photo-hilly-field-beautiful-sky-hilly.jpg"
+               }
+            ],
+            ...
+         }
+       ]
+ ```
+
+Multiple values declared for a property String 
+```json
+       [
+         {
+            ...,
+            "taxonomy": [
+               { "value": "taxo001"},
+               { "value": "taxo002"},
+               { "value": "taxo003"}
+            ],
+            ...
+         }
+       ]
+ ```
 ---
 ## Screenshots
 ![picture](./src/main/resources/images/importContentFromJson.png)

@@ -14,6 +14,7 @@
     "invalidFile": "Invalid file type. Please upload a JSON file.",
     "processingFile": "Processing JSON file...",
     "path": "Content Path",
-    "enterPathSuffix": "Enter the content path"
+    "enterPathSuffix": "Enter the content path",
+    "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501."
   }
 }
