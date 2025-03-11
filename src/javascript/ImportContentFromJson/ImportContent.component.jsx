@@ -8,8 +8,10 @@ import {
     CreateContentMutation,
     CheckImageExists,
     CreateFileMutation,
-    AddTags
-} from './ImportContent.gql-queries.js';
+    AddTags,
+    CheckIfCategoryExists,
+    AddCategories
+} from '../gql-queries/ImportContent.gql-queries.js';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '../Services/services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
@@ -31,6 +33,7 @@ export default () => {
     const [uploadedFileContent, setUploadedFileContent] = useState(null); // Full JSON content
     const siteKey = window.contextJsParameters.siteKey;
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
+    const [categoryTree, setCategoryTree] = useState(null);
 
     const language = window.contextJsParameters.uilang;
     const baseContentPath = `/sites/${siteKey}/contents`; // Fixed base path
@@ -46,12 +49,23 @@ export default () => {
         fetchPolicy: 'network-only'
     });
 
+    const [fetchCategories, {data: categoryData}] = useLazyQuery(CheckIfCategoryExists, {
+        fetchPolicy: 'network-only', // Ensures we get fresh data once
+        onCompleted: data => {
+            if (data?.jcr?.nodeByPath?.children?.nodes) {
+                setCategoryTree(data.jcr.nodeByPath.children.nodes);
+            }
+        }
+    });
+
     const [checkPath] = useLazyQuery(CheckPathQuery, {fetchPolicy: 'network-only'});
     const [createPath] = useMutation(CreatePathMutation);
     const [createContent] = useMutation(CreateContentMutation);
     const [checkImageExists] = useLazyQuery(CheckImageExists);
     const [addFileToJcr] = useMutation(CreateFileMutation);
     const [addTags] = useMutation(AddTags);
+    const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists);
+    const [addCategories] = useMutation(AddCategories);
 
     useEffect(() => {
         fetchContentTypes();
@@ -69,6 +83,35 @@ export default () => {
             setProperties(propertiesData.jcr.nodeTypes.nodes[0].properties);
         }
     }, [propertiesData]);
+
+    let categoryCache = new Map(); // Store categories as { name: uuid }
+
+    const fetchCategoriesOnce = async () => {
+        if (categoryCache.size > 0) {
+            return;
+        } // Already fetched
+
+        const {data, error} = await checkIfCategoryExists();
+        if (error) {
+            console.error('GraphQL Category Fetch Error:', error);
+            return;
+        }
+
+        if (data?.jcr?.nodeByPath?.children?.nodes) {
+            console.log('Category Tree Loaded:', data.jcr.nodeByPath.children.nodes);
+            flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache);
+        }
+    };
+
+    // Recursive function to flatten category tree into a Map for fast lookup
+    const flattenCategoryTree = (nodes, cache) => {
+        for (const node of nodes) {
+            cache.set(node.name, node.uuid);
+            if (node.children?.nodes.length > 0) {
+                flattenCategoryTree(node.children.nodes, cache);
+            }
+        }
+    };
 
     const handleContentTypeChange = selectedType => {
         setSelectedContentType(selectedType);
@@ -173,8 +216,8 @@ export default () => {
                 const propertiesToSend = await Promise.all(
                     Object.keys(entry).map(async key => {
                         // Skip j:tagList if not defined in the content type
-                        if (key === 'j:tagList') {
-                            console.info('Skipping j:tagList property as it is not part of the content type definition.');
+                        if (key === 'j:tagList' || key === 'j:defaultCategory') {
+                            console.info('Skipping j:tagList or j:defaultCategory property as it is not part of the content type definition.');
                             return null;
                         }
 
@@ -304,6 +347,46 @@ export default () => {
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Error adding tags',
+                            details: error.message
+                        });
+                    }
+                }
+
+                // Add Categories if avalaible
+                if (contentUuid && entry['j:defaultCategory']) {
+                    try {
+                        await fetchCategoriesOnce(); // Ensure categories are loaded once
+
+                        let defaultCategoryUuids = [];
+                        if (Array.isArray(entry['j:defaultCategory'])) {
+                            for (let categoryName of entry['j:defaultCategory']) {
+                                // Normalize categoryName: lowercase + replace spaces with dashes
+                                categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
+
+                                const categoryUuid = categoryCache.get(categoryName);
+
+                                if (categoryUuid) {
+                                    defaultCategoryUuids.push(categoryUuid);
+                                } else {
+                                    console.warn(`Category ${categoryName} not found in cache.`);
+                                }
+                            }
+                        }
+
+                        // Add to properties if categories exist
+                        if (defaultCategoryUuids.length > 0) {
+                            await addCategories({
+                                variables: {
+                                    path: contentUuid,
+                                    categories: defaultCategoryUuids
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Error adding categories to ${fullContentPath}/${contentName}:`, error);
+                        errorReport.push({
+                            node: `${fullContentPath}/${contentName}`,
+                            reason: 'Error adding categories',
                             details: error.message
                         });
                     }

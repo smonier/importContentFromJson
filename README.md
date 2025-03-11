@@ -30,7 +30,8 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 - handle multiple for images
 - check if image exists in JCR in folder importedFiles, before importing it
 - A user-friendly interface with error messages and sample JSON previews.
-
+- Tags will be created if present in json file
+- Categories will be attached if matching existing system name
 ---
 
 ## Installation
@@ -44,14 +45,14 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 2. Install dependencies:
 
     ```bash
-    npm install
+    npm install or yarn 
     ```
 
-3. Start the development server:
+3. Build and deploy server:
 
     ```bash
-    npm start
-    ```
+   mvn clean install    
+   ```
 
 ---
 
@@ -63,7 +64,7 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
     - **Choose a content type.**
     - **Upload a valid JSON file.**
     - **Click “Import From JSON”** to initiate the process.
-   3. Ensure the JSON file follows the structure below and matches the name of the properties of the selected Content Type:
+3. Ensure the JSON file follows the structure below and matches the name of the properties of the selected Content Type:
 
 ```json
        [
@@ -105,15 +106,30 @@ Multiple values declared for the property images (WeakReference)
        ]
  ```
 
-Multiple values declared for a property String 
+Multiple values declared for Tag property  
 ```json
        [
          {
             ...,
-            "taxonomy": [
-               { "value": "taxo001"},
-               { "value": "taxo002"},
-               { "value": "taxo003"}
+            "j:tagList": [
+               "tag001",
+               "tag002",
+               "tag003"
+            ],
+            ...
+         }
+       ]
+ ```
+
+Multiple values declared for Category property (the category system name needs to exist to be attached)
+```json
+       [
+         {
+            ...,
+            "j:dafaultCategory": [
+               "cat001",
+               "cat002",
+               "cat003"
             ],
             ...
          }

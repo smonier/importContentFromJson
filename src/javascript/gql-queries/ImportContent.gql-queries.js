@@ -67,6 +67,7 @@ export const CheckPathQuery = gql`
         jcr {
             nodeByPath(path: $path) {
                 path
+                workspace
             }
         }
     }
@@ -142,16 +143,17 @@ export const CheckImageExists = gql`
                 uuid
                 name
                 path
+                workspace
                 children {
                     nodes {
                         name
                         uuid
+                        workspace
                     }
                 }
             }
         }
     }`;
-
 
 export const AddTags = gql`
     mutation addTags($path:String!, $tags:[String]!) {
@@ -164,3 +166,55 @@ export const AddTags = gql`
             }
         }
     }`;
+
+export const AddCategories = gql`
+    mutation addCategories($path:String!, $categories:[String]!) {
+        jcr {
+            mutateNode(pathOrId: $path) {
+                addMixins(mixins:["jmix:categorized"])
+                mutateProperty(name:"j:defaultCategory") {
+                    setValues(values:$categories)
+                }
+            }
+        }
+    }`;
+
+export const CATEGORIES_FIELDS = gql`
+    fragment CategoryCheck on JCRNode {
+        children {
+            nodes {
+                name
+                uuid
+                workspace
+                children {
+                    nodes {
+                        name
+                        uuid
+                        workspace
+                    }
+                }
+            }
+        }
+    }
+`;
+
+export const CheckIfCategoryExists = gql`
+    query CheckIfCategoryExists {
+        jcr {
+            nodeByPath(path: "/sites/systemsite/categories") {
+                uuid
+                name
+                path
+                workspace
+                children {
+                    nodes {
+                        name
+                        uuid
+                        workspace
+                        ...CategoryCheck
+                    }
+                }
+            }
+        }
+    }
+${CATEGORIES_FIELDS}`;

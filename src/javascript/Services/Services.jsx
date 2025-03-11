@@ -1,4 +1,10 @@
-const proxyServer = "/image-proxy?url="; // Replace with your actual proxy server URL
+const proxyServer = '/image-proxy?url='; // Replace with your actual proxy server URL
+
+const extractFileName = (url, index) => {
+    const fileNameWithParams = url.substring(url.lastIndexOf('/') + 1); // Get last part after "/"
+    const cleanFileName = fileNameWithParams.split('?')[0]; // Remove query parameters
+    return cleanFileName || `image_${index + 1}`; // Fallback if empty
+};
 
 /**
  * Handle multiple images for a content property.
@@ -26,9 +32,9 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
                 continue;
             }
 
-            const fileName = url.substring(url.lastIndexOf("/") + 1) || `image_${index + 1}`;
+            const fileName = extractFileName(url, 1);
             const imagePath = `${baseFilePath}/${pathSuffix}/${fileName}`;
-            const { data } = await checkImageExists({ variables: { path: imagePath } });
+            const {data} = await checkImageExists({variables: {path: imagePath}});
 
             const existingNode = data?.jcr?.nodeByPath;
             if (existingNode) {
@@ -46,17 +52,17 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             }
 
             const binaryBlob = await binaryResponse.blob();
-            const mimeType = binaryBlob.type || "application/octet-stream";
-            const fileHandle = new File([binaryBlob], key, { type: mimeType });
+            const mimeType = binaryBlob.type || 'application/octet-stream';
+            const fileHandle = new File([binaryBlob], key, {type: mimeType});
             const uploadPath = `${baseFilePath}/${pathSuffix}`;
 
-            const { data: uploadResponse } = await addFileToJcr({
+            const {data: uploadResponse} = await addFileToJcr({
                 variables: {
                     nameInJCR: fileName,
                     path: uploadPath,
                     mimeType,
-                    fileHandle,
-                },
+                    fileHandle
+                }
             });
 
             if (uploadResponse?.jcr?.addNode?.uuid) {
@@ -85,7 +91,7 @@ export const handleMultipleValues = async (value, key) => {
         return null;
     }
 
-    const processedValues = value.map((item) => item.value?.trim()).filter(Boolean);
+    const processedValues = value.map(item => item.value?.trim()).filter(Boolean);
 
     if (processedValues.length === 0) {
         console.warn(`No valid values found for key ${key}.`);
@@ -112,9 +118,9 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
             return null;
         }
 
-        const fileName = url.substring(url.lastIndexOf("/") + 1) || `image_1`;
+        const fileName = extractFileName(url, 1);
         const imagePath = `${baseFilePath}/${pathSuffix}/${fileName}`;
-        const { data } = await checkImageExists({ variables: { path: imagePath } });
+        const {data} = await checkImageExists({variables: {path: imagePath}});
 
         const existingNode = data?.jcr?.nodeByPath;
         if (existingNode) {
@@ -131,26 +137,26 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
         }
 
         const binaryBlob = await binaryResponse.blob();
-        const mimeType = binaryBlob.type || "application/octet-stream";
-        const fileHandle = new File([binaryBlob], key, { type: mimeType });
+        const mimeType = binaryBlob.type || 'application/octet-stream';
+        const fileHandle = new File([binaryBlob], key, {type: mimeType});
         const uploadPath = `${baseFilePath}/${pathSuffix}`;
 
-        const { data: uploadResponse } = await addFileToJcr({
+        const {data: uploadResponse} = await addFileToJcr({
             variables: {
                 nameInJCR: fileName,
                 path: uploadPath,
                 mimeType,
-                fileHandle,
-            },
+                fileHandle
+            }
         });
 
         if (uploadResponse?.jcr?.addNode?.uuid) {
             console.log(`Successfully uploaded image. UUID: ${uploadResponse.jcr.addNode.uuid}`);
             return uploadResponse.jcr.addNode.uuid;
-        } else {
-            console.warn(`Failed to get UUID for image at URL: ${url}`);
-            return null;
         }
+
+        console.warn(`Failed to get UUID for image at URL: ${url}`);
+        return null;
     } catch (error) {
         console.error(`Error processing image for key ${key}:`, error);
         return null;
