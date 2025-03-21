@@ -1,7 +1,8 @@
 import {createApi} from 'unsplash-js';
 
+const unsplashAccessKey = window.contextJsParameters.config.importContentFromJson['unsplash.accessKey'];
 const unsplash = createApi({
-    accessKey: 'YOO3KreQp_2yypXC6RAqx2E0Y48bO11f-0VD70HY40M', // Replace with your Unsplash API access key
+    accessKey: unsplashAccessKey,
     fetch: fetch
 });
 

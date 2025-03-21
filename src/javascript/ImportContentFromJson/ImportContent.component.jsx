@@ -11,12 +11,12 @@ import {
     AddTags,
     CheckIfCategoryExists,
     AddCategories
-} from '../gql-queries/ImportContent.gql-queries.js';
-import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '../Services/services';
+} from '~/gql-queries/ImportContent.gql-queries';
+import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 
-import {LoaderOverlay} from '../DesignSystem/LoaderOverlay';
+import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils';
