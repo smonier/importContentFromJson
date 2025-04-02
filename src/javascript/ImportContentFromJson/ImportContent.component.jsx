@@ -10,7 +10,8 @@ import {
     CreateFileMutation,
     AddTags,
     CheckIfCategoryExists,
-    AddCategories
+    AddCategories,
+    AddVanityUrl
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
@@ -66,6 +67,7 @@ export default () => {
     const [addTags] = useMutation(AddTags);
     const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists);
     const [addCategories] = useMutation(AddCategories);
+    const [addVanityUrl] = useMutation(AddVanityUrl);
 
     useEffect(() => {
         fetchContentTypes();
@@ -391,6 +393,28 @@ export default () => {
                         });
                     }
                 }
+
+                // Add Vanity URL if available
+                if (contentUuid) {
+                    try {
+                        const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
+                        await addVanityUrl({
+                            variables: {
+                                pathOrId: contentUuid,
+                                language: language,
+                                url: cleanUrl
+                            }
+                        });
+                        console.log(`Vanity URL '${cleanUrl}' added to ${fullContentPath}/${contentName}`);
+                    } catch (error) {
+                        console.error(`Error adding vanity URL to ${fullContentPath}/${contentName}:`, error);
+                        errorReport.push({
+                            node: `${fullContentPath}/${contentName}`,
+                            reason: 'Error adding vanity URL',
+                            details: error.message
+                        });
+                    }
+                }
             }
 
             // Step 4: Report success and errors
@@ -475,7 +499,7 @@ export default () => {
                             {properties.map(property => (
                                 <div key={property.name} className={styles.propertyItem}>
                                     <Typography variant="body" className={styles.propertyText}>
-                                        {property.displayName} - ({property.name} - {property.requiredType})
+                                        {property.displayName} - ({property.name} - {property.requiredType}{property.multiple ? '[]' : ''})
                                     </Typography>
                                 </div>
                             ))}

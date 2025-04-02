@@ -218,3 +218,19 @@ export const CheckIfCategoryExists = gql`
         }
     }
 ${CATEGORIES_FIELDS}`;
+
+export const AddVanityUrl = gql`
+    mutation addVanityUrl($pathOrId: String!, $language: String!, $url: String!){
+        jcr{
+            mutateNode(pathOrId: $pathOrId){
+                addVanityUrl(vanityUrlInputList: [{
+                    language: $language,
+                    active: true,
+                    defaultMapping: true,
+                    url: $url
+                }]){
+                    uuid
+                }
+            }
+        }
+    }`;

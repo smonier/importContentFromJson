@@ -1,11 +1,5 @@
 import {createApi} from 'unsplash-js';
 
-const unsplashAccessKey = window.contextJsParameters.config.importContentFromJson['unsplash.accessKey'];
-const unsplash = createApi({
-    accessKey: unsplashAccessKey,
-    fetch: fetch
-});
-
 const proxyServer = '/image-proxy?url='; // Replace with your actual proxy server URL
 
 const extractFileName = (url, index) => {
@@ -16,6 +10,11 @@ const extractFileName = (url, index) => {
 
 const fetchUnsplashImages = async (query, perPage = 10) => {
     try {
+        const unsplash = getUnsplashClient();
+        if (!unsplash) {
+            return [];
+        }
+
         if (!query || typeof query !== 'string') {
             console.error('Invalid query for Unsplash API.');
             return [];
@@ -196,15 +195,37 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
  */
 export const handleMultipleValues = async (value, key) => {
     if (!Array.isArray(value)) {
-        console.warn(`Invalid format for multiple values on key ${key}.`);
+        console.warn(`Invalid format for multiple values on key ${key}.`, value);
         return null;
     }
 
-    const processedValues = value.map(item => item.value?.trim()).filter(Boolean);
+    const processedValues = value
+        .map(item => {
+            if (typeof item === 'string') {
+                return item.trim();
+            }
+
+            if (typeof item === 'object' && typeof item.value === 'string') {
+                return item.value.trim();
+            }
+
+            return null;
+        })
+        .filter(Boolean);
 
     if (processedValues.length === 0) {
-        console.warn(`No valid values found for key ${key}.`);
+        console.warn(`No valid values found for key ${key}.`, value);
     }
 
     return processedValues;
+};
+
+export const getUnsplashClient = () => {
+    const accessKey = window?.contextJsParameters?.config?.unplashConfig?.accessKey;
+    if (!accessKey) {
+        console.error('Unsplash accessKey is missing or undefined.');
+        return null;
+    }
+
+    return createApi({accessKey, fetch});
 };

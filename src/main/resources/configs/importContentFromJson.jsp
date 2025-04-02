@@ -1,12 +1,21 @@
-<%@ page import="org.jahia.settings.SettingsBean"%>
-<%@ page import="org.json.JSONObject"%>
-<%@ page import="org.jahia.services.modulemanager.spi.ConfigService"%>
-<%@ page import="org.jahia.osgi.BundleUtils"%>
-<%@ page language="java" contentType="text/javascript" %>
-    <%
-        SettingsBean settingsBean = SettingsBean.getInstance();
-    %>
-    contextJsParameters.config.wip = "<%= settingsBean.getString("wip.link", "https://academy.jahia.com/documentation/enduser/jahia/8/authoring-content-in-jahia/using-content-editor/understanding-work-in-progress-content")%>";
-    contextJsParameters.config.maxNameSize =<%= settingsBean.getMaxNameSize() %>;
-    contextJsParameters.config.defaultSynchronizeNameWithTitle =<%= settingsBean.getString("jahia.ui.contentTab.defaultSynchronizeNameWithTitle", "true") %>;
-    contextJsParameters.config.importContentFromJson = <%= new JSONObject(BundleUtils.getOsgiService(ConfigService.class, null).getConfig("org.jahia.se.modules.importContentFromJson").getRawProperties()).toString() %>;
+    <%@ page language="java" contentType="text/javascript" %>
+    <%@ taglib prefix="jcr" uri="http://www.jahia.org/tags/jcr" %>
+    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    <%@ taglib prefix="utility" uri="http://www.jahia.org/tags/utilityLib" %>
+    <%@ taglib prefix="functions" uri="http://www.jahia.org/tags/functions"%>
+
+    <c:set var="unplashConfig" value="${functions:getConfigValues('org.jahia.se.modules.importContentFromJson')}"/>
+    <%--<utility:logger level="debug" value="keepeekConfig : ${keepeekConfig}"/>--%>
+
+    <c:choose>
+    <c:when test="${! empty unplashConfig}">
+    window.contextJsParameters.config.unplashConfig={
+        accessKey:"${unplashConfig['unsplash.accessKey']}"
+    }
+    console.debug("%c Unsplash config is added to contextJsParameters.config", 'color: #3c8cba');
+    </c:when>
+    <c:otherwise>
+    <utility:logger level="warn" value="Unsplash Config retrieval faile"/>
+    console.warn("Unsplash Config retrieval failed");
+    </c:otherwise>
+    </c:choose>
