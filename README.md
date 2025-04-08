@@ -27,11 +27,12 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 - Automatic folder creation if the specified path doesn’t exist.
 - Skipping of existing nodes with detailed reporting of skipped items.
 - Fetch images from URL and upload them in to the JCR (using a proxy to avoid CORS issues)
-- handle multiple for images
+- handle multiple for images and String Multiple
 - check if image exists in JCR in folder importedFiles, before importing it
 - A user-friendly interface with error messages and sample JSON previews.
 - Tags will be created if present in json file
 - Categories will be attached if matching existing system name
+- Support unsplash API to create related images (need API Key)
 ---
 
 ## Installation
@@ -133,6 +134,51 @@ Multiple values declared for Category property (the category system name needs t
             ],
             ...
          }
+       ]
+ ```
+Unsplash image generation support
+```json
+       [
+         {
+            ...,
+            "image": { 
+               "url": "unsplash", 
+               "query": "Dubai Marina grocery"
+            },
+            ...
+         }
+       ]
+ ```
+
+Example for sloc:store
+```json
+       [
+   {
+      "jcr:title": "LKK Mexico City Mercado",
+      "name": "LKK Mexico City Mercado",
+      "description": "Fusion flavors meet tradition at this flagship in La Roma.",
+      "telephone": "+52-55-5555-6789",
+      "url": "https://example.com/mexico-mercado",
+      "image": { 
+         "url": "unsplash", 
+         "query": "Mexico City grocery"
+      },
+      "streetAddress": "Av. Álvaro Obregón 110",
+      "addressLocality": "Mexico City",
+      "addressRegion": "CDMX",
+      "postalCode": "06700",
+      "addressCountry": "MX",
+      "latitude": 19.4178,
+      "longitude": -99.1611,
+      "openingHours": [
+         "{\"dayOfWeek\": \"Monday\", \"opens\": \"10:00\", \"closes\": \"21:00\"}",
+         "{\"dayOfWeek\": \"Sunday\", \"opens\": \"11:00\", \"closes\": \"19:00\"}"
+      ],
+      "priceRange": "$$",
+      "amenityFeature": ["Delivery", "Tasting Area"],
+      ":j:tagList": ["mexico", "roma", "urban", "flagship"],
+      ":j:defaultCategory": "store"
+   }
        ]
  ```
 ---
