@@ -54,7 +54,7 @@
     <groupId>org.jahia.se.modules</groupId>
     <artifactId>importContentFromJson</artifactId>
     <name>Import Content into JCR from JSON file</name>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>bundle</packaging>
     <description>This is the custom module (Import Content into JCR from JSON file) for running on a Jahia server.</description>
 
@@ -62,7 +62,7 @@
         <connection>scm:git:git@github.com:smonier/importContentFromJson.git</connection>
         <developerConnection>scm:git:git@github.com:smonier/importContentFromJson.git</developerConnection>
         <url>https://github.com/smonier/importContentFromJson</url>
-        <tag>HEAD</tag>
+        <tag>importContentFromJson-1.0.1</tag>
     </scm>
     <properties>
         <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
