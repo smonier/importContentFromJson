@@ -177,7 +177,7 @@ Example for sloc:store
       "priceRange": "$$",
       "amenityFeature": ["Delivery", "Tasting Area"],
       ":j:tagList": ["mexico", "roma", "urban", "flagship"],
-      ":j:defaultCategory": "store"
+      ":j:defaultCategory": ["store"]
    }
        ]
  ```
