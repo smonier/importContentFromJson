@@ -33,6 +33,7 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 - Tags will be created if present in json file
 - Categories will be attached if matching existing system name
 - Support unsplash API to create related images (need API Key)
+- Create a Vanity URL automatically "/folder/title"
 ---
 
 ## Installation
@@ -151,11 +152,13 @@ Unsplash image generation support
  ```
 
 Example for sloc:store
+
+Store Locator Module, available here : https://store.jahia.com/contents/modules-repository/org/jahia/se/modules/store-locator.html
 ```json
        [
    {
-      "jcr:title": "LKK Mexico City Mercado",
-      "name": "LKK Mexico City Mercado",
+      "jcr:title": "Mexico City Mercado",
+      "name": "Mexico City Mercado",
       "description": "Fusion flavors meet tradition at this flagship in La Roma.",
       "telephone": "+52-55-5555-6789",
       "url": "https://example.com/mexico-mercado",
