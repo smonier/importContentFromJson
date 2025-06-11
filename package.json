@@ -41,6 +41,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@jahia/data-helper": "^1.1.12",
     "@jahia/moonstone": "^2.7.0",
     "@jahia/react-material": "^3.0.6",

@@ -196,6 +196,7 @@ export default () => {
         if (!uploadedFileContent) {
             return [];
         }
+
         return uploadedFileContent.map(rawEntry => {
             const mappedEntry = {};
             Object.entries(fieldMappings).forEach(([propName, fileField]) => {
@@ -433,6 +434,7 @@ export default () => {
         if (!jsonPreview) {
             return;
         }
+
         const blob = new Blob([JSON.stringify(jsonPreview, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -455,17 +457,17 @@ export default () => {
 
             <Header
                 title={t('label.header', {siteInfo: siteKey})}
-                mainActions={[
-                    <Button
-                        key="importButton"
-                        size="big"
-                        id="importButton"
-                        color="accent"
-                        isDisabled={!selectedContentType || !uploadedFileContent}
-                        label={t('label.importFromJson')}
-                        onClick={handleImport}
-                    />
-                ]}
+                // MainActions={[
+                //     <Button
+                //         key="importButton"
+                //         size="big"
+                //         id="importButton"
+                //         color="accent"
+                //         isDisabled={!selectedContentType || !uploadedFileContent}
+                //         label={t('label.importFromJson')}
+                //         onClick={handleImport}
+                //     />
+                // ]}
             />
             <div className={styles.container}>
                 <div className={styles.leftPanel}>
@@ -539,7 +541,7 @@ export default () => {
                     )}
                 </div>
             </div>
-            <Dialog open={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} maxWidth="md" fullWidth>
+            <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
                 <DialogTitle>{t('label.previewTitle')}</DialogTitle>
                 <DialogContent dividers>
                     <pre className={styles.previewContent}>{JSON.stringify(jsonPreview, null, 2)}</pre>
