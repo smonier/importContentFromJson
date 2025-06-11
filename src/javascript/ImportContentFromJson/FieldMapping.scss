@@ -3,6 +3,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    padding: 0 16px;
 }
 
 .mappingRow {
@@ -13,6 +15,13 @@
     gap: 8px;
     margin-bottom: 8px;
     width: 100%; /* optional, helps alignment */
+
+    &:nth-child(even) {
+        background-color: #f3f3f3;
+    }
+    &:nth-child(odd) {
+        background-color: #ffffff;
+    }
 }
 
 .propertyName {
@@ -28,7 +37,7 @@
 .headerRow {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin: 16px 0;
     padding: 0 4px;
     width: 100%;
     font-weight: bold;
