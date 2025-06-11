@@ -8,6 +8,7 @@
     "loadingContentTypes": "Chargement ...",
     "noProperties": "Sélectionnez un type de contenu pour afficher les propriétés",
     "selectPlaceholder": "Sélectionner ...",
+    "none": "Aucun",
     "uploadFile": "Télécharger un fichier JSON",
     "chooseFile": "Choisir un fichier",
     "sampleData": "Exemple de JSON téléchargé",
