@@ -38,6 +38,8 @@ export default () => {
     const [fieldMappings, setFieldMappings] = useState({});
     const [jsonPreview, setJsonPreview] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [contentTypeError, setContentTypeError] = useState(null);
+    const [propertiesError, setPropertiesError] = useState(null);
     const siteKey = window.contextJsParameters.siteKey;
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
@@ -49,11 +51,19 @@ export default () => {
     // GraphQL Queries and Mutations
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
         variables: {siteKey, language},
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        onError: error => {
+            console.error('GetContentType error', error);
+            setContentTypeError(error);
+        }
     });
 
     const [fetchProperties, {data: propertiesData}] = useLazyQuery(GetContentPropertiesQuery, {
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        onError: error => {
+            console.error('GetContentProperties error', error);
+            setPropertiesError(error);
+        }
     });
 
     const [fetchCategories, {data: categoryData}] = useLazyQuery(CheckIfCategoryExists, {
@@ -62,18 +72,40 @@ export default () => {
             if (data?.jcr?.nodeByPath?.children?.nodes) {
                 setCategoryTree(data.jcr.nodeByPath.children.nodes);
             }
+        },
+        onError: error => {
+            console.error('Fetch categories error', error);
         }
     });
 
-    const [checkPath] = useLazyQuery(CheckPathQuery, {fetchPolicy: 'network-only'});
-    const [createPath] = useMutation(CreatePathMutation);
-    const [createContent] = useMutation(CreateContentMutation);
-    const [checkImageExists] = useLazyQuery(CheckImageExists);
-    const [addFileToJcr] = useMutation(CreateFileMutation);
-    const [addTags] = useMutation(AddTags);
-    const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists);
-    const [addCategories] = useMutation(AddCategories);
-    const [addVanityUrl] = useMutation(AddVanityUrl);
+    const [checkPath] = useLazyQuery(CheckPathQuery, {
+        fetchPolicy: 'network-only',
+        onError: error => console.error('CheckPath error', error)
+    });
+    const [createPath] = useMutation(CreatePathMutation, {
+        onError: error => console.error('CreatePath error', error)
+    });
+    const [createContent] = useMutation(CreateContentMutation, {
+        onError: error => console.error('CreateContent error', error)
+    });
+    const [checkImageExists] = useLazyQuery(CheckImageExists, {
+        onError: error => console.error('CheckImageExists error', error)
+    });
+    const [addFileToJcr] = useMutation(CreateFileMutation, {
+        onError: error => console.error('CreateFile error', error)
+    });
+    const [addTags] = useMutation(AddTags, {
+        onError: error => console.error('AddTags error', error)
+    });
+    const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists, {
+        onError: error => console.error('CheckIfCategoryExists error', error)
+    });
+    const [addCategories] = useMutation(AddCategories, {
+        onError: error => console.error('AddCategories error', error)
+    });
+    const [addVanityUrl] = useMutation(AddVanityUrl, {
+        onError: error => console.error('AddVanityUrl error', error)
+    });
 
     useEffect(() => {
         fetchContentTypes();
@@ -83,12 +115,14 @@ export default () => {
         if (contentTypeData?.jcr?.nodeTypes?.nodes) {
             const contentTypeDataFormated = extractAndFormatContentTypeData(contentTypeData);
             setContentTypes(contentTypeDataFormated);
+            setContentTypeError(null);
         }
     }, [contentTypeData]);
 
     useEffect(() => {
         if (propertiesData?.jcr?.nodeTypes?.nodes?.[0]?.properties) {
             setProperties(propertiesData.jcr.nodeTypes.nodes[0].properties);
+            setPropertiesError(null);
         }
     }, [propertiesData]);
 
@@ -112,16 +146,14 @@ export default () => {
         if (categoryCache.current.size > 0) {
             return;
         } // Already fetched
-
-        const {data, error} = await checkIfCategoryExists();
-        if (error) {
+        try {
+            const {data} = await checkIfCategoryExists();
+            if (data?.jcr?.nodeByPath?.children?.nodes) {
+                console.log('Category Tree Loaded:', data.jcr.nodeByPath.children.nodes);
+                flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
+            }
+        } catch (error) {
             console.error('GraphQL Category Fetch Error:', error);
-            return;
-        }
-
-        if (data?.jcr?.nodeByPath?.children?.nodes) {
-            console.log('Category Tree Loaded:', data.jcr.nodeByPath.children.nodes);
-            flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
         }
     };
 
@@ -499,6 +531,11 @@ export default () => {
                         placeholder={t('label.selectPlaceholder')}
                         onChange={(e, item) => handleContentTypeChange(item.value)}
                     />
+                    {contentTypeError && (
+                        <Typography variant="body" className={styles.errorMessage}>
+                            {t('label.loadContentTypesError')}
+                        </Typography>
+                    )}
                     <div className={styles.propertiesInfo}>
                         <Typography variant="heading" className={styles.heading}>
                             {t('label.properties')}
@@ -512,6 +549,11 @@ export default () => {
                                 </div>
                             ))}
                         </div>
+                        {propertiesError && (
+                            <Typography variant="body" className={styles.errorMessage}>
+                                {t('label.loadPropertiesError')}
+                            </Typography>
+                        )}
                     </div>
                 </div>
 

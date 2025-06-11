@@ -23,5 +23,7 @@
     "startImport": "Start Import",
     "contentTypeProperties": "Content Type Properties",
     "uploadedFileFields": "Uploaded File Fields"
+    ,"loadContentTypesError": "Failed to load content types.",
+    "loadPropertiesError": "Failed to load properties."
   }
 }

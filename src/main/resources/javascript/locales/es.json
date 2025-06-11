@@ -23,5 +23,7 @@
     "startImport": "Iniciar importación",
     "contentTypeProperties": "Propiedades del tipo de contenido",
     "uploadedFileFields": "Campos del archivo cargado"
+    ,"loadContentTypesError": "Error al cargar los tipos de contenido.",
+    "loadPropertiesError": "Error al cargar las propiedades."
   }
 }
