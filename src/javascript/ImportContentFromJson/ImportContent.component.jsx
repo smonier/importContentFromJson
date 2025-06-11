@@ -17,6 +17,7 @@ import {
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
+import {Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
@@ -32,10 +33,11 @@ export default () => {
     const [contentTypes, setContentTypes] = useState([]);
     const [properties, setProperties] = useState([]);
     const [uploadedFileName, setUploadedFileName] = useState('');
-    const [uploadedFileSample, setUploadedFileSample] = useState(null); // JSON sample
     const [uploadedFileContent, setUploadedFileContent] = useState(null); // Full JSON content
     const [fileFields, setFileFields] = useState([]);
     const [fieldMappings, setFieldMappings] = useState({});
+    const [jsonPreview, setJsonPreview] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const siteKey = window.contextJsParameters.siteKey;
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
@@ -143,7 +145,6 @@ export default () => {
         // Clear previous file state
         setUploadedFileName('');
         setUploadedFileContent(null);
-        setUploadedFileSample(null);
 
         if (!file) {
             console.error('No file selected');
@@ -170,17 +171,10 @@ export default () => {
                     const result = Papa.parse(event.target.result, {header: true});
                     const rows = result.data;
                     setUploadedFileContent(rows);
-                    setUploadedFileSample(rows.slice(0, 5));
                     setFileFields(result.meta?.fields || Object.keys(rows[0] || {}));
                 } else {
                     const jsonData = JSON.parse(event.target.result);
                     setUploadedFileContent(jsonData); // Store full JSON content
-
-                    const sample = Array.isArray(jsonData) ?
-                        jsonData.slice(0, 5) :
-                        Object.entries(jsonData).slice(0, 5);
-
-                    setUploadedFileSample(sample); // Update the sample
                     const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
                     setFileFields(Object.keys(firstItem || {}));
                 }
@@ -198,116 +192,108 @@ export default () => {
         reader.readAsText(file); // Read the content of the new file
     };
 
-    const handleImport = async () => {
+    const generatePreviewData = () => {
+        if (!uploadedFileContent) {
+            return [];
+        }
+        return uploadedFileContent.map(rawEntry => {
+            const mappedEntry = {};
+            Object.entries(fieldMappings).forEach(([propName, fileField]) => {
+                if (rawEntry[fileField] !== undefined) {
+                    mappedEntry[propName] = rawEntry[fileField];
+                }
+            });
+
+            if (rawEntry['j:tagList']) {
+                mappedEntry['j:tagList'] = rawEntry['j:tagList'];
+            }
+
+            if (rawEntry['j:defaultCategory']) {
+                mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
+            }
+
+            return mappedEntry;
+        });
+    };
+
+    const handleImport = () => {
+        if (!uploadedFileContent || !selectedContentType) {
+            // eslint-disable-next-line no-alert
+            alert('Please upload a valid JSON file and select a content type.');
+            return;
+        }
+
+        const preview = generatePreviewData();
+        setJsonPreview(preview);
+        setIsPreviewOpen(true);
+    };
+
+    const startImport = async () => {
         setIsLoading(true);
         const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
         const fullFilePath = pathSuffix ? `${baseFilePath}/${pathSuffix.trim()}` : baseFilePath;
 
-        const errorReport = []; // Array to keep track of skipped nodes or errors
-        let successCount = 0; // Counter for successfully created nodes
+        const errorReport = [];
+        let successCount = 0;
 
         try {
-            // Step 1: Ensure the folder exists
             const ensurePathExists = async (fullPath, nodeType) => {
-                const pathSegments = fullPath.split('/').filter(segment => segment.length > 0); // Remove empty segments
+                const pathSegments = fullPath.split('/').filter(segment => segment.length > 0);
                 let currentPath = '';
 
                 for (const segment of pathSegments) {
                     currentPath += `/${segment}`;
-
-                    // Check if the current path exists
                     // eslint-disable-next-line no-await-in-loop
                     const {data: pathCheckData} = await checkPath({variables: {path: currentPath}});
                     if (!pathCheckData?.jcr?.nodeByPath) {
-                        console.log(`Path ${currentPath} does not exist. Creating...`);
                         const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/';
                         const name = segment;
-
                         // eslint-disable-next-line no-await-in-loop
                         await createPath({variables: {path: parentPath, name, nodeType}});
-                        console.log(`Folder ${currentPath} created successfully.`);
                     }
                 }
             };
 
-            // Ensure the content path exists
             await ensurePathExists(fullContentPath, 'jnt:contentFolder');
-
-            // Ensure the file path exists
             await ensurePathExists(fullFilePath, 'jnt:folder');
 
-            // Step 2: Validate JSON keys against the node type properties
-            if (!uploadedFileContent || !selectedContentType) {
+            if (!jsonPreview || !selectedContentType) {
                 // eslint-disable-next-line no-alert
                 alert('Please upload a valid JSON file and select a content type.');
                 return;
             }
 
-            const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
+            const propertyDefinitions = properties;
 
-            for (const rawEntry of uploadedFileContent) {
-                const mappedEntry = {};
-                Object.entries(fieldMappings).forEach(([propName, fileField]) => {
-                    if (rawEntry[fileField] !== undefined) {
-                        mappedEntry[propName] = rawEntry[fileField];
-                    }
-                });
-
-                if (rawEntry['j:tagList']) {
-                    mappedEntry['j:tagList'] = rawEntry['j:tagList'];
-                }
-
-                if (rawEntry['j:defaultCategory']) {
-                    mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
-                }
-
+            for (const mappedEntry of jsonPreview) {
                 const propertiesToSend = await Promise.all(
                     Object.keys(mappedEntry).map(async key => {
-                        // Skip j:tagList if not defined in the content type
                         if (key === 'j:tagList' || key === 'j:defaultCategory') {
-                            console.info('Skipping j:tagList or j:defaultCategory property as it is not part of the content type definition.');
                             return null;
                         }
 
-                        const propertyDefinition = propertyDefinitions.find(
-                            prop => prop.name === key
-                        );
-
+                        const propertyDefinition = propertyDefinitions.find(prop => prop.name === key);
                         if (!propertyDefinition) {
-                            console.warn(`Property ${key} does not match the content type definition.`);
                             return null;
                         }
 
                         let value = mappedEntry[key];
-                        // Handle tags (j:tagList)
-                        if (key === 'j:tagList' && Array.isArray(value)) {
-                            return null; // Skip tags for now; we'll handle them after creating the content.
-                        }
-
                         const isImage = propertyDefinition.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
                         const isDate = propertyDefinition.requiredType === 'DATE';
                         const isMultiple = propertyDefinition.multiple;
 
-                        // Handle DATE properties
                         if (isDate && value) {
                             const date = new Date(value);
                             if (!isNaN(date.getTime())) {
-                                value = date.toISOString(); // Convert to 'YYYY-MM-DDTHH:mm:ss.sssZ'
-                            } else {
-                                console.warn(`Invalid date format for property ${key}: ${value}`);
+                                value = date.toISOString();
                             }
                         }
 
-                        // Handle Multiple values and Images (Logic remains same as in your code)
                         if (isMultiple) {
                             let values = '';
                             if (isImage) {
-                                // Logic for handling multiple images
-
                                 values = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
                             } else {
-                                // Logic for handling multiple non-image values
-
                                 values = handleMultipleValues(value, key);
                             }
 
@@ -319,7 +305,6 @@ export default () => {
                         }
 
                         if (isImage) {
-                            // Logic for handling single images
                             const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
                             return {
                                 name: key,
@@ -328,14 +313,13 @@ export default () => {
                             };
                         }
 
-                        // Return structure for single values
                         return {
                             name: key,
                             value: value,
                             language: propertyDefinition?.internationalized ? language : undefined
                         };
                     })
-                ).then(results => results.filter(Boolean)); // Filter out invalid properties
+                ).then(results => results.filter(Boolean));
 
                 const contentName = mappedEntry['jcr:title'] ?
                     mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
@@ -344,32 +328,27 @@ export default () => {
                         `content_${new Date().getTime()}`;
 
                 let contentUuid = null;
-                console.log('Properties to send:', JSON.stringify(propertiesToSend, null, 2));
                 try {
                     const {data: contentData} = await createContent({
                         variables: {
                             path: fullContentPath,
                             name: contentName,
-                            primaryNodeType: selectedContentType, // Use your custom node type
+                            primaryNodeType: selectedContentType,
                             properties: propertiesToSend
                         }
                     });
                     contentUuid = contentData?.jcr?.addNode?.uuid;
-
-                    console.log(`Node created: ${fullContentPath}/${contentName}`);
-                    successCount++; // Increment the success counter
+                    successCount++;
                 } catch (error) {
                     if (
                         error.message.includes('javax.jcr.ItemExistsException') ||
                         error.message.includes('This node already exists')
                     ) {
-                        console.warn(`Node already exists: ${fullContentPath}/${contentName}`);
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Node already exists'
                         });
                     } else {
-                        console.error(`Error creating node: ${fullContentPath}/${contentName}`, error);
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Other error',
@@ -380,18 +359,10 @@ export default () => {
                     continue;
                 }
 
-                // Add tags if available
                 if (contentUuid && mappedEntry['j:tagList']) {
                     try {
-                        await addTags({
-                            variables: {
-                                path: contentUuid,
-                                tags: mappedEntry['j:tagList']
-                            }
-                        });
-                        console.log(`Tags added to ${fullContentPath}/${contentName}`);
+                        await addTags({variables: {path: contentUuid, tags: mappedEntry['j:tagList']}});
                     } catch (error) {
-                        console.error(`Error adding tags to ${fullContentPath}/${contentName}:`, error);
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Error adding tags',
@@ -400,38 +371,25 @@ export default () => {
                     }
                 }
 
-                // Add Categories if avalaible
                 if (contentUuid && mappedEntry['j:defaultCategory']) {
                     try {
-                        await fetchCategoriesOnce(); // Ensure categories are loaded once
+                        await fetchCategoriesOnce();
 
                         let defaultCategoryUuids = [];
                         if (Array.isArray(mappedEntry['j:defaultCategory'])) {
                             for (let categoryName of mappedEntry['j:defaultCategory']) {
-                                // Normalize categoryName: lowercase + replace spaces with dashes
                                 categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
-
                                 const categoryUuid = categoryCache.current.get(categoryName);
-
                                 if (categoryUuid) {
                                     defaultCategoryUuids.push(categoryUuid);
-                                } else {
-                                    console.warn(`Category ${categoryName} not found in cache.`);
                                 }
                             }
                         }
 
-                        // Add to properties if categories exist
                         if (defaultCategoryUuids.length > 0) {
-                            await addCategories({
-                                variables: {
-                                    path: contentUuid,
-                                    categories: defaultCategoryUuids
-                                }
-                            });
+                            await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
                         }
                     } catch (error) {
-                        console.error(`Error adding categories to ${fullContentPath}/${contentName}:`, error);
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Error adding categories',
@@ -440,20 +398,11 @@ export default () => {
                     }
                 }
 
-                // Add Vanity URL if available
                 if (contentUuid) {
                     try {
                         const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
-                        await addVanityUrl({
-                            variables: {
-                                pathOrId: contentUuid,
-                                language: language,
-                                url: cleanUrl
-                            }
-                        });
-                        console.log(`Vanity URL '${cleanUrl}' added to ${fullContentPath}/${contentName}`);
+                        await addVanityUrl({variables: {pathOrId: contentUuid, language: language, url: cleanUrl}});
                     } catch (error) {
-                        console.error(`Error adding vanity URL to ${fullContentPath}/${contentName}:`, error);
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Error adding vanity URL',
@@ -463,13 +412,10 @@ export default () => {
                 }
             }
 
-            // Step 4: Report success and errors
             if (errorReport.length > 0) {
                 console.warn('Import completed with some issues:');
                 console.table(errorReport);
-                alert(
-                    `Import completed with some issues. ${successCount} nodes were successfully created. Check the console for details.`
-                );
+                alert(`Import completed with some issues. ${successCount} nodes were successfully created. Check the console for details.`);
             } else {
                 console.log('Import completed successfully without errors!');
                 alert(`${successCount} nodes were successfully created!`);
@@ -478,8 +424,22 @@ export default () => {
             console.error('Error during import:', error);
             alert('An error occurred during the import process.');
         } finally {
-            setIsLoading(false); // Stop loading spinner
+            setIsLoading(false);
+            setIsPreviewOpen(false);
         }
+    };
+
+    const handleDownloadJson = () => {
+        if (!jsonPreview) {
+            return;
+        }
+        const blob = new Blob([JSON.stringify(jsonPreview, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'mappedContent.json';
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -568,16 +528,6 @@ export default () => {
                             {uploadedFileName || t('label.chooseFile')}
                         </label>
                     </div>
-                    {uploadedFileSample && (
-                        <div className={styles.sampleContainer}>
-                            <Typography variant="heading" className={styles.sampleHeading}>
-                                {t('label.sampleData')}
-                            </Typography>
-                            <pre className={styles.sampleContent}>
-                                {JSON.stringify(uploadedFileSample, null, 2)}
-                            </pre>
-                        </div>
-                    )}
                     {properties.length > 0 && fileFields.length > 0 && (
                         <FieldMapping
                             properties={properties}
@@ -589,6 +539,16 @@ export default () => {
                     )}
                 </div>
             </div>
+            <Dialog open={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} maxWidth="md" fullWidth>
+                <DialogTitle>{t('label.previewTitle')}</DialogTitle>
+                <DialogContent dividers>
+                    <pre className={styles.previewContent}>{JSON.stringify(jsonPreview, null, 2)}</pre>
+                </DialogContent>
+                <DialogActions>
+                    <Button label={t('label.downloadJson')} onClick={handleDownloadJson}/>
+                    <Button color="accent" label={t('label.startImport')} onClick={startImport}/>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };
