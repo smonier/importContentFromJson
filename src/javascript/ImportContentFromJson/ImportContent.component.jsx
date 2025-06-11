@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import Papa from 'papaparse/papaparse.min.js';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {
@@ -104,10 +104,10 @@ export default () => {
         }
     }, [properties, fileFields]);
 
-    let categoryCache = new Map(); // Store categories as { name: uuid }
+    const categoryCache = useRef(new Map()); // Store categories as { name: uuid }
 
     const fetchCategoriesOnce = async () => {
-        if (categoryCache.size > 0) {
+        if (categoryCache.current.size > 0) {
             return;
         } // Already fetched
 
@@ -119,7 +119,7 @@ export default () => {
 
         if (data?.jcr?.nodeByPath?.children?.nodes) {
             console.log('Category Tree Loaded:', data.jcr.nodeByPath.children.nodes);
-            flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache);
+            flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
         }
     };
 
@@ -411,7 +411,7 @@ export default () => {
                                 // Normalize categoryName: lowercase + replace spaces with dashes
                                 categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
 
-                                const categoryUuid = categoryCache.get(categoryName);
+                                const categoryUuid = categoryCache.current.get(categoryName);
 
                                 if (categoryUuid) {
                                     defaultCategoryUuids.push(categoryUuid);
