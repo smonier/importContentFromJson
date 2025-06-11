@@ -161,7 +161,6 @@ export default () => {
         }
 
         setUploadedFileName(file.name); // Set the new file name
-
         const reader = new FileReader();
 
         reader.onload = event => {
@@ -243,9 +242,10 @@ export default () => {
                 return;
             }
 
-            const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
-
+            const propertyDefinitions = properties; // From GetContentPropertiesQuery
             for (const rawEntry of uploadedFileContent) {
+                let skipEntry = false;
+                let continueProcessing = true;
                 const mappedEntry = {};
                 Object.entries(fieldMappings).forEach(([propName, fileField]) => {
                     if (rawEntry[fileField] !== undefined) {
@@ -263,63 +263,40 @@ export default () => {
 
                 const propertiesToSend = await Promise.all(
                     Object.keys(mappedEntry).map(async key => {
-                        // Skip j:tagList if not defined in the content type
-                        if (key === 'j:tagList' || key === 'j:defaultCategory') {
-                            console.info('Skipping j:tagList or j:defaultCategory property as it is not part of the content type definition.');
-                            return null;
-                        }
-
-                        const propertyDefinition = propertyDefinitions.find(
-                            prop => prop.name === key
-                        );
-
+                        const propertyDefinition = propertyDefinitions.find(prop => prop.name === key);
                         if (!propertyDefinition) {
                             console.warn(`Property ${key} does not match the content type definition.`);
                             return null;
                         }
 
                         let value = mappedEntry[key];
-                        // Handle tags (j:tagList)
-                        if (key === 'j:tagList' && Array.isArray(value)) {
-                            return null; // Skip tags for now; we'll handle them after creating the content.
-                        }
-
                         const isImage = propertyDefinition.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
                         const isDate = propertyDefinition.requiredType === 'DATE';
                         const isMultiple = propertyDefinition.multiple;
 
-                        // Handle DATE properties
                         if (isDate && value) {
                             const date = new Date(value);
                             if (!isNaN(date.getTime())) {
-                                value = date.toISOString(); // Convert to 'YYYY-MM-DDTHH:mm:ss.sssZ'
-                            } else {
-                                console.warn(`Invalid date format for property ${key}: ${value}`);
+                                value = date.toISOString();
                             }
                         }
 
-                        // Handle Multiple values and Images (Logic remains same as in your code)
                         if (isMultiple) {
                             let values = '';
                             if (isImage) {
-                                // Logic for handling multiple images
-
                                 values = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
                             } else {
-                                // Logic for handling multiple non-image values
-
-                                values = await handleMultipleValues(value, key);
+                                values = handleMultipleValues(value, key);
                             }
 
                             return {
                                 name: key,
-                                values: values,
+                                values,
                                 language: propertyDefinition?.internationalized ? language : undefined
                             };
                         }
 
                         if (isImage) {
-                            // Logic for handling single images
                             const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
                             return {
                                 name: key,
@@ -328,14 +305,14 @@ export default () => {
                             };
                         }
 
-                        // Return structure for single values
                         return {
                             name: key,
-                            value: value,
+                            value,
                             language: propertyDefinition?.internationalized ? language : undefined
                         };
                     })
-                ).then(results => results.filter(Boolean)); // Filter out invalid properties
+                ).filter(Boolean);
+                // `propertiesToSend` now matches the CND structure for this entry
 
                 const contentName = mappedEntry['jcr:title'] ?
                     mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
@@ -345,6 +322,7 @@ export default () => {
 
                 let contentUuid = null;
                 console.log('Properties to send:', JSON.stringify(propertiesToSend, null, 2));
+
                 try {
                     const {data: contentData} = await createContent({
                         variables: {
@@ -377,88 +355,98 @@ export default () => {
                         });
                     }
 
-                    continue;
+                    skipEntry = true;
                 }
 
-                // Add tags if available
-                if (contentUuid && mappedEntry['j:tagList']) {
-                    try {
-                        await addTags({
-                            variables: {
-                                path: contentUuid,
-                                tags: mappedEntry['j:tagList']
-                            }
-                        });
-                        console.log(`Tags added to ${fullContentPath}/${contentName}`);
-                    } catch (error) {
-                        console.error(`Error adding tags to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding tags',
-                            details: error.message
-                        });
-                    }
+                // Replace the problematic continue with continueProcessing flag
+                if (skipEntry) {
+                    // Skip processing the remaining steps for this entry.
+                    // Continue to the next iteration without using 'continue' (which causes a syntax error in this context).
+                    continueProcessing = false;
+                } else {
+                    continueProcessing = true;
                 }
 
-                // Add Categories if avalaible
-                if (contentUuid && mappedEntry['j:defaultCategory']) {
-                    try {
-                        await fetchCategoriesOnce(); // Ensure categories are loaded once
-
-                        let defaultCategoryUuids = [];
-                        if (Array.isArray(mappedEntry['j:defaultCategory'])) {
-                            for (let categoryName of mappedEntry['j:defaultCategory']) {
-                                // Normalize categoryName: lowercase + replace spaces with dashes
-                                categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
-
-                                const categoryUuid = categoryCache.get(categoryName);
-
-                                if (categoryUuid) {
-                                    defaultCategoryUuids.push(categoryUuid);
-                                } else {
-                                    console.warn(`Category ${categoryName} not found in cache.`);
-                                }
-                            }
-                        }
-
-                        // Add to properties if categories exist
-                        if (defaultCategoryUuids.length > 0) {
-                            await addCategories({
+                if (continueProcessing) {
+                    if (contentUuid && mappedEntry['j:tagList']) {
+                        try {
+                            await addTags({
                                 variables: {
                                     path: contentUuid,
-                                    categories: defaultCategoryUuids
+                                    tags: mappedEntry['j:tagList']
                                 }
                             });
+                            console.log(`Tags added to ${fullContentPath}/${contentName}`);
+                        } catch (error) {
+                            console.error(`Error adding tags to ${fullContentPath}/${contentName}:`, error);
+                            errorReport.push({
+                                node: `${fullContentPath}/${contentName}`,
+                                reason: 'Error adding tags',
+                                details: error.message
+                            });
                         }
-                    } catch (error) {
-                        console.error(`Error adding categories to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding categories',
-                            details: error.message
-                        });
                     }
-                }
 
-                // Add Vanity URL if available
-                if (contentUuid) {
-                    try {
-                        const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
-                        await addVanityUrl({
-                            variables: {
-                                pathOrId: contentUuid,
-                                language: language,
-                                url: cleanUrl
+                    // Add Categories if available
+                    if (contentUuid && mappedEntry['j:defaultCategory']) {
+                        try {
+                            await fetchCategoriesOnce(); // Ensure categories are loaded once
+
+                            let defaultCategoryUuids = [];
+                            if (Array.isArray(mappedEntry['j:defaultCategory'])) {
+                                for (let categoryName of mappedEntry['j:defaultCategory']) {
+                                    // Normalize categoryName: lowercase + replace spaces with dashes
+                                    categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
+
+                                    const categoryUuid = categoryCache.get(categoryName);
+
+                                    if (categoryUuid) {
+                                        defaultCategoryUuids.push(categoryUuid);
+                                    } else {
+                                        console.warn(`Category ${categoryName} not found in cache.`);
+                                    }
+                                }
                             }
-                        });
-                        console.log(`Vanity URL '${cleanUrl}' added to ${fullContentPath}/${contentName}`);
-                    } catch (error) {
-                        console.error(`Error adding vanity URL to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding vanity URL',
-                            details: error.message
-                        });
+
+                            // Add to properties if categories exist
+                            if (defaultCategoryUuids.length > 0) {
+                                await addCategories({
+                                    variables: {
+                                        path: contentUuid,
+                                        categories: defaultCategoryUuids
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.error(`Error adding categories to ${fullContentPath}/${contentName}:`, error);
+                            errorReport.push({
+                                node: `${fullContentPath}/${contentName}`,
+                                reason: 'Error adding categories',
+                                details: error.message
+                            });
+                        }
+                    }
+
+                    // Add Vanity URL if available
+                    if (contentUuid) {
+                        try {
+                            const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
+                            await addVanityUrl({
+                                variables: {
+                                    pathOrId: contentUuid,
+                                    language: language,
+                                    url: cleanUrl
+                                }
+                            });
+                            console.log(`Vanity URL '${cleanUrl}' added to ${fullContentPath}/${contentName}`);
+                        } catch (error) {
+                            console.error(`Error adding vanity URL to ${fullContentPath}/${contentName}:`, error);
+                            errorReport.push({
+                                node: `${fullContentPath}/${contentName}`,
+                                reason: 'Error adding vanity URL',
+                                details: error.message
+                            });
+                        }
                     }
                 }
             }
