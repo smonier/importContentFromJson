@@ -16,6 +16,9 @@
     "path": "Ruta del contenido",
     "enterPathSuffix": "Introduzca el sufijo de la ruta del contenido",
     "enterPathSuffixHelp": "Se permiten directorios recursivos, como /news/202501.",
-    "fieldMapping": "Mapeo de campos"
+    "fieldMapping": "Mapeo de campos",
+    "previewTitle": "Vista previa del JSON generado",
+    "downloadJson": "Descargar JSON",
+    "startImport": "Iniciar importación"
   }
 }

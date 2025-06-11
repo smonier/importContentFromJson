@@ -152,34 +152,13 @@ $font-family: 'Roboto', sans-serif;
     background: var(--color-accent);
 }
 
-.sampleContainer {
-    margin-top: 16px;
-    padding: 12px;
-    background: #f9f9f9; /* Light background for better readability */
-    border: 1px solid #ddd; /* Border for emphasis */
-    border-radius: 4px; /* Rounded corners */
-}
-
-.sampleHeading {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px; /* Space between heading and content */
-}
-
-.sampleContent {
-    font-family: "Courier New", Courier, monospace; /* Monospace font for JSON */
+.previewContent {
+    font-family: "Courier New", Courier, monospace;
     font-size: 14px;
-    color: var(--color-dark); /* Primary color for JSON */
-    background: #fefefe; /* White background for JSON content */
-    padding: 10px; /* Padding around JSON text */
-    border-radius: 4px;
-    overflow-x: auto; /* Enable horizontal scrolling for long JSON lines */
-    overflow-y: auto; /* Enable vertical scrolling for large JSON content */
-    white-space: pre-wrap; /* Preserve whitespace and wrap lines */
-    line-height: 1.5; /* Better readability for JSON lines */
-    max-height: 600px; /* Set a maximum height for scrollable content */
-    border: 1px solid #ddd; /* Optional border for better visibility */
+    padding: 10px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    max-height: 600px;
 }
 
 .pathInput {
