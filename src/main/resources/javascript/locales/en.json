@@ -16,6 +16,9 @@
     "path": "Content Path",
     "enterPathSuffix": "Enter the content path",
     "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501.",
-    "fieldMapping": "Field Mapping"
+    "fieldMapping": "Field Mapping",
+    "previewTitle": "Mapped JSON Preview",
+    "downloadJson": "Download JSON",
+    "startImport": "Start Import"
   }
 }
