@@ -23,5 +23,7 @@
     "startImport": "Import starten",
     "contentTypeProperties": "Eigenschaften des Inhaltstyps",
     "uploadedFileFields": "Felder der hochgeladenen Datei"
+    ,"loadContentTypesError": "Fehler beim Laden der Inhaltstypen.",
+    "loadPropertiesError": "Fehler beim Laden der Eigenschaften."
   }
 }

@@ -23,5 +23,7 @@
     "startImport": "Démarrer l'import",
     "contentTypeProperties": "Propriétés du type de contenu",
     "uploadedFileFields": "Champs du fichier importé"
+    ,"loadContentTypesError": "Échec du chargement des types de contenu.",
+    "loadPropertiesError": "Échec du chargement des propriétés."
   }
 }
