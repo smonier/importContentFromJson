@@ -54,7 +54,7 @@ $font-family: 'Roboto', sans-serif;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .heading {
@@ -136,7 +136,7 @@ $font-family: 'Roboto', sans-serif;
 .rightPanel {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     padding: 16px;
 }
 
@@ -246,6 +246,17 @@ $font-family: 'Roboto', sans-serif;
 .tabs {
     width: 100%;
     margin-bottom: 16px;
+}
+
+.tab {
+    flex: 1;
+    min-width: 0;
+    width: 50%;
+    text-align: center;
+}
+
+.tab.Mui-selected {
+    color: var(--color-accent) !important;
 }
 
 .tabContent {

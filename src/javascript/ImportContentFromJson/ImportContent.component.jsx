@@ -649,9 +649,20 @@ export default () => {
                 </div>
 
                 <div className={styles.rightPanel}>
-                    <Tabs value={activeTab} onChange={handleTabChange} className={styles.tabs}>
-                        <Tab label={t('label.manualMapping')} />
-                        <Tab label={t('label.reImportGeneratedFile')} />
+                    <Tabs
+                        value={activeTab}
+                        onChange={handleTabChange}
+                        className={styles.tabs}
+                        TabIndicatorProps={{style: {backgroundColor: 'var(--color-accent)'}}}
+                    >
+                        <Tab
+                            className={styles.tab}
+                            label={<Typography variant="heading">{t('label.manualMapping')}</Typography>}
+                        />
+                        <Tab
+                            className={styles.tab}
+                            label={<Typography variant="heading">{t('label.reImportGeneratedFile')}</Typography>}
+                        />
                     </Tabs>
                     {activeTab === 0 && (
                         <div className={styles.tabContent}>
