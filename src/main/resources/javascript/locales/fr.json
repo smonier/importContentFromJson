@@ -11,7 +11,7 @@
     "uploadFile": "Télécharger un fichier JSON",
     "chooseFile": "Choisir un fichier",
     "sampleData": "Exemple de JSON téléchargé",
-    "invalidFile": "Type de fichier invalide. Veuillez télécharger un fichier JSON.",
+    "invalidFile": "Type de fichier invalide. Veuillez télécharger un fichier JSON ou CSV.",
     "processingFile": "Traitement du fichier JSON...",
     "path": "Chemin du contenu",
     "enterPathSuffix": "Entrez le suffixe du chemin de contenu",

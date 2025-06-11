@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import Papa from 'papaparse';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {
     GetContentTypeQuery,
@@ -132,9 +133,13 @@ export default () => {
             return;
         }
 
-        if (file.type !== 'application/json') {
-            console.error('Invalid file type. Please upload a JSON file.');
-            alert('Invalid file type. Please upload a JSON file.');
+        const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
+        const isCsv = file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.toLowerCase().endsWith('.csv');
+
+        if (!isJson && !isCsv) {
+            const invalidMsg = t('label.invalidFile');
+            console.error(invalidMsg);
+            alert(invalidMsg);
             return;
         }
 
@@ -144,18 +149,25 @@ export default () => {
 
         reader.onload = event => {
             try {
-                const jsonData = JSON.parse(event.target.result);
-                setUploadedFileContent(jsonData); // Store full JSON content
+                if (isCsv) {
+                    const result = Papa.parse(event.target.result, {header: true});
+                    const rows = result.data;
+                    setUploadedFileContent(rows);
+                    setUploadedFileSample(rows.slice(0, 5));
+                } else {
+                    const jsonData = JSON.parse(event.target.result);
+                    setUploadedFileContent(jsonData); // Store full JSON content
 
-                // Store the first 5 entries as a sample
-                const sample = Array.isArray(jsonData) ?
-                    jsonData.slice(0, 5) :
-                    Object.entries(jsonData).slice(0, 5);
+                    // Store the first 5 entries as a sample
+                    const sample = Array.isArray(jsonData) ?
+                        jsonData.slice(0, 5) :
+                        Object.entries(jsonData).slice(0, 5);
 
-                setUploadedFileSample(sample); // Update the sample
+                    setUploadedFileSample(sample); // Update the sample
+                }
             } catch (error) {
-                console.error('Error parsing JSON file:', error);
-                alert('Invalid JSON file. Please check the file contents.');
+                console.error('Error parsing file:', error);
+                alert('Invalid file. Please check the file contents.');
             }
         };
 
