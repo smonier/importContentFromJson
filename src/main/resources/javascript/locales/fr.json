@@ -9,7 +9,7 @@
     "noProperties": "Sélectionnez un type de contenu pour afficher les propriétés",
     "selectPlaceholder": "Sélectionner ...",
     "none": "Aucun",
-    "uploadFile": "Télécharger un fichier JSON",
+    "uploadFile": "Télécharger un fichier JSON ou CSV",
     "chooseFile": "Choisir un fichier",
     "sampleData": "Exemple de JSON téléchargé",
     "invalidFile": "Type de fichier invalide. Veuillez télécharger un fichier JSON ou CSV.",
@@ -25,7 +25,7 @@
     "uploadedFileFields": "Champs du fichier importé",
     "manualMapping": "Correspondance manuelle",
     "reImportGeneratedFile": "Réimporter le fichier généré",
-    "uploadGeneratedFile": "Téléverser le fichier généré",
+    "uploadGeneratedFile": "Téléverser un fichier JSON généré",
     "invalidGeneratedFile": "Le fichier importé ne correspond pas au type de contenu sélectionné."
     ,"loadContentTypesError": "Échec du chargement des types de contenu.",
     "loadPropertiesError": "Échec du chargement des propriétés."
