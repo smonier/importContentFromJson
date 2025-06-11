@@ -308,7 +308,7 @@ export default () => {
                             } else {
                                 // Logic for handling multiple non-image values
 
-                                values = await handleMultipleValues(value, key);
+                                values = handleMultipleValues(value, key);
                             }
 
                             return {
