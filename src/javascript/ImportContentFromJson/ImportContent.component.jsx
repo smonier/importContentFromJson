@@ -232,9 +232,31 @@ export default () => {
         return uploadedFileContent.map(rawEntry => {
             const mappedEntry = {};
             Object.entries(fieldMappings).forEach(([propName, fileField]) => {
-                if (rawEntry[fileField] !== undefined) {
-                    mappedEntry[propName] = rawEntry[fileField];
+                if (rawEntry[fileField] === undefined) {
+                    return;
                 }
+
+                let value = rawEntry[fileField];
+                const propertyDefinition = properties.find(prop => prop.name === propName);
+                const isImage = propertyDefinition?.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
+                const isMultiple = propertyDefinition?.multiple;
+
+                if (isImage) {
+                    if (isMultiple) {
+                        if (typeof value === 'string') {
+                            value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                        }
+                        if (Array.isArray(value)) {
+                            value = value.map(v => (typeof v === 'string' ? {url: v} : v));
+                        }
+                    } else {
+                        if (typeof value === 'string') {
+                            value = {url: value};
+                        }
+                    }
+                }
+
+                mappedEntry[propName] = value;
             });
 
             if (rawEntry['j:tagList']) {
