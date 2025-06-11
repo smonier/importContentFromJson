@@ -22,7 +22,11 @@
     "downloadJson": "Download JSON",
     "startImport": "Start Import",
     "contentTypeProperties": "Content Type Properties",
-    "uploadedFileFields": "Uploaded File Fields"
+    "uploadedFileFields": "Uploaded File Fields",
+    "manualMapping": "Manual Mapping",
+    "reImportGeneratedFile": "Re-import Generated File",
+    "uploadGeneratedFile": "Upload Generated JSON File",
+    "invalidGeneratedFile": "File does not match selected content type."
     ,"loadContentTypesError": "Failed to load content types.",
     "loadPropertiesError": "Failed to load properties."
   }

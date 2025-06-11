@@ -22,7 +22,11 @@
     "downloadJson": "Descargar JSON",
     "startImport": "Iniciar importación",
     "contentTypeProperties": "Propiedades del tipo de contenido",
-    "uploadedFileFields": "Campos del archivo cargado"
+    "uploadedFileFields": "Campos del archivo cargado",
+    "manualMapping": "Mapeo manual",
+    "reImportGeneratedFile": "Reimportar archivo generado",
+    "uploadGeneratedFile": "Subir archivo JSON generado",
+    "invalidGeneratedFile": "El archivo cargado no coincide con el tipo de contenido seleccionado."
     ,"loadContentTypesError": "Error al cargar los tipos de contenido.",
     "loadPropertiesError": "Error al cargar las propiedades."
   }

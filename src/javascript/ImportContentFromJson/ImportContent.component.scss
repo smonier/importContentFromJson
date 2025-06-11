@@ -41,7 +41,7 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .leftPanel {
-    flex: 1;
+    flex: 0 0 40%;
     padding: 16px;
     border-right: 1px solid #e0e0e0;
     display: flex;
@@ -51,7 +51,7 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .rightPanel {
-    flex: 1;
+    flex: 0 0 60%;
     padding: 16px;
     overflow-y: auto;
     display: flex;
@@ -243,4 +243,13 @@ $font-family: 'Roboto', sans-serif;
 .errorMessage {
     color: red;
     margin-bottom: 16px;
+}
+
+.tabs {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.tabContent {
+    width: 100%;
 }
