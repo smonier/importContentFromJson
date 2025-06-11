@@ -21,7 +21,7 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 
 ## Features
 
-- Import JSON files to a specified JCR content path.
+- Import JSON **and CSV** files to a specified JCR content path. CSV parsing relies on [PapaParse](https://www.papaparse.com/).
 - Support for both internationalized (i18n) and non-internationalized properties.
 - Validation of JSON fields against the selected content type properties.
 - Automatic folder creation if the specified path doesn’t exist.
@@ -47,7 +47,7 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 2. Install dependencies:
 
     ```bash
-    npm install or yarn 
+    npm install or yarn   # ensures `papaparse` and other packages are installed
     ```
 
 3. Build and deploy server:
@@ -64,9 +64,10 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 2. Follow these steps to import content:
     - **Select the base content path.**
     - **Choose a content type.**
-    - **Upload a valid JSON file.**
+    - **Upload a valid JSON or CSV file.**
+    - **Map CSV columns to content properties using the Field Mapping interface.**
     - **Click “Import From JSON”** to initiate the process.
-3. Ensure the JSON file follows the structure below and matches the name of the properties of the selected Content Type:
+3. Ensure the data file follows the structure below and matches the names of the properties of the selected Content Type:
 
 ```json
        [
@@ -186,7 +187,16 @@ Store Locator Module, available here : https://store.jahia.com/contents/modules-
  ```
 ---
 ## Screenshots
-![picture](./src/main/resources/images/importContentFromJson.png)
+![Field mapping screenshot](./src/main/resources/images/importContentFromJson.png)
+Example of the Field Mapping interface showing JCR properties mapped to CSV columns.
+
+```
+| JCR Property | CSV Column |
+|--------------|------------|
+| jcr:title    | title      |
+| body         | body       |
+| image        | image      |
+```
 ---
 
 ## Configuration
@@ -216,6 +226,13 @@ query SiteContentTypesQuery($siteKey: String!, $language:String!) {
       }
    }
 }
+```
+
+Example CSV file with corresponding columns:
+
+```csv
+title,teaser,body,date,image
+"AI for public procurement","Short intro","Long text",2024-11-01,https://example.com/image.jpg
 ```
 
 ### Fetch Properties for Selected Content Type
@@ -316,6 +333,7 @@ This project is licensed under the MIT License.
 ## Additional Notes
 
 - Ensure the JSON file adheres to the structure required by the selected content type.
+- CSV files must include a header row. Only comma-separated values are supported.
 - Use the sample JSON preview to verify file content before importing.
 - For advanced configurations, consult the module documentation or support team.
 
