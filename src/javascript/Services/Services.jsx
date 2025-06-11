@@ -221,7 +221,7 @@ export const handleMultipleValues = async (value, key) => {
 };
 
 export const getUnsplashClient = () => {
-    const accessKey = window?.contextJsParameters?.config?.unplashConfig?.accessKey;
+    const accessKey = window?.contextJsParameters?.config?.unsplashConfig?.accessKey;
     if (!accessKey) {
         console.error('Unsplash accessKey is missing or undefined.');
         return null;
