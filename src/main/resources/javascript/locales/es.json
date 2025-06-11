@@ -11,7 +11,7 @@
     "uploadFile": "Cargar archivo JSON",
     "chooseFile": "Elegir archivo",
     "sampleData": "Ejemplo de JSON cargado",
-    "invalidFile": "Tipo de archivo no válido. Por favor, cargue un archivo JSON.",
+    "invalidFile": "Tipo de archivo no válido. Por favor, cargue un archivo JSON o CSV.",
     "processingFile": "Procesando archivo JSON...",
     "path": "Ruta del contenido",
     "enterPathSuffix": "Introduzca el sufijo de la ruta del contenido",

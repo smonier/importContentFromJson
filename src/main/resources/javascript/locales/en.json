@@ -11,7 +11,7 @@
     "uploadFile": "Upload JSON File",
     "chooseFile": "Choose File",
     "sampleData": "Uploaded JSON Sample",
-    "invalidFile": "Invalid file type. Please upload a JSON file.",
+    "invalidFile": "Invalid file type. Please upload a JSON or CSV file.",
     "processingFile": "Processing JSON file...",
     "path": "Content Path",
     "enterPathSuffix": "Enter the content path",

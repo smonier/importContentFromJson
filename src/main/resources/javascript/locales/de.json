@@ -11,7 +11,7 @@
     "uploadFile": "JSON-Datei hochladen",
     "chooseFile": "Datei auswählen",
     "sampleData": "Hochgeladenes JSON-Beispiel",
-    "invalidFile": "Ungültiger Dateityp. Bitte laden Sie eine JSON-Datei hoch.",
+    "invalidFile": "Ungültiger Dateityp. Bitte laden Sie eine JSON- oder CSV-Datei hoch.",
     "processingFile": "JSON-Datei wird verarbeitet...",
     "path": "Inhaltspfad",
     "enterPathSuffix": "Geben Sie das Inhaltspfad-Suffix ein",
