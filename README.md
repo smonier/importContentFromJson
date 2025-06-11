@@ -238,9 +238,10 @@ title,teaser,body,date,image
 ### Fetch Properties for Selected Content Type
 ```graphql
       query GetContentPropertiesQuery($type: String!, $language: String!) {
-         jcr {
-            nodeTypes(filter: {includeTypes: [$type]}) {
+       jcr {
+           nodeTypes(filter: {includeTypes: [$type]}) {
                nodes {
+                  name
                   properties(fieldFilter: {filters: [{fieldName: "hidden", value: "false"}]}) {
                      name
                      hidden
