@@ -489,7 +489,7 @@ export default () => {
 
             <Header
                 title={t('label.header', {siteInfo: siteKey})}
-                MainActions={[
+                mainActions={[
                     <Button
                         key="importButton"
                         size="big"
