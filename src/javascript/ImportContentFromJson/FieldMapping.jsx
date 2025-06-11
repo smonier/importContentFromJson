@@ -15,6 +15,7 @@ export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMap
             } else {
                 updated[propertyName] = value;
             }
+
             return updated;
         });
     };
@@ -22,6 +23,10 @@ export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMap
     return (
         <div className={styles.container}>
             <Typography variant="heading" className={styles.heading}>{t('label.fieldMapping')}</Typography>
+            <div className={styles.headerRow}>
+                <Typography variant="subheading" className={styles.headerLeft}>{t('label.contentTypeProperties')}</Typography>
+                <Typography variant="subheading" className={styles.headerRight}>{t('label.uploadedFileFields')}</Typography>
+            </div>
             {properties.map(prop => (
                 <div key={prop.name} className={styles.mappingRow}>
                     <Typography variant="body" className={styles.propertyName}>{prop.name}</Typography>

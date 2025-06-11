@@ -20,6 +20,8 @@
     "fieldMapping": "Correspondance des champs",
     "previewTitle": "Aperçu du JSON généré",
     "downloadJson": "Télécharger le JSON",
-    "startImport": "Démarrer l'import"
+    "startImport": "Démarrer l'import",
+    "contentTypeProperties": "Propriétés du type de contenu",
+    "uploadedFileFields": "Champs du fichier importé"
   }
 }

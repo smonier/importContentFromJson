@@ -6,7 +6,6 @@ export const extractAndFormatContentTypeData = data => {
         return {
             label: item.displayName,
             value: item.name,
-
             iconStart: <ImgWrapper src={item.icon + '.png'}/>
         };
     });

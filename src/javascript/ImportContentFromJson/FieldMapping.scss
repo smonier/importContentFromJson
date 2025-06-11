@@ -7,16 +7,39 @@
 
 .mappingRow {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* change to row */
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     margin-bottom: 8px;
+    width: 100%; /* optional, helps alignment */
 }
 
 .propertyName {
-    width: 200px;
+    flex: 1;
+    text-align: left;
 }
 
 .dropdown {
     flex: 1;
+    text-align: right;
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 4px;
+    width: 100%;
+    font-weight: bold;
+}
+
+.headerLeft {
+    flex: 1;
+    text-align: left;
+}
+
+.headerRight {
+    flex: 1;
+    text-align: right;
 }

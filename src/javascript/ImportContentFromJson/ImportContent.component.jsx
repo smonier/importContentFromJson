@@ -457,17 +457,17 @@ export default () => {
 
             <Header
                 title={t('label.header', {siteInfo: siteKey})}
-                // MainActions={[
-                //     <Button
-                //         key="importButton"
-                //         size="big"
-                //         id="importButton"
-                //         color="accent"
-                //         isDisabled={!selectedContentType || !uploadedFileContent}
-                //         label={t('label.importFromJson')}
-                //         onClick={handleImport}
-                //     />
-                // ]}
+                MainActions={[
+                    <Button
+                        key="importButton"
+                        size="big"
+                        id="importButton"
+                        color="accent"
+                        isDisabled={!selectedContentType || !uploadedFileContent}
+                        label={t('label.importFromJson')}
+                        onClick={handleImport}
+                    />
+                ]}
             />
             <div className={styles.container}>
                 <div className={styles.leftPanel}>

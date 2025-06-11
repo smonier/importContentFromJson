@@ -45,10 +45,12 @@ export const FetchContentForCSVQuery = gql`
     ) {
         jcr(workspace: $workspace) {
             result: nodeByPath(path: $path) {
+                name
                 value: uuid
                 label: displayName(language: $language)
                 descendants(typesFilter: {types: [$type]}) {
                     nodes {
+                        name
                         value: uuid
                         label: displayName(language: $language)
                         properties(names: $properties, language: $language) {

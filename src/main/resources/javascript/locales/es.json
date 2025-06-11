@@ -20,6 +20,8 @@
     "fieldMapping": "Mapeo de campos",
     "previewTitle": "Vista previa del JSON generado",
     "downloadJson": "Descargar JSON",
-    "startImport": "Iniciar importación"
+    "startImport": "Iniciar importación",
+    "contentTypeProperties": "Propiedades del tipo de contenido",
+    "uploadedFileFields": "Campos del archivo cargado"
   }
 }

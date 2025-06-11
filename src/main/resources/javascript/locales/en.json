@@ -20,6 +20,8 @@
     "fieldMapping": "Field Mapping",
     "previewTitle": "Mapped JSON Preview",
     "downloadJson": "Download JSON",
-    "startImport": "Start Import"
+    "startImport": "Start Import",
+    "contentTypeProperties": "Content Type Properties",
+    "uploadedFileFields": "Uploaded File Fields"
   }
 }
