@@ -17,7 +17,7 @@ import {
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
-import {Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
+import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab} from '@mui/material';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
@@ -36,6 +36,10 @@ export default () => {
     const [uploadedFileContent, setUploadedFileContent] = useState(null); // Full JSON content
     const [fileFields, setFileFields] = useState([]);
     const [fieldMappings, setFieldMappings] = useState({});
+    const [activeTab, setActiveTab] = useState(0);
+    const [generatedFileName, setGeneratedFileName] = useState('');
+    const [generatedFileContent, setGeneratedFileContent] = useState(null);
+    const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [contentTypeError, setContentTypeError] = useState(null);
@@ -222,6 +226,48 @@ export default () => {
         };
 
         reader.readAsText(file); // Read the content of the new file
+    };
+
+    const handleGeneratedFileUpload = file => {
+        setGeneratedFileName('');
+        setGeneratedFileContent(null);
+        setGeneratedFileError('');
+
+        if (!file) {
+            return;
+        }
+
+        const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
+        if (!isJson) {
+            alert(t('label.invalidFile'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = event => {
+            try {
+                const jsonData = JSON.parse(event.target.result);
+                const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
+                const fileProps = Object.keys(firstItem || {});
+                const allowed = properties.map(p => p.name);
+                const invalid = fileProps.filter(p => !allowed.includes(p) && p !== 'j:tagList' && p !== 'j:defaultCategory');
+
+                if (invalid.length > 0) {
+                    setGeneratedFileError(t('label.invalidGeneratedFile'));
+                } else {
+                    setGeneratedFileName(file.name);
+                    setGeneratedFileContent(jsonData);
+                }
+            } catch (e) {
+                alert('Invalid file.');
+            }
+        };
+
+        reader.readAsText(file);
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setActiveTab(newValue);
     };
 
     const generatePreviewData = () => {
@@ -498,6 +544,14 @@ export default () => {
         URL.revokeObjectURL(url);
     };
 
+    const importGeneratedFile = () => {
+        if (!generatedFileContent) {
+            return;
+        }
+        setJsonPreview(generatedFileContent);
+        startImport();
+    };
+
     return (
         <>
 
@@ -518,9 +572,13 @@ export default () => {
                         size="big"
                         id="importButton"
                         color="accent"
-                        isDisabled={!selectedContentType || !uploadedFileContent}
+                        isDisabled={
+                            activeTab === 0
+                                ? (!selectedContentType || !uploadedFileContent)
+                                : (!selectedContentType || !generatedFileContent || generatedFileError)
+                        }
                         label={t('label.importFromJson')}
-                        onClick={handleImport}
+                        onClick={activeTab === 0 ? handleImport : importGeneratedFile}
                     />
                 ]}
             />
@@ -581,28 +639,59 @@ export default () => {
                 </div>
 
                 <div className={styles.rightPanel}>
-                    <Typography variant="heading" className={styles.heading}>
-                        {t('label.uploadFile')}
-                    </Typography>
-                    <div className={styles.fileUpload}>
-                        <input
-                            type="file"
-                            id="fileUpload"
-                            className={styles.fileInput}
-                            onChange={e => handleFileUpload(e.target.files[0])}
-                        />
-                        <label htmlFor="fileUpload" className={styles.fileLabel}>
-                            {uploadedFileName || t('label.chooseFile')}
-                        </label>
-                    </div>
-                    {properties.length > 0 && fileFields.length > 0 && (
-                        <FieldMapping
-                            properties={properties}
-                            fileFields={fileFields}
-                            fieldMappings={fieldMappings}
-                            setFieldMappings={setFieldMappings}
-                            t={t}
-                        />
+                    <Tabs value={activeTab} onChange={handleTabChange} className={styles.tabs}>
+                        <Tab label={t('label.manualMapping')} />
+                        <Tab label={t('label.reImportGeneratedFile')} />
+                    </Tabs>
+                    {activeTab === 0 && (
+                        <div className={styles.tabContent}>
+                            <Typography variant="heading" className={styles.heading}>
+                                {t('label.uploadFile')}
+                            </Typography>
+                            <div className={styles.fileUpload}>
+                                <input
+                                    type="file"
+                                    id="fileUpload"
+                                    className={styles.fileInput}
+                                    onChange={e => handleFileUpload(e.target.files[0])}
+                                />
+                                <label htmlFor="fileUpload" className={styles.fileLabel}>
+                                    {uploadedFileName || t('label.chooseFile')}
+                                </label>
+                            </div>
+                            {properties.length > 0 && fileFields.length > 0 && (
+                                <FieldMapping
+                                    properties={properties}
+                                    fileFields={fileFields}
+                                    fieldMappings={fieldMappings}
+                                    setFieldMappings={setFieldMappings}
+                                    t={t}
+                                />
+                            )}
+                        </div>
+                    )}
+                    {activeTab === 1 && (
+                        <div className={styles.tabContent}>
+                            <Typography variant="heading" className={styles.heading}>
+                                {t('label.uploadGeneratedFile')}
+                            </Typography>
+                            <div className={styles.fileUpload}>
+                                <input
+                                    type="file"
+                                    id="generatedUpload"
+                                    className={styles.fileInput}
+                                    onChange={e => handleGeneratedFileUpload(e.target.files[0])}
+                                />
+                                <label htmlFor="generatedUpload" className={styles.fileLabel}>
+                                    {generatedFileName || t('label.chooseFile')}
+                                </label>
+                            </div>
+                            {generatedFileError && (
+                                <Typography variant="body" className={styles.errorMessage}>
+                                    {generatedFileError}
+                                </Typography>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
