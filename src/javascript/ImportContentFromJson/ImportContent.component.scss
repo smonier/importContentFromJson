@@ -43,7 +43,7 @@ $font-family: 'Roboto', sans-serif;
 .rightPanel {
     flex: 2;
     padding: 16px;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
