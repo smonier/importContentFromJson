@@ -3,10 +3,14 @@ import {ImgWrapper} from '@jahia/moonstone';
 
 export const extractAndFormatContentTypeData = data => {
     const contentTypeSelectData = data.jcr.nodeTypes.nodes.map(item => {
+        if (!item.icon) {
+            console.warn(`Icon is missing for content type ${item.name}`);
+        }
+
         return {
             label: item.displayName,
             value: item.name,
-            iconStart: <ImgWrapper src={item.icon + '.png'}/>
+            iconStart: item.icon ? <ImgWrapper src={item.icon + '.png'}/> : null
         };
     });
 
