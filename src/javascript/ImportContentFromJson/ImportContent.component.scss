@@ -246,6 +246,11 @@ $font-family: 'Roboto', sans-serif;
 .tabs {
     width: 100%;
     margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: $border-radius;
+    .MuiTabs-flexContainer {
+        width: 100%;
+    }
 }
 
 .tab {
@@ -253,10 +258,19 @@ $font-family: 'Roboto', sans-serif;
     min-width: 0;
     width: 50%;
     text-align: center;
+    text-transform: capitalize;
+    color: var(--color-accent);
+    border-right: 1px solid #e0e0e0;
+
+    &:last-child {
+        border-right: none;
+    }
 }
 
 .tab.Mui-selected {
     color: var(--color-accent) !important;
+    background-color: lighten($accent-color, 40%);
+    border-radius: $border-radius;
 }
 
 .tabContent {
