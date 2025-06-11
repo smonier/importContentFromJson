@@ -1,0 +1,18 @@
+.container {
+    margin-top: 16px;
+}
+
+.mappingRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.propertyName {
+    width: 200px;
+}
+
+.dropdown {
+    flex: 1;
+}

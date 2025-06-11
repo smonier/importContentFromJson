@@ -15,6 +15,7 @@
     "processingFile": "Processing JSON file...",
     "path": "Content Path",
     "enterPathSuffix": "Enter the content path",
-    "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501."
+    "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501.",
+    "fieldMapping": "Field Mapping"
   }
 }

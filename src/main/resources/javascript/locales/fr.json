@@ -15,6 +15,7 @@
     "processingFile": "Traitement du fichier JSON...",
     "path": "Chemin du contenu",
     "enterPathSuffix": "Entrez le suffixe du chemin de contenu",
-    "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501."
+    "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501.",
+    "fieldMapping": "Correspondance des champs"
   }
 }

@@ -20,6 +20,7 @@ import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
+import FieldMapping from './FieldMapping.jsx';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils';
 
@@ -33,6 +34,8 @@ export default () => {
     const [uploadedFileName, setUploadedFileName] = useState('');
     const [uploadedFileSample, setUploadedFileSample] = useState(null); // JSON sample
     const [uploadedFileContent, setUploadedFileContent] = useState(null); // Full JSON content
+    const [fileFields, setFileFields] = useState([]);
+    const [fieldMappings, setFieldMappings] = useState({});
     const siteKey = window.contextJsParameters.siteKey;
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
@@ -86,6 +89,20 @@ export default () => {
             setProperties(propertiesData.jcr.nodeTypes.nodes[0].properties);
         }
     }, [propertiesData]);
+
+    useEffect(() => {
+        if (properties.length > 0 && fileFields.length > 0) {
+            setFieldMappings(prev => {
+                const mapping = {...prev};
+                properties.forEach(prop => {
+                    if (fileFields.includes(prop.name) && !mapping[prop.name]) {
+                        mapping[prop.name] = prop.name;
+                    }
+                });
+                return mapping;
+            });
+        }
+    }, [properties, fileFields]);
 
     let categoryCache = new Map(); // Store categories as { name: uuid }
 
@@ -154,16 +171,18 @@ export default () => {
                     const rows = result.data;
                     setUploadedFileContent(rows);
                     setUploadedFileSample(rows.slice(0, 5));
+                    setFileFields(Object.keys(rows[0] || {}));
                 } else {
                     const jsonData = JSON.parse(event.target.result);
                     setUploadedFileContent(jsonData); // Store full JSON content
 
-                    // Store the first 5 entries as a sample
                     const sample = Array.isArray(jsonData) ?
                         jsonData.slice(0, 5) :
                         Object.entries(jsonData).slice(0, 5);
 
                     setUploadedFileSample(sample); // Update the sample
+                    const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
+                    setFileFields(Object.keys(firstItem || {}));
                 }
             } catch (error) {
                 console.error('Error parsing file:', error);
@@ -226,7 +245,20 @@ export default () => {
 
             const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
 
-            for (const entry of uploadedFileContent) {
+            for (const rawEntry of uploadedFileContent) {
+                const entry = {};
+                Object.entries(fieldMappings).forEach(([propName, fileField]) => {
+                    if (rawEntry[fileField] !== undefined) {
+                        entry[propName] = rawEntry[fileField];
+                    }
+                });
+                if (rawEntry['j:tagList']) {
+                    entry['j:tagList'] = rawEntry['j:tagList'];
+                }
+                if (rawEntry['j:defaultCategory']) {
+                    entry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
+                }
+
                 const propertiesToSend = await Promise.all(
                     Object.keys(entry).map(async key => {
                         // Skip j:tagList if not defined in the content type
@@ -543,6 +575,15 @@ export default () => {
                                 {JSON.stringify(uploadedFileSample, null, 2)}
                             </pre>
                         </div>
+                    )}
+                    {properties.length > 0 && fileFields.length > 0 && (
+                        <FieldMapping
+                            properties={properties}
+                            fileFields={fileFields}
+                            fieldMappings={fieldMappings}
+                            setFieldMappings={setFieldMappings}
+                            t={t}
+                        />
                     )}
                 </div>
             </div>
