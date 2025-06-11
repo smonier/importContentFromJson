@@ -4,13 +4,13 @@
     <%@ taglib prefix="utility" uri="http://www.jahia.org/tags/utilityLib" %>
     <%@ taglib prefix="functions" uri="http://www.jahia.org/tags/functions"%>
 
-    <c:set var="unplashConfig" value="${functions:getConfigValues('org.jahia.se.modules.importContentFromJson')}"/>
+    <c:set var="unsplashConfig" value="${functions:getConfigValues('org.jahia.se.modules.importContentFromJson')}"/>
     <%--<utility:logger level="debug" value="keepeekConfig : ${keepeekConfig}"/>--%>
 
     <c:choose>
-    <c:when test="${! empty unplashConfig}">
-    window.contextJsParameters.config.unplashConfig={
-        accessKey:"${unplashConfig['unsplash.accessKey']}"
+    <c:when test="${! empty unsplashConfig}">
+    window.contextJsParameters.config.unsplashConfig={
+        accessKey:"${unsplashConfig['unsplash.accessKey']}"
     }
     console.debug("%c Unsplash config is added to contextJsParameters.config", 'color: #3c8cba');
     </c:when>
