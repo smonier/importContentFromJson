@@ -24,12 +24,14 @@ $font-family: 'Roboto', sans-serif;
 .container {
     display: flex;
     flex-direction: row;
-    height: calc(100vh - 200px); /* Adjust based on the header height */
+    /* Allow the container to grow naturally and scroll when content overflows */
+    min-height: calc(100vh - 200px);
     margin-top: 16px;
     margin: $spacing-unit * 2;
     padding: $spacing-unit * 4;
     border-radius: $border-radius;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
 }
 
 .leftPanel {
