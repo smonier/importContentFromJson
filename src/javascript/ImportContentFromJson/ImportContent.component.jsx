@@ -187,6 +187,8 @@ export default () => {
             return;
         }
 
+        console.log('File uploaded', file.name);
+
         const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
         const isCsv = file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.toLowerCase().endsWith('.csv');
 
@@ -237,6 +239,8 @@ export default () => {
             return;
         }
 
+        console.log('Generated file uploaded', file.name);
+
         const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
         if (!isJson) {
             alert(t('label.invalidFile'));
@@ -254,9 +258,11 @@ export default () => {
 
                 if (invalid.length > 0) {
                     setGeneratedFileError(t('label.invalidGeneratedFile'));
+                    console.log('Generated JSON validation failed', invalid);
                 } else {
                     setGeneratedFileName(file.name);
                     setGeneratedFileContent(jsonData);
+                    console.log('Generated JSON validation succeeded');
                 }
             } catch (e) {
                 alert('Invalid file.');
@@ -318,6 +324,7 @@ export default () => {
     };
 
     const handleImport = () => {
+        console.log('Import button clicked - manual mapping');
         if (!uploadedFileContent || !selectedContentType) {
             // eslint-disable-next-line no-alert
             alert('Please upload a valid JSON file and select a content type.');
@@ -330,6 +337,7 @@ export default () => {
     };
 
     const startImport = async () => {
+        console.log('Starting import');
         setIsLoading(true);
         const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
         const fullFilePath = pathSuffix ? `${baseFilePath}/${pathSuffix.trim()}` : baseFilePath;
@@ -531,6 +539,7 @@ export default () => {
     };
 
     const handleDownloadJson = () => {
+        console.log('Download button clicked');
         if (!jsonPreview) {
             return;
         }
@@ -545,6 +554,7 @@ export default () => {
     };
 
     const importGeneratedFile = () => {
+        console.log('Import button clicked - re-import');
         if (!generatedFileContent) {
             return;
         }
@@ -690,6 +700,9 @@ export default () => {
                                 <Typography variant="body" className={styles.errorMessage}>
                                     {generatedFileError}
                                 </Typography>
+                            )}
+                            {generatedFileContent && (
+                                <pre className={styles.previewContent}>{JSON.stringify(generatedFileContent, null, 2)}</pre>
                             )}
                         </div>
                     )}

@@ -8,6 +8,7 @@ export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMap
         ...fileFields.map(field => ({label: field, value: field}))];
 
     const handleChange = (propertyName, value) => {
+        console.log('Field mapping changed', propertyName, '->', value);
         setFieldMappings(prev => {
             const updated = {...prev};
             if (!value) {
