@@ -129,7 +129,7 @@ Multiple values declared for Category property (the category system name needs t
        [
          {
             ...,
-            "j:dafaultCategory": [
+            "j:defaultCategory": [
                "cat001",
                "cat002",
                "cat003"
