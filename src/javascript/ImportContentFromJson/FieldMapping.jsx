@@ -4,13 +4,19 @@ import {Dropdown, Typography} from '@jahia/moonstone';
 import styles from './FieldMapping.scss';
 
 export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMappings, t}) => {
-    const dropdownData = fileFields.map(field => ({label: field, value: field}));
+    const dropdownData = [{label: t('label.none'), value: ''},
+        ...fileFields.map(field => ({label: field, value: field}))];
 
     const handleChange = (propertyName, value) => {
-        setFieldMappings(prev => ({
-            ...prev,
-            [propertyName]: value
-        }));
+        setFieldMappings(prev => {
+            const updated = {...prev};
+            if (!value) {
+                delete updated[propertyName];
+            } else {
+                updated[propertyName] = value;
+            }
+            return updated;
+        });
     };
 
     return (
