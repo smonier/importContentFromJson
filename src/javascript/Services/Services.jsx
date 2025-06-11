@@ -193,7 +193,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
  * @param {string} key - The property key being processed.
  * @returns {Array} - Array of processed values.
  */
-export const handleMultipleValues = async (value, key) => {
+export const handleMultipleValues = (value, key) => {
     if (!Array.isArray(value)) {
         console.warn(`Invalid format for multiple values on key ${key}.`, value);
         return null;
@@ -221,7 +221,7 @@ export const handleMultipleValues = async (value, key) => {
 };
 
 export const getUnsplashClient = () => {
-    const accessKey = window?.contextJsParameters?.config?.unplashConfig?.accessKey;
+    const accessKey = window?.contextJsParameters?.config?.unsplashConfig?.accessKey;
     if (!accessKey) {
         console.error('Unsplash accessKey is missing or undefined.');
         return null;
