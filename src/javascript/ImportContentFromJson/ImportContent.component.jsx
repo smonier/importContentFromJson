@@ -509,6 +509,7 @@ export default () => {
                 </div>
             )}
 
+        <div className={styles.layout}>
             <Header
                 title={t('label.header', {siteInfo: siteKey})}
                 mainActions={[
@@ -605,8 +606,9 @@ export default () => {
                     )}
                 </div>
             </div>
-            <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
-                <DialogTitle>{t('label.previewTitle')}</DialogTitle>
+        </div>
+        <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
+            <DialogTitle>{t('label.previewTitle')}</DialogTitle>
                 <DialogContent dividers>
                     <pre className={styles.previewContent}>{JSON.stringify(jsonPreview, null, 2)}</pre>
                 </DialogContent>
