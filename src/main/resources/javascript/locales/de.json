@@ -15,6 +15,7 @@
     "processingFile": "JSON-Datei wird verarbeitet...",
     "path": "Inhaltspfad",
     "enterPathSuffix": "Geben Sie das Inhaltspfad-Suffix ein",
-    "enterPathSuffixHelp": "Rekursive Verzeichnisse sind erlaubt, zum Beispiel /news/202501."
+    "enterPathSuffixHelp": "Rekursive Verzeichnisse sind erlaubt, zum Beispiel /news/202501.",
+    "fieldMapping": "Feldzuordnung"
   }
 }
