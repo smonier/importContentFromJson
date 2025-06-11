@@ -24,7 +24,7 @@
     "contentTypeProperties": "Propriétés du type de contenu",
     "uploadedFileFields": "Champs du fichier importé",
     "manualMapping": "Correspondance manuelle",
-    "reImportGeneratedFile": "Réimporter le fichier généré",
+    "reImportGeneratedFile": "Réimporter un fichier JSON généré",
     "uploadGeneratedFile": "Téléverser un fichier JSON généré",
     "invalidGeneratedFile": "Le fichier importé ne correspond pas au type de contenu sélectionné."
     ,"loadContentTypesError": "Échec du chargement des types de contenu.",
