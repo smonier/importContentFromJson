@@ -47,12 +47,16 @@ const fetchUnsplashImages = async (query, perPage = 10) => {
 };
 
 export const handleMultipleImages = async (value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix) => {
+    if (typeof value === 'string') {
+        value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+    }
+
     if (!Array.isArray(value)) {
         console.warn(`Invalid format for multiple images on key ${key}.`);
         return null;
     }
 
-    let imageList = value;
+    let imageList = value.map(item => (typeof item === 'string' ? {url: item} : item));
     // If (value.length === 1 && value[0].url === 'unsplash') {
     //     imageList = await fetchUnsplashImages(propertyDefinition.query, 2);
     // }
@@ -126,7 +130,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
 
 export const handleSingleImage = async (value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix) => {
     try {
-        let url = value.url?.trim();
+        let url = typeof value === 'string' ? value.trim() : value.url?.trim();
         if (url === 'unsplash') {
             const unsplashImages = await fetchUnsplashImages(value.query, 1);
             if (unsplashImages.length > 0) {
