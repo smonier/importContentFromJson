@@ -171,7 +171,7 @@ export default () => {
                     const rows = result.data;
                     setUploadedFileContent(rows);
                     setUploadedFileSample(rows.slice(0, 5));
-                    setFileFields(Object.keys(rows[0] || {}));
+                    setFileFields(result.meta?.fields || Object.keys(rows[0] || {}));
                 } else {
                     const jsonData = JSON.parse(event.target.result);
                     setUploadedFileContent(jsonData); // Store full JSON content
@@ -246,21 +246,23 @@ export default () => {
             const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
 
             for (const rawEntry of uploadedFileContent) {
-                const entry = {};
+                const mappedEntry = {};
                 Object.entries(fieldMappings).forEach(([propName, fileField]) => {
                     if (rawEntry[fileField] !== undefined) {
-                        entry[propName] = rawEntry[fileField];
+                        mappedEntry[propName] = rawEntry[fileField];
                     }
                 });
+
                 if (rawEntry['j:tagList']) {
-                    entry['j:tagList'] = rawEntry['j:tagList'];
+                    mappedEntry['j:tagList'] = rawEntry['j:tagList'];
                 }
+
                 if (rawEntry['j:defaultCategory']) {
-                    entry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
+                    mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
                 }
 
                 const propertiesToSend = await Promise.all(
-                    Object.keys(entry).map(async key => {
+                    Object.keys(mappedEntry).map(async key => {
                         // Skip j:tagList if not defined in the content type
                         if (key === 'j:tagList' || key === 'j:defaultCategory') {
                             console.info('Skipping j:tagList or j:defaultCategory property as it is not part of the content type definition.');
@@ -276,7 +278,7 @@ export default () => {
                             return null;
                         }
 
-                        let value = entry[key];
+                        let value = mappedEntry[key];
                         // Handle tags (j:tagList)
                         if (key === 'j:tagList' && Array.isArray(value)) {
                             return null; // Skip tags for now; we'll handle them after creating the content.
@@ -335,10 +337,10 @@ export default () => {
                     })
                 ).then(results => results.filter(Boolean)); // Filter out invalid properties
 
-                const contentName = entry['jcr:title'] ?
-                    entry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
-                    entry.name ?
-                        entry.name.replace(/\s+/g, '_').toLowerCase() :
+                const contentName = mappedEntry['jcr:title'] ?
+                    mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
+                    mappedEntry.name ?
+                        mappedEntry.name.replace(/\s+/g, '_').toLowerCase() :
                         `content_${new Date().getTime()}`;
 
                 let contentUuid = null;
@@ -379,12 +381,12 @@ export default () => {
                 }
 
                 // Add tags if available
-                if (contentUuid && entry['j:tagList']) {
+                if (contentUuid && mappedEntry['j:tagList']) {
                     try {
                         await addTags({
                             variables: {
                                 path: contentUuid,
-                                tags: entry['j:tagList']
+                                tags: mappedEntry['j:tagList']
                             }
                         });
                         console.log(`Tags added to ${fullContentPath}/${contentName}`);
@@ -399,13 +401,13 @@ export default () => {
                 }
 
                 // Add Categories if avalaible
-                if (contentUuid && entry['j:defaultCategory']) {
+                if (contentUuid && mappedEntry['j:defaultCategory']) {
                     try {
                         await fetchCategoriesOnce(); // Ensure categories are loaded once
 
                         let defaultCategoryUuids = [];
-                        if (Array.isArray(entry['j:defaultCategory'])) {
-                            for (let categoryName of entry['j:defaultCategory']) {
+                        if (Array.isArray(mappedEntry['j:defaultCategory'])) {
+                            for (let categoryName of mappedEntry['j:defaultCategory']) {
                                 // Normalize categoryName: lowercase + replace spaces with dashes
                                 categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
 
