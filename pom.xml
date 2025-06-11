@@ -54,7 +54,7 @@
     <groupId>org.jahia.se.modules</groupId>
     <artifactId>importContentFromJson</artifactId>
     <name>Import Content into JCR from JSON file</name>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>This is the custom module (Import Content into JCR from JSON file) for running on a Jahia server.</description>
 

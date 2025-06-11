@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import Papa from 'papaparse';
+import Papa from 'papaparse/papaparse.min.js';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {
     GetContentTypeQuery,
