@@ -16,7 +16,7 @@ import {
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
-import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
+import {Button, Header, Dropdown, Typography, Input, Search} from '@jahia/moonstone';
 import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab} from '@mui/material';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
@@ -42,6 +42,7 @@ export default () => {
     const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
     const [contentTypeError, setContentTypeError] = useState(null);
     const [propertiesError, setPropertiesError] = useState(null);
     const siteKey = window.contextJsParameters.siteKey;
@@ -680,6 +681,13 @@ export default () => {
                                 <label htmlFor="fileUpload" className={styles.fileLabel}>
                                     {uploadedFileName || t('label.chooseFile')}
                                 </label>
+                                {uploadedFileContent && (
+                                    <Button
+                                        icon={<Search/>}
+                                        aria-label={t('label.viewFile')}
+                                        onClick={() => setIsFilePreviewOpen(true)}
+                                    />
+                                )}
                             </div>
                             {properties.length > 0 && fileFields.length > 0 && (
                                 <FieldMapping
@@ -721,6 +729,15 @@ export default () => {
                     </div>
                 </div>
             </div>
+            <Dialog fullWidth open={isFilePreviewOpen} maxWidth="md" onClose={() => setIsFilePreviewOpen(false)}>
+                <DialogTitle>{t('label.filePreviewTitle')}</DialogTitle>
+                <DialogContent dividers>
+                    <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
+                </DialogContent>
+                <DialogActions>
+                    <Button label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
+                </DialogActions>
+            </Dialog>
             <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
                 <DialogTitle>{t('label.previewTitle')}</DialogTitle>
                 <DialogContent dividers>
