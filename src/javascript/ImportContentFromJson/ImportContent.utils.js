@@ -1,0 +1,94 @@
+/**
+ * Utility helpers for ImportContent component.
+ * Functions here are logic only and contain no React code.
+ */
+
+/**
+ * Ensure that a repository path exists by creating any missing segments.
+ * @param {string} fullPath The full path to check or create.
+ * @param {string} nodeType The JCR node type for intermediate folders.
+ * @param {Function} checkPath GraphQL lazy query function to check if a path exists.
+ * @param {Function} createPath GraphQL mutation to create a folder.
+ */
+export const ensurePathExists = async (fullPath, nodeType, checkPath, createPath) => {
+    const pathSegments = fullPath.split('/').filter(segment => segment.length > 0);
+    let currentPath = '';
+
+    for (const segment of pathSegments) {
+        currentPath += `/${segment}`;
+        // eslint-disable-next-line no-await-in-loop
+        const {data: pathCheckData} = await checkPath({variables: {path: currentPath}});
+        if (!pathCheckData?.jcr?.nodeByPath) {
+            const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/';
+            const name = segment;
+            // eslint-disable-next-line no-await-in-loop
+            await createPath({variables: {path: parentPath, name, nodeType}});
+        }
+    }
+};
+
+/**
+ * Recursively flatten a category tree into a Map for fast lookup.
+ * @param {Array} nodes Category nodes to flatten.
+ * @param {Map} cache Map instance used to store name => uuid pairs.
+ */
+export const flattenCategoryTree = (nodes, cache) => {
+    for (const node of nodes) {
+        cache.set(node.name, node.uuid);
+        if (node.children?.nodes.length > 0) {
+            flattenCategoryTree(node.children.nodes, cache);
+        }
+    }
+};
+
+/**
+ * Build preview data according to field mappings and available properties.
+ * @param {Array|Object} uploadedFileContent Parsed JSON or CSV rows.
+ * @param {Object} fieldMappings Mapping between JCR properties and file fields.
+ * @param {Array} properties Definitions of the selected content type properties.
+ * @returns {Array} Array of mapped entries ready for import.
+ */
+export const generatePreviewData = (uploadedFileContent, fieldMappings, properties) => {
+    if (!uploadedFileContent) {
+        return [];
+    }
+
+    return uploadedFileContent.map(rawEntry => {
+        const mappedEntry = {};
+        Object.entries(fieldMappings).forEach(([propName, fileField]) => {
+            if (rawEntry[fileField] === undefined) {
+                return;
+            }
+
+            let value = rawEntry[fileField];
+            const propertyDefinition = properties.find(prop => prop.name === propName);
+            const isImage = propertyDefinition?.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
+            const isMultiple = propertyDefinition?.multiple;
+
+            if (isImage) {
+                if (isMultiple) {
+                    if (typeof value === 'string') {
+                        value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                    }
+                    if (Array.isArray(value)) {
+                        value = value.map(v => (typeof v === 'string' ? {url: v} : v));
+                    }
+                } else if (typeof value === 'string') {
+                    value = {url: value};
+                }
+            }
+
+            mappedEntry[propName] = value;
+        });
+
+        if (rawEntry['j:tagList']) {
+            mappedEntry['j:tagList'] = rawEntry['j:tagList'];
+        }
+
+        if (rawEntry['j:defaultCategory']) {
+            mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
+        }
+
+        return mappedEntry;
+    });
+};
