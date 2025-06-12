@@ -17,7 +17,7 @@
     "path": "Chemin du contenu",
     "enterPathSuffix": "Entrez le suffixe du chemin de contenu",
     "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501.",
-    "selectLanguage": "Sélectionnez la langue du site",
+    "selectLanguage": "Sélectionnez la langue de destination pour l'import",
     "fieldMapping": "Correspondance des champs",
     "previewTitle": "Aperçu du JSON généré",
     "filePreviewTitle": "Contenu du fichier téléchargé",
