@@ -28,7 +28,7 @@ import FileUploader from './FileUploader.jsx';
 import PropertiesList from './PropertiesList.jsx';
 import ImportPreviewDialog from './ImportPreviewDialog.jsx';
 import {useTranslation} from 'react-i18next';
-import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils';
+import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils.jsx';
 import {
     ensurePathExists,
     flattenCategoryTree,
@@ -312,7 +312,6 @@ export default () => {
         setActiveTab(newValue);
     };
 
-
     const handleImport = () => {
         console.log('Import button clicked - manual mapping');
         if (!uploadedFileContent || !selectedContentType) {
@@ -587,9 +586,9 @@ export default () => {
                         <LanguageSelector
                             languages={siteLanguages}
                             selectedLanguage={selectedLanguage}
-                            onChange={setSelectedLanguage}
                             error={languageError}
                             t={t}
+                            onChange={setSelectedLanguage}
                         />
                         <Typography variant="heading" className={styles.heading}>
                             {t('label.selectContentType')}
@@ -635,10 +634,10 @@ export default () => {
                             <FileUploader
                                 id="fileUpload"
                                 fileName={uploadedFileName}
-                                onChange={handleFileUpload}
                                 showPreview={Boolean(uploadedFileContent)}
-                                onPreview={() => setIsFilePreviewOpen(true)}
                                 t={t}
+                                onChange={handleFileUpload}
+                                onPreview={() => setIsFilePreviewOpen(true)}
                             />
                             {properties.length > 0 && fileFields.length > 0 && (
                                 <FieldMapping
@@ -659,8 +658,8 @@ export default () => {
                             <FileUploader
                                 id="generatedUpload"
                                 fileName={generatedFileName}
-                                onChange={handleGeneratedFileUpload}
                                 t={t}
+                                onChange={handleGeneratedFileUpload}
                             />
                             {generatedFileError && (
                                 <Typography variant="body" className={styles.errorMessage}>
@@ -686,11 +685,11 @@ export default () => {
             </Dialog>
             <ImportPreviewDialog
                 open={isPreviewOpen}
-                onClose={() => setIsPreviewOpen(false)}
                 previewData={jsonPreview}
+                t={t}
+                onClose={() => setIsPreviewOpen(false)}
                 onDownload={handleDownloadJson}
                 onStart={startImport}
-                t={t}
             />
         </>
     );
