@@ -17,45 +17,63 @@ import {
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
-import {Button, Header, Dropdown, Typography, Input, Search} from '@jahia/moonstone';
+import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab} from '@mui/material';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
 import FieldMapping from './FieldMapping.jsx';
+import LanguageSelector from './LanguageSelector.jsx';
+import FileUploader from './FileUploader.jsx';
+import PropertiesList from './PropertiesList.jsx';
+import ImportPreviewDialog from './ImportPreviewDialog.jsx';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils';
+import {
+    ensurePathExists,
+    flattenCategoryTree,
+    generatePreviewData
+} from '~/ImportContentFromJson/ImportContent.utils.js';
 
 export default () => {
     const {t} = useTranslation('importContentFromJson');
-    const [isLoading, setIsLoading] = useState(false); // Loading state
+
+    // --- UI state ------------------------------------------------------------
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState(0);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
+
+    // --- Content type & properties -----------------------------------------
     const [selectedContentType, setSelectedContentType] = useState(null);
     const [selectedProperties, setSelectedProperties] = useState([]);
     const [contentTypes, setContentTypes] = useState([]);
     const [properties, setProperties] = useState([]);
+    const [contentTypeError, setContentTypeError] = useState(null);
+    const [propertiesError, setPropertiesError] = useState(null);
+
+    // --- File handling ------------------------------------------------------
     const [uploadedFileName, setUploadedFileName] = useState('');
-    const [uploadedFileContent, setUploadedFileContent] = useState(null); // Full JSON content
+    const [uploadedFileContent, setUploadedFileContent] = useState(null);
     const [fileFields, setFileFields] = useState([]);
     const [fieldMappings, setFieldMappings] = useState({});
-    const [activeTab, setActiveTab] = useState(0);
     const [generatedFileName, setGeneratedFileName] = useState('');
     const [generatedFileContent, setGeneratedFileContent] = useState(null);
     const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
-    const [contentTypeError, setContentTypeError] = useState(null);
-    const [propertiesError, setPropertiesError] = useState(null);
+
+    // --- Path & categories --------------------------------------------------
     const siteKey = window.contextJsParameters.siteKey;
-    const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
+    const baseContentPath = `/sites/${siteKey}/contents`;
+    const baseFilePath = `/sites/${siteKey}/files`;
+    const [pathSuffix, setPathSuffix] = useState('');
     const [categoryTree, setCategoryTree] = useState(null);
 
+    // --- Languages ----------------------------------------------------------
     const initialLanguage = window.contextJsParameters.uilang;
     const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage);
     const [siteLanguages, setSiteLanguages] = useState([]);
     const [languageError, setLanguageError] = useState(null);
-    const baseContentPath = `/sites/${siteKey}/contents`; // Fixed base path
-    const baseFilePath = `/sites/${siteKey}/files`;
 
     // GraphQL Queries and Mutations
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
@@ -176,7 +194,7 @@ export default () => {
     const fetchCategoriesOnce = async () => {
         if (categoryCache.current.size > 0) {
             return;
-        } // Already fetched
+        }
 
         try {
             const {data} = await checkIfCategoryExists();
@@ -186,16 +204,6 @@ export default () => {
             }
         } catch (error) {
             console.error('GraphQL Category Fetch Error:', error);
-        }
-    };
-
-    // Recursive function to flatten category tree into a Map for fast lookup
-    const flattenCategoryTree = (nodes, cache) => {
-        for (const node of nodes) {
-            cache.set(node.name, node.uuid);
-            if (node.children?.nodes.length > 0) {
-                flattenCategoryTree(node.children.nodes, cache);
-            }
         }
     };
 
@@ -304,51 +312,6 @@ export default () => {
         setActiveTab(newValue);
     };
 
-    const generatePreviewData = () => {
-        if (!uploadedFileContent) {
-            return [];
-        }
-
-        return uploadedFileContent.map(rawEntry => {
-            const mappedEntry = {};
-            Object.entries(fieldMappings).forEach(([propName, fileField]) => {
-                if (rawEntry[fileField] === undefined) {
-                    return;
-                }
-
-                let value = rawEntry[fileField];
-                const propertyDefinition = properties.find(prop => prop.name === propName);
-                const isImage = propertyDefinition?.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
-                const isMultiple = propertyDefinition?.multiple;
-
-                if (isImage) {
-                    if (isMultiple) {
-                        if (typeof value === 'string') {
-                            value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
-                        }
-
-                        if (Array.isArray(value)) {
-                            value = value.map(v => (typeof v === 'string' ? {url: v} : v));
-                        }
-                    } else if (typeof value === 'string') {
-                        value = {url: value};
-                    }
-                }
-
-                mappedEntry[propName] = value;
-            });
-
-            if (rawEntry['j:tagList']) {
-                mappedEntry['j:tagList'] = rawEntry['j:tagList'];
-            }
-
-            if (rawEntry['j:defaultCategory']) {
-                mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
-            }
-
-            return mappedEntry;
-        });
-    };
 
     const handleImport = () => {
         console.log('Import button clicked - manual mapping');
@@ -358,7 +321,7 @@ export default () => {
             return;
         }
 
-        const preview = generatePreviewData();
+        const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties);
         setJsonPreview(preview);
         setIsPreviewOpen(true);
     };
@@ -373,25 +336,8 @@ export default () => {
         let successCount = 0;
 
         try {
-            const ensurePathExists = async (fullPath, nodeType) => {
-                const pathSegments = fullPath.split('/').filter(segment => segment.length > 0);
-                let currentPath = '';
-
-                for (const segment of pathSegments) {
-                    currentPath += `/${segment}`;
-                    // eslint-disable-next-line no-await-in-loop
-                    const {data: pathCheckData} = await checkPath({variables: {path: currentPath}});
-                    if (!pathCheckData?.jcr?.nodeByPath) {
-                        const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/';
-                        const name = segment;
-                        // eslint-disable-next-line no-await-in-loop
-                        await createPath({variables: {path: parentPath, name, nodeType}});
-                    }
-                }
-            };
-
-            await ensurePathExists(fullContentPath, 'jnt:contentFolder');
-            await ensurePathExists(fullFilePath, 'jnt:folder');
+            await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
+            await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
 
             if (!jsonPreview || !selectedContentType) {
                 // eslint-disable-next-line no-alert
@@ -638,21 +584,13 @@ export default () => {
                         </div>
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
                         </Typography>
-                        <Typography variant="heading" className={styles.heading}>
-                            {t('label.selectLanguage')}
-                        </Typography>
-                        <Dropdown
-                        data={siteLanguages}
-                        value={selectedLanguage}
-                        className={styles.customDropdown}
-                        placeholder={t('label.selectPlaceholder')}
-                        onChange={(e, item) => { setSelectedLanguage(item.value); console.log('Selected language:', item.value); }}
-                    />
-                        {languageError && (
-                        <Typography variant="body" className={styles.errorMessage}>
-                            {t('label.loadContentTypesError')}
-                        </Typography>
-                    )}
+                        <LanguageSelector
+                            languages={siteLanguages}
+                            selectedLanguage={selectedLanguage}
+                            onChange={setSelectedLanguage}
+                            error={languageError}
+                            t={t}
+                        />
                         <Typography variant="heading" className={styles.heading}>
                             {t('label.selectContentType')}
                         </Typography>
@@ -670,25 +608,7 @@ export default () => {
                             {t('label.loadContentTypesError')}
                         </Typography>
                     )}
-                        <div className={styles.propertiesInfo}>
-                            <Typography variant="heading" className={styles.heading}>
-                                {t('label.properties')}
-                            </Typography>
-                            <div className={styles.propertiesList}>
-                                {properties.map(property => (
-                                    <div key={property.name} className={styles.propertyItem}>
-                                        <Typography variant="body" className={styles.propertyText}>
-                                            {property.displayName} - ({property.name} - {property.requiredType}{property.multiple ? '[]' : ''})
-                                        </Typography>
-                                    </div>
-                            ))}
-                            </div>
-                            {propertiesError && (
-                            <Typography variant="body" className={styles.errorMessage}>
-                                {t('label.loadPropertiesError')}
-                            </Typography>
-                        )}
-                        </div>
+                        <PropertiesList properties={properties} error={propertiesError} t={t}/>
                     </div>
 
                     <div className={styles.rightPanel}>
@@ -712,24 +632,14 @@ export default () => {
                             <Typography variant="heading" className={styles.heading}>
                                 {t('label.uploadFile')}
                             </Typography>
-                            <div className={styles.fileUpload}>
-                                <input
-                                    type="file"
-                                    id="fileUpload"
-                                    className={styles.fileInput}
-                                    onChange={e => handleFileUpload(e.target.files[0])}
-                                />
-                                <label htmlFor="fileUpload" className={styles.fileLabel}>
-                                    {uploadedFileName || t('label.chooseFile')}
-                                </label>
-                                {uploadedFileContent && (
-                                    <Button
-                                        icon={<Search/>}
-                                        aria-label={t('label.viewFile')}
-                                        onClick={() => setIsFilePreviewOpen(true)}
-                                    />
-                                )}
-                            </div>
+                            <FileUploader
+                                id="fileUpload"
+                                fileName={uploadedFileName}
+                                onChange={handleFileUpload}
+                                showPreview={Boolean(uploadedFileContent)}
+                                onPreview={() => setIsFilePreviewOpen(true)}
+                                t={t}
+                            />
                             {properties.length > 0 && fileFields.length > 0 && (
                                 <FieldMapping
                                     properties={properties}
@@ -746,17 +656,12 @@ export default () => {
                             <Typography variant="heading" className={styles.heading}>
                                 {t('label.uploadGeneratedFile')}
                             </Typography>
-                            <div className={styles.fileUpload}>
-                                <input
-                                    type="file"
-                                    id="generatedUpload"
-                                    className={styles.fileInput}
-                                    onChange={e => handleGeneratedFileUpload(e.target.files[0])}
-                                />
-                                <label htmlFor="generatedUpload" className={styles.fileLabel}>
-                                    {generatedFileName || t('label.chooseFile')}
-                                </label>
-                            </div>
+                            <FileUploader
+                                id="generatedUpload"
+                                fileName={generatedFileName}
+                                onChange={handleGeneratedFileUpload}
+                                t={t}
+                            />
                             {generatedFileError && (
                                 <Typography variant="body" className={styles.errorMessage}>
                                     {generatedFileError}
@@ -779,16 +684,14 @@ export default () => {
                     <Button label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
                 </DialogActions>
             </Dialog>
-            <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
-                <DialogTitle>{t('label.previewTitle')}</DialogTitle>
-                <DialogContent dividers>
-                    <pre className={styles.previewContent}>{JSON.stringify(jsonPreview, null, 2)}</pre>
-                </DialogContent>
-                <DialogActions>
-                    <Button label={t('label.downloadJson')} onClick={handleDownloadJson}/>
-                    <Button color="accent" label={t('label.startImport')} onClick={startImport}/>
-                </DialogActions>
-            </Dialog>
+            <ImportPreviewDialog
+                open={isPreviewOpen}
+                onClose={() => setIsPreviewOpen(false)}
+                previewData={jsonPreview}
+                onDownload={handleDownloadJson}
+                onStart={startImport}
+                t={t}
+            />
         </>
     );
 };
