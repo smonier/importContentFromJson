@@ -237,3 +237,17 @@ export const AddVanityUrl = gql`
             }
         }
     }`;
+
+export const GET_SITE_LANGUAGES = gql`
+    query GetSiteLanguages($workspace: Workspace!, $scope: String!) {
+        jcr(workspace: $workspace) {
+            nodeByPath(path: $scope) {
+                displayName
+                isDisplayableNode
+                languages: property(name: "j:languages") {
+                    values
+                }
+            }
+        }
+    }
+`;
