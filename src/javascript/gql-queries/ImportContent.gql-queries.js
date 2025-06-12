@@ -1,5 +1,18 @@
 import {gql} from '@apollo/client';
 
+export const GetSiteLanguagesQuery = gql`
+    query GetSiteLanguages($siteKey: String!) {
+        jcr {
+            site(siteKey: $siteKey) {
+                languages {
+                    language
+                    displayName
+                }
+            }
+        }
+    }
+`;
+
 export const GetContentTypeQuery = gql`
     query SiteContentTypesQuery($siteKey: String!, $language:String!) {
         jcr {

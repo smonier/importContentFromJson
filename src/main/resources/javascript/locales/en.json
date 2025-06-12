@@ -8,6 +8,7 @@
     "loadingContentTypes": "Loading ...",
     "noProperties": "Select a Content Type to display the properties",
     "selectPlaceholder": "Select ...",
+    "selectLanguage": "Select import language",
     "uploadFile": "Upload JSON File",
     "chooseFile": "Choose File",
     "sampleData": "Uploaded JSON Sample",
