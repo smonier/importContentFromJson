@@ -17,6 +17,7 @@
     "path": "Inhaltspfad",
     "enterPathSuffix": "Geben Sie das Inhaltspfad-Suffix ein",
     "enterPathSuffixHelp": "Rekursive Verzeichnisse sind erlaubt, zum Beispiel /news/202501.",
+    "selectLanguage": "Sprache auswählen",
     "fieldMapping": "Feldzuordnung",
     "previewTitle": "Vorschau des generierten JSON",
     "filePreviewTitle": "Inhalt der hochgeladenen Datei",

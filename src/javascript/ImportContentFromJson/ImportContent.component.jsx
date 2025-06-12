@@ -12,7 +12,8 @@ import {
     AddTags,
     CheckIfCategoryExists,
     AddCategories,
-    AddVanityUrl
+    AddVanityUrl,
+    GET_SITE_LANGUAGES
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
@@ -49,13 +50,15 @@ export default () => {
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
 
-    const language = window.contextJsParameters.uilang;
+    const initialLanguage = window.contextJsParameters.uilang;
+    const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage);
+    const [siteLanguages, setSiteLanguages] = useState([]);
+    const [languageError, setLanguageError] = useState(null);
     const baseContentPath = `/sites/${siteKey}/contents`; // Fixed base path
     const baseFilePath = `/sites/${siteKey}/files`;
 
     // GraphQL Queries and Mutations
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
-        variables: {siteKey, language},
         fetchPolicy: 'network-only',
         onError: error => {
             console.error('GetContentType error', error);
@@ -111,10 +114,25 @@ export default () => {
     const [addVanityUrl] = useMutation(AddVanityUrl, {
         onError: error => console.error('AddVanityUrl error', error)
     });
+    const [fetchSiteLanguages, {data: siteLanguagesData}] = useLazyQuery(GET_SITE_LANGUAGES, {
+        variables: {workspace: 'EDIT', scope: `/sites/${siteKey}`},
+        fetchPolicy: 'network-only',
+        onError: error => {
+            console.error('GetSiteLanguages error', error);
+            setLanguageError(error);
+        }
+    });
 
     useEffect(() => {
-        fetchContentTypes();
-    }, [fetchContentTypes]);
+        fetchSiteLanguages();
+    }, [fetchSiteLanguages]);
+
+    useEffect(() => {
+        fetchContentTypes({variables: {siteKey, language: selectedLanguage}});
+        if (selectedContentType) {
+            fetchProperties({variables: {type: selectedContentType, language: selectedLanguage}});
+        }
+    }, [fetchContentTypes, fetchProperties, siteKey, selectedLanguage, selectedContentType]);
 
     useEffect(() => {
         if (contentTypeData?.jcr?.nodeTypes?.nodes) {
@@ -123,6 +141,14 @@ export default () => {
             setContentTypeError(null);
         }
     }, [contentTypeData]);
+
+    useEffect(() => {
+        if (siteLanguagesData?.jcr?.nodeByPath?.languages?.values) {
+            const langs = siteLanguagesData.jcr.nodeByPath.languages.values.map(l => ({label: l, value: l}));
+            setSiteLanguages(langs);
+            setLanguageError(null);
+        }
+    }, [siteLanguagesData]);
 
     useEffect(() => {
         if (propertiesData?.jcr?.nodeTypes?.nodes?.[0]?.properties) {
@@ -176,7 +202,7 @@ export default () => {
     const handleContentTypeChange = selectedType => {
         setSelectedContentType(selectedType);
         setSelectedProperties([]); // Clear selected properties when content type changes
-        fetchProperties({variables: {type: selectedType, language}});
+        fetchProperties({variables: {type: selectedType, language: selectedLanguage}});
     };
 
     const handleFileUpload = file => {
@@ -410,7 +436,7 @@ export default () => {
                             return {
                                 name: key,
                                 values: values,
-                                language: propertyDefinition?.internationalized ? language : undefined
+                                language: propertyDefinition?.internationalized ? selectedLanguage : undefined
                             };
                         }
 
@@ -419,14 +445,14 @@ export default () => {
                             return {
                                 name: key,
                                 value: newValue,
-                                language: propertyDefinition?.internationalized ? language : undefined
+                                language: propertyDefinition?.internationalized ? selectedLanguage : undefined
                             };
                         }
 
                         return {
                             name: key,
                             value: value,
-                            language: propertyDefinition?.internationalized ? language : undefined
+                            language: propertyDefinition?.internationalized ? selectedLanguage : undefined
                         };
                     })
                 ).then(results => results.filter(Boolean));
@@ -511,7 +537,7 @@ export default () => {
                 if (contentUuid) {
                     try {
                         const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
-                        await addVanityUrl({variables: {pathOrId: contentUuid, language: language, url: cleanUrl}});
+                        await addVanityUrl({variables: {pathOrId: contentUuid, language: selectedLanguage, url: cleanUrl}});
                     } catch (error) {
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
@@ -612,6 +638,21 @@ export default () => {
                         </div>
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
                         </Typography>
+                        <Typography variant="heading" className={styles.heading}>
+                            {t('label.selectLanguage')}
+                        </Typography>
+                        <Dropdown
+                        data={siteLanguages}
+                        value={selectedLanguage}
+                        className={styles.customDropdown}
+                        placeholder={t('label.selectPlaceholder')}
+                        onChange={(e, item) => { setSelectedLanguage(item.value); console.log('Selected language:', item.value); }}
+                    />
+                        {languageError && (
+                        <Typography variant="body" className={styles.errorMessage}>
+                            {t('label.loadContentTypesError')}
+                        </Typography>
+                    )}
                         <Typography variant="heading" className={styles.heading}>
                             {t('label.selectContentType')}
                         </Typography>
