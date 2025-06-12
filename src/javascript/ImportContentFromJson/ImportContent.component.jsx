@@ -11,7 +11,8 @@ import {
     AddTags,
     CheckIfCategoryExists,
     AddCategories,
-    AddVanityUrl
+    AddVanityUrl,
+    GetSiteLanguagesQuery
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
@@ -36,13 +37,18 @@ export default () => {
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
 
-    const language = window.contextJsParameters.uilang;
+    const [language, setLanguage] = useState(window.contextJsParameters.uilang);
+    const [languages, setLanguages] = useState([]);
     const baseContentPath = `/sites/${siteKey}/contents`; // Fixed base path
     const baseFilePath = `/sites/${siteKey}/files`;
 
     // GraphQL Queries and Mutations
+    const [fetchSiteLanguages, {data: siteLanguagesData}] = useLazyQuery(GetSiteLanguagesQuery, {
+        variables: {siteKey},
+        fetchPolicy: 'network-only'
+    });
+
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
-        variables: {siteKey, language},
         fetchPolicy: 'network-only'
     });
 
@@ -70,8 +76,21 @@ export default () => {
     const [addVanityUrl] = useMutation(AddVanityUrl);
 
     useEffect(() => {
-        fetchContentTypes();
-    }, [fetchContentTypes]);
+        fetchSiteLanguages();
+    }, [fetchSiteLanguages]);
+
+    useEffect(() => {
+        if (siteLanguagesData?.jcr?.site?.languages) {
+            setLanguages(siteLanguagesData.jcr.site.languages);
+        }
+    }, [siteLanguagesData]);
+
+    useEffect(() => {
+        fetchContentTypes({variables: {siteKey, language}});
+        if (selectedContentType) {
+            fetchProperties({variables: {type: selectedContentType, language}});
+        }
+    }, [fetchContentTypes, fetchProperties, siteKey, language, selectedContentType]);
 
     useEffect(() => {
         if (contentTypeData?.jcr?.nodeTypes?.nodes) {
@@ -113,6 +132,12 @@ export default () => {
                 flattenCategoryTree(node.children.nodes, cache);
             }
         }
+    };
+
+    const handleLanguageChange = selectedLang => {
+        setLanguage(selectedLang);
+        window.contextJsParameters.uilang = selectedLang;
+        console.log('Selected language:', selectedLang);
     };
 
     const handleContentTypeChange = selectedType => {
@@ -479,6 +504,16 @@ export default () => {
                     </div>
                     <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
                     </Typography>
+                    <Typography variant="heading" className={styles.heading}>
+                        {t('label.selectLanguage')}
+                    </Typography>
+                    <Dropdown
+                        data={languages.map(l => ({label: l.displayName, value: l.language}))}
+                        value={language}
+                        className={styles.customDropdown}
+                        placeholder={t('label.selectPlaceholder')}
+                        onChange={(e, item) => handleLanguageChange(item.value)}
+                    />
                     <Typography variant="heading" className={styles.heading}>
                         {t('label.selectContentType')}
                     </Typography>

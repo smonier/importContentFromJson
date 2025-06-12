@@ -8,6 +8,7 @@
     "loadingContentTypes": "Wird geladen ...",
     "noProperties": "Wählen Sie einen Inhaltstyp, um die Eigenschaften anzuzeigen",
     "selectPlaceholder": "Wählen ...",
+    "selectLanguage": "Website-Sprache wählen",
     "uploadFile": "JSON-Datei hochladen",
     "chooseFile": "Datei auswählen",
     "sampleData": "Hochgeladenes JSON-Beispiel",
