@@ -150,6 +150,7 @@ export default () => {
         if (categoryCache.current.size > 0) {
             return;
         } // Already fetched
+
         try {
             const {data} = await checkIfCategoryExists();
             if (data?.jcr?.nodeByPath?.children?.nodes) {
@@ -298,13 +299,12 @@ export default () => {
                         if (typeof value === 'string') {
                             value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
                         }
+
                         if (Array.isArray(value)) {
                             value = value.map(v => (typeof v === 'string' ? {url: v} : v));
                         }
-                    } else {
-                        if (typeof value === 'string') {
-                            value = {url: value};
-                        }
+                    } else if (typeof value === 'string') {
+                        value = {url: value};
                     }
                 }
 
@@ -558,6 +558,7 @@ export default () => {
         if (!generatedFileContent) {
             return;
         }
+
         setJsonPreview(generatedFileContent);
         startImport();
     };
@@ -573,8 +574,8 @@ export default () => {
                 </div>
             )}
 
-        <div className={styles.layout}>
-            <Header
+            <div className={styles.layout}>
+                <Header
                 title={t('label.header', {siteInfo: siteKey})}
                 mainActions={[
                     <Button
@@ -583,37 +584,37 @@ export default () => {
                         id="importButton"
                         color="accent"
                         isDisabled={
-                            activeTab === 0
-                                ? (!selectedContentType || !uploadedFileContent)
-                                : (!selectedContentType || !generatedFileContent || generatedFileError)
+                            activeTab === 0 ?
+                                (!selectedContentType || !uploadedFileContent) :
+                                (!selectedContentType || !generatedFileContent || generatedFileError)
                         }
                         label={t('label.importFromJson')}
                         onClick={activeTab === 0 ? handleImport : importGeneratedFile}
                     />
                 ]}
             />
-            <div className={styles.container}>
-                <div className={styles.leftPanel}>
-                    <Typography variant="heading" className={styles.heading}>
-                        {t('label.path')}
-                    </Typography>
-                    <div className={styles.pathContainer}>
-                        <Typography variant="body" className={styles.baseContentPath}>
-                            {baseContentPath}/
+                <div className={styles.container}>
+                    <div className={styles.leftPanel}>
+                        <Typography variant="heading" className={styles.heading}>
+                            {t('label.path')}
                         </Typography>
-                        <Input
+                        <div className={styles.pathContainer}>
+                            <Typography variant="body" className={styles.baseContentPath}>
+                                {baseContentPath}/
+                            </Typography>
+                            <Input
                             value={pathSuffix}
                             placeholder={t('label.enterPathSuffix')}
                             className={styles.pathSuffixInput}
                             onChange={e => setPathSuffix(e.target.value)}
                         />
-                    </div>
-                    <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
-                    </Typography>
-                    <Typography variant="heading" className={styles.heading}>
-                        {t('label.selectContentType')}
-                    </Typography>
-                    <Dropdown
+                        </div>
+                        <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
+                        </Typography>
+                        <Typography variant="heading" className={styles.heading}>
+                            {t('label.selectContentType')}
+                        </Typography>
+                        <Dropdown
                         data={contentTypes}
                         icon={contentTypes && contentTypes.iconStart}
                         label={contentTypes && contentTypes.label}
@@ -622,49 +623,49 @@ export default () => {
                         placeholder={t('label.selectPlaceholder')}
                         onChange={(e, item) => handleContentTypeChange(item.value)}
                     />
-                    {contentTypeError && (
+                        {contentTypeError && (
                         <Typography variant="body" className={styles.errorMessage}>
                             {t('label.loadContentTypesError')}
                         </Typography>
                     )}
-                    <div className={styles.propertiesInfo}>
-                        <Typography variant="heading" className={styles.heading}>
-                            {t('label.properties')}
-                        </Typography>
-                        <div className={styles.propertiesList}>
-                            {properties.map(property => (
-                                <div key={property.name} className={styles.propertyItem}>
-                                    <Typography variant="body" className={styles.propertyText}>
-                                        {property.displayName} - ({property.name} - {property.requiredType}{property.multiple ? '[]' : ''})
-                                    </Typography>
-                                </div>
+                        <div className={styles.propertiesInfo}>
+                            <Typography variant="heading" className={styles.heading}>
+                                {t('label.properties')}
+                            </Typography>
+                            <div className={styles.propertiesList}>
+                                {properties.map(property => (
+                                    <div key={property.name} className={styles.propertyItem}>
+                                        <Typography variant="body" className={styles.propertyText}>
+                                            {property.displayName} - ({property.name} - {property.requiredType}{property.multiple ? '[]' : ''})
+                                        </Typography>
+                                    </div>
                             ))}
-                        </div>
-                        {propertiesError && (
+                            </div>
+                            {propertiesError && (
                             <Typography variant="body" className={styles.errorMessage}>
                                 {t('label.loadPropertiesError')}
                             </Typography>
                         )}
+                        </div>
                     </div>
-                </div>
 
-                <div className={styles.rightPanel}>
-                    <Tabs
+                    <div className={styles.rightPanel}>
+                        <Tabs
                         value={activeTab}
-                        onChange={handleTabChange}
                         className={styles.tabs}
                         TabIndicatorProps={{style: {backgroundColor: 'var(--color-accent)'}}}
-                    >
-                        <Tab
+                        onChange={handleTabChange}
+                        >
+                            <Tab
                             className={styles.tab}
-                            label={<Typography variant="heading">{t('label.manualMapping')}</Typography>}
+                            label={<Typography>{t('label.manualMapping')}</Typography>}
                         />
-                        <Tab
+                            <Tab
                             className={styles.tab}
-                            label={<Typography variant="heading">{t('label.reImportGeneratedFile')}</Typography>}
+                            label={<Typography>{t('label.reImportGeneratedFile')}</Typography>}
                         />
-                    </Tabs>
-                    {activeTab === 0 && (
+                        </Tabs>
+                        {activeTab === 0 && (
                         <div className={styles.tabContent}>
                             <Typography variant="heading" className={styles.heading}>
                                 {t('label.uploadFile')}
@@ -691,7 +692,7 @@ export default () => {
                             )}
                         </div>
                     )}
-                    {activeTab === 1 && (
+                        {activeTab === 1 && (
                         <div className={styles.tabContent}>
                             <Typography variant="heading" className={styles.heading}>
                                 {t('label.uploadGeneratedFile')}
@@ -717,11 +718,11 @@ export default () => {
                             )}
                         </div>
                     )}
+                    </div>
                 </div>
             </div>
-        </div>
-        <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
-            <DialogTitle>{t('label.previewTitle')}</DialogTitle>
+            <Dialog fullWidth open={isPreviewOpen} maxWidth="md" onClose={() => setIsPreviewOpen(false)}>
+                <DialogTitle>{t('label.previewTitle')}</DialogTitle>
                 <DialogContent dividers>
                     <pre className={styles.previewContent}>{JSON.stringify(jsonPreview, null, 2)}</pre>
                 </DialogContent>
