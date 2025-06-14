@@ -49,7 +49,6 @@ export default () => {
 
     // --- Content type & properties -----------------------------------------
     const [selectedContentType, setSelectedContentType] = useState(null);
-    const [selectedProperties, setSelectedProperties] = useState([]);
     const [contentTypes, setContentTypes] = useState([]);
     const [properties, setProperties] = useState([]);
     const [contentTypeError, setContentTypeError] = useState(null);
@@ -218,7 +217,6 @@ export default () => {
 
     const handleContentTypeChange = selectedType => {
         setSelectedContentType(selectedType);
-        setSelectedProperties([]); // Clear selected properties when content type changes
         fetchProperties({variables: {type: selectedType, language: selectedLanguage}});
     };
 
