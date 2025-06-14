@@ -28,6 +28,23 @@ export const ensurePathExists = async (fullPath, nodeType, checkPath, createPath
 };
 
 /**
+ * Check if a node already exists at the given path.
+ *
+ * @param {string} fullPath Full JCR path of the node to check.
+ * @param {Function} checkPath GraphQL lazy query function to check the path.
+ * @returns {boolean} True if the node exists, false otherwise.
+ */
+export const nodeExists = async (fullPath, checkPath) => {
+    try {
+        const {data} = await checkPath({variables: {path: fullPath}});
+        return Boolean(data?.jcr?.nodeByPath);
+    } catch (e) {
+        // In case of any error just assume the node does not exist
+        return false;
+    }
+};
+
+/**
  * Recursively flatten a category tree into a Map for fast lookup.
  * @param {Array} nodes Category nodes to flatten.
  * @param {Map} cache Map instance used to store name => uuid pairs.

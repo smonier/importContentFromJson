@@ -33,7 +33,8 @@ import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportCon
 import {
     ensurePathExists,
     flattenCategoryTree,
-    generatePreviewData
+    generatePreviewData,
+    nodeExists
 } from '~/ImportContentFromJson/ImportContent.utils.js';
 
 export default () => {
@@ -365,7 +366,15 @@ export default () => {
                     mappedEntry.name ?
                         mappedEntry.name.replace(/\s+/g, '_').toLowerCase() :
                         `content_${new Date().getTime()}`;
-                const nodeReport = {name: `${fullContentPath}/${contentName}`, status: 'created'};
+                const fullNodePath = `${fullContentPath}/${contentName}`;
+                const nodeReport = {name: fullNodePath, status: 'created'};
+
+                const exists = await nodeExists(fullNodePath, checkPath);
+                if (exists) {
+                    reportData.nodes.push({name: fullNodePath, status: 'already exists'});
+                    skippedCount++;
+                    continue;
+                }
 
                 const imageResultsBuffer = [];
                 const categoryResultsBuffer = [];
