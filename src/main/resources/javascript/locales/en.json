@@ -16,6 +16,22 @@
     "processingFile": "Processing JSON file...",
     "path": "Content Path",
     "enterPathSuffix": "Enter the content path",
-    "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501."
+    "enterPathSuffixHelp": "Recursive directories are allowed, such as /news/202501.",
+    "reportTitle": "Import Summary",
+    "closeReport": "Close",
+    "column": {
+      "type": "Type",
+      "name": "Name",
+      "status": "Status",
+      "image": "Image",
+      "category": "Category"
+    },
+    "status": {
+      "created": "created",
+      "existing": "already exists",
+      "failed": "failed",
+      "added": "added",
+      "notFound": "not found"
+    }
   }
 }

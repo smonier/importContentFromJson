@@ -16,6 +16,22 @@
     "processingFile": "JSON-Datei wird verarbeitet...",
     "path": "Inhaltspfad",
     "enterPathSuffix": "Geben Sie das Inhaltspfad-Suffix ein",
-    "enterPathSuffixHelp": "Rekursive Verzeichnisse sind erlaubt, zum Beispiel /news/202501."
+    "enterPathSuffixHelp": "Rekursive Verzeichnisse sind erlaubt, zum Beispiel /news/202501.",
+    "reportTitle": "Importübersicht",
+    "closeReport": "Schließen",
+    "column": {
+      "type": "Typ",
+      "name": "Name",
+      "status": "Status",
+      "image": "Bild",
+      "category": "Kategorie"
+    },
+    "status": {
+      "created": "erstellt",
+      "existing": "existiert bereits",
+      "failed": "fehlgeschlagen",
+      "added": "hinzugefügt",
+      "notFound": "nicht gefunden"
+    }
   }
 }
