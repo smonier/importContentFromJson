@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Button, Dialog} from '@jahia/moonstone';
-import {DialogTitle, DialogContent, DialogActions} from '@mui/material';
+import {Button} from '@jahia/moonstone';
+import {Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
 
 const ImportReportDialog = ({open, onClose, report, t}) => {
     if (!report) {
@@ -30,7 +30,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     );
 
     return (
-        <Dialog open={open} maxWidth="md" fullWidth onClose={onClose}>
+        <Dialog fullWidth open={open} maxWidth="md" onClose={onClose}>
             <DialogTitle>{t('label.reportTitle')}</DialogTitle>
             <DialogContent dividers>
                 {nodes.length > 0 && renderTable(nodes, t('label.node'))}
