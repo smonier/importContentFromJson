@@ -101,7 +101,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
 
             const binaryBlob = await binaryResponse.blob();
             const mimeType = binaryBlob.type || 'application/octet-stream';
-            const fileHandle = new File([binaryBlob], key, {type: mimeType});
+            const fileHandle = new File([binaryBlob], fileName, {type: mimeType});
             const uploadPath = `${baseFilePath}/${pathSuffix}`;
 
             const {data: uploadResponse} = await addFileToJcr({
@@ -167,7 +167,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
 
         const binaryBlob = await binaryResponse.blob();
         const mimeType = binaryBlob.type || 'application/octet-stream';
-        const fileHandle = new File([binaryBlob], key, {type: mimeType});
+        const fileHandle = new File([binaryBlob], fileName, {type: mimeType});
         const uploadPath = `${baseFilePath}/${pathSuffix}`;
 
         const {data: uploadResponse} = await addFileToJcr({
