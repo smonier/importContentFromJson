@@ -333,6 +333,10 @@ export default () => {
 
         const errorReport = [];
         let successCount = 0;
+        let imageSuccessCount = 0;
+        let imageFailCount = 0;
+        let categorySuccessCount = 0;
+        let categoryFailCount = 0;
 
         try {
             await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
@@ -386,12 +390,19 @@ export default () => {
                         }
 
                         if (isImage) {
-                            const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
-                            return {
-                                name: key,
-                                value: newValue,
-                                language: propertyDefinition?.internationalized ? selectedLanguage : undefined
-                            };
+                            try {
+                                const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                imageSuccessCount++;
+                                return {
+                                    name: key,
+                                    value: newValue,
+                                    language: propertyDefinition?.internationalized ? selectedLanguage : undefined
+                                };
+                            } catch (err) {
+                                imageFailCount++;
+                                errorReport.push({node: contentName, reason: 'Image import failed', details: err.message});
+                                return null;
+                            }
                         }
 
                         return {
@@ -419,23 +430,23 @@ export default () => {
                         }
                     });
                     contentUuid = contentData?.jcr?.addNode?.uuid;
-                    successCount++;
-                } catch (error) {
-                    if (
-                        error.message.includes('javax.jcr.ItemExistsException') ||
-                        error.message.includes('This node already exists')
-                    ) {
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Node already exists'
-                        });
-                    } else {
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Other error',
-                            details: error.message
-                        });
+                    if (contentUuid) {
+                        successCount++;
                     }
+                } catch (error) {
+                    let reason = 'Other error';
+                    let details = error.message;
+
+                    if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('This node already exists')) {
+                        reason = 'Node already exists';
+                        details = ''; // No need to show stack trace for expected conflict
+                    }
+
+                    errorReport.push({
+                        node: `${fullContentPath}/${contentName}`,
+                        reason,
+                        details
+                    });
 
                     continue;
                 }
@@ -468,7 +479,16 @@ export default () => {
                         }
 
                         if (defaultCategoryUuids.length > 0) {
-                            await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
+                            try {
+                                await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
+                                categorySuccessCount++;
+                            } catch (err) {
+                                categoryFailCount++;
+                                errorReport.push({node: contentName, reason: 'Error adding categories', details: err.message});
+                            }
+                        } else {
+                            categoryFailCount++;
+                            errorReport.push({node: contentName, reason: 'No matching category UUID found', details: ''});
                         }
                     } catch (error) {
                         errorReport.push({
@@ -493,14 +513,39 @@ export default () => {
                 }
             }
 
+            // Final import summary report
+            const totalAttempts = jsonPreview.length;
+            const failedCount = errorReport.length;
+
+            console.group('=== Import Summary ===');
+            console.info(`✅ Success: ${successCount}`);
+            console.warn(`❌ Failed: ${failedCount}`);
+
+            // Enhanced summary for nodes that already existed
             if (errorReport.length > 0) {
-                console.warn('Import completed with some issues:');
-                console.table(errorReport);
-                alert(`Import completed with some issues. ${successCount} nodes were successfully created. Check the console for details.`);
-            } else {
-                console.log('Import completed successfully without errors!');
-                alert(`${successCount} nodes were successfully created!`);
+                console.warn(`❌ ${errorReport.length} failed nodes:`);
+                errorReport.forEach(e => console.warn(`• ${e.node} → ${e.reason}`));
+
+                console.table(errorReport.map(entry => ({
+                    Node: entry.node,
+                    Reason: entry.reason,
+                    Details: entry.details || ''
+                })));
             }
+
+            console.info(`🖼️ Images: ${imageSuccessCount} success, ${imageFailCount} failed`);
+            console.info(`🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed`);
+            console.groupEnd();
+
+            const summaryMessage = `Import Summary:
+                    ✅ Success: ${successCount}
+                    ❌ Failed: ${failedCount}
+                    🖼️ Images: ${imageSuccessCount} success, ${imageFailCount} failed
+                    🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed
+                    
+                    ${failedCount > 0 ? 'Some errors occurred. Check console for details.' : 'All items imported successfully!'}`;
+
+            alert(summaryMessage);
         } catch (error) {
             console.error('Error during import:', error);
             alert('An error occurred during the import process.');
