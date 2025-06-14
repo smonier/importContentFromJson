@@ -679,14 +679,12 @@ export default () => {
                             {t('label.selectContentType')}
                         </Typography>
                         <Dropdown
-                        data={contentTypes}
-                        icon={contentTypes && contentTypes.iconStart}
-                        label={contentTypes && contentTypes.label}
-                        value={selectedContentType}
-                        className={styles.customDropdown}
-                        placeholder={t('label.selectPlaceholder')}
-                        onChange={(e, item) => handleContentTypeChange(item.value)}
-                    />
+                            data={contentTypes}
+                            value={selectedContentType}
+                            className={styles.customDropdown}
+                            placeholder={t('label.selectPlaceholder')}
+                            onChange={(e, item) => handleContentTypeChange(item.value)}
+                        />
                         {contentTypeError && (
                         <Typography variant="body" className={styles.errorMessage}>
                             {t('label.loadContentTypesError')}
