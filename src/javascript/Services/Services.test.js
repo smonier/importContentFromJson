@@ -19,8 +19,9 @@ describe('image handlers', () => {
         const checkImageExists = jest.fn(() => Promise.resolve({data: {jcr: {nodeByPath: null}}}));
         const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuid123'}}}}));
 
-        const uuid = await handleSingleImage('http://example.com/img.png', 'img', checkImageExists, addFileToJcr, '/files', 'test');
-        expect(uuid).toBe('uuid123');
+        const res = await handleSingleImage('http://example.com/img.png', 'img', checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res.uuid).toBe('uuid123');
+        expect(res.status).toBe('created');
         expect(fetch).toHaveBeenCalled();
     });
 
@@ -28,8 +29,11 @@ describe('image handlers', () => {
         const checkImageExists = jest.fn(() => Promise.resolve({data: {jcr: {nodeByPath: null}}}));
         const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuid1'}}}}));
 
-        const uuids = await handleMultipleImages(['http://ex.com/a.png', 'http://ex.com/b.png'], 'imgs', {}, checkImageExists, addFileToJcr, '/files', 'test');
-        expect(uuids).toEqual(['uuid1', 'uuid1']);
+        const res = await handleMultipleImages(['http://ex.com/a.png', 'http://ex.com/b.png'], 'imgs', {}, checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res).toEqual([
+            {uuid: 'uuid1', status: 'created', name: 'a.png'},
+            {uuid: 'uuid1', status: 'created', name: 'b.png'}
+        ]);
         expect(fetch).toHaveBeenCalledTimes(2);
     });
 
@@ -37,8 +41,11 @@ describe('image handlers', () => {
         const checkImageExists = jest.fn(() => Promise.resolve({data: {jcr: {nodeByPath: null}}}));
         const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuid2'}}}}));
 
-        const uuids = await handleMultipleImages('http://ex.com/a.png; http://ex.com/b.png', 'imgs', {}, checkImageExists, addFileToJcr, '/files', 'test');
-        expect(uuids).toEqual(['uuid2', 'uuid2']);
+        const res = await handleMultipleImages('http://ex.com/a.png; http://ex.com/b.png', 'imgs', {}, checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res).toEqual([
+            {uuid: 'uuid2', status: 'created', name: 'a.png'},
+            {uuid: 'uuid2', status: 'created', name: 'b.png'}
+        ]);
         expect(fetch).toHaveBeenCalledTimes(2);
     });
 });

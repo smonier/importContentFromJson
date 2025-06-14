@@ -33,5 +33,11 @@
     "invalidGeneratedFile": "The imported file does not match the selected content type.",
     "loadContentTypesError": "Failed to load content types.",
     "loadPropertiesError": "Failed to load properties."
+    ,"reportTitle": "Import report"
+    ,"closeReport": "Close report"
+    ,"node": "Node"
+    ,"image": "Image"
+    ,"category": "Category"
+    ,"status": "Status"
   }
 }
