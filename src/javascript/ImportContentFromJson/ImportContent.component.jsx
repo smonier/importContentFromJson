@@ -115,7 +115,13 @@ export default () => {
         onError: error => console.error('CreatePath error', error)
     });
     const [createContent] = useMutation(CreateContentMutation, {
-        onError: error => console.error('CreateContent error', error)
+        onError: error => {
+            if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('already exists')) {
+                console.info('CreateContent skipped - node already exists');
+            } else {
+                console.error('CreateContent error', error);
+            }
+        }
     });
     const [checkImageExists] = useLazyQuery(CheckImageExists, {
         onError: error => console.error('CheckImageExists error', error)
@@ -336,6 +342,7 @@ export default () => {
 
         const errorReport = [];
         let successCount = 0;
+        let skippedCount = 0;
         let imageSuccessCount = 0;
         let imageFailCount = 0;
         let categorySuccessCount = 0;
@@ -460,6 +467,7 @@ export default () => {
                     if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('This node already exists')) {
                         reason = 'Node already exists';
                         details = ''; // No need to show stack trace for expected conflict
+                        skippedCount++;
                     }
 
                     nodeReport.status = reason === 'Node already exists' ? 'already exists' : 'failed';
@@ -548,15 +556,19 @@ export default () => {
 
             // Final import summary report
             const totalAttempts = jsonPreview.length;
-            const failedCount = errorReport.length;
+            const failedCount = errorReport.filter(e => e.reason !== 'Node already exists').length;
+            const skippedNodes = errorReport.filter(e => e.reason === 'Node already exists').length;
 
             console.group('=== Import Summary ===');
             console.info(`✅ Success: ${successCount}`);
+            if (skippedNodes > 0) {
+                console.info(`⏭️ Skipped: ${skippedNodes}`);
+            }
             console.warn(`❌ Failed: ${failedCount}`);
 
-            // Enhanced summary for nodes that already existed
+            // Detailed summary
             if (errorReport.length > 0) {
-                console.warn(`❌ ${errorReport.length} failed nodes:`);
+                console.warn(`❌ ${failedCount} failed nodes${skippedNodes ? `, ${skippedNodes} skipped` : ''}:`);
                 errorReport.forEach(e => console.warn(`• ${e.node} → ${e.reason}`));
 
                 console.table(errorReport.map(entry => ({
