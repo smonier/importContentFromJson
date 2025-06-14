@@ -58,6 +58,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
     // }
 
     const uuids = [];
+    const report = [];
 
     for (const [index, item] of imageList.entries()) {
         let url = item.url?.trim();
@@ -85,6 +86,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             if (existingNode) {
                 console.log(`Image exists: ${existingNode.name}. Using UUID: ${existingNode.uuid}`);
                 uuids.push(existingNode.uuid);
+                report.push({name: fileName, status: 'existing'});
                 continue;
             }
 
@@ -93,6 +95,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
 
             if (!binaryResponse.ok) {
                 console.warn(`Failed to fetch image at URL: ${url}. Response status: ${binaryResponse.status}`);
+                report.push({name: fileName, status: 'failed'});
                 continue;
             }
 
@@ -113,15 +116,18 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             if (uploadResponse?.jcr?.addNode?.uuid) {
                 console.log(`Successfully uploaded image ${index + 1}. UUID: ${uploadResponse.jcr.addNode.uuid}`);
                 uuids.push(uploadResponse.jcr.addNode.uuid);
+                report.push({name: fileName, status: 'created'});
             } else {
                 console.warn(`Failed to get UUID for image ${index + 1} at URL: ${url}`);
+                report.push({name: fileName, status: 'failed'});
             }
         } catch (error) {
             console.error(`Error processing image at index ${index}:`, error);
+            report.push({name: extractFileName(url, index), status: 'failed'});
         }
     }
 
-    return uuids;
+    return {uuids, report};
 };
 
 export const handleSingleImage = async (value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix) => {
@@ -149,7 +155,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
         const existingNode = data?.jcr?.nodeByPath;
         if (existingNode) {
             console.log(`Image exists: ${existingNode.name}. Using UUID: ${existingNode.uuid}`);
-            return existingNode.uuid;
+            return {uuid: existingNode.uuid, report: {name: fileName, status: 'existing'}};
         }
 
         const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
@@ -157,7 +163,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
 
         if (!binaryResponse.ok) {
             console.warn(`Failed to fetch image at URL: ${url}. Response status: ${binaryResponse.status}`);
-            return null;
+            return {uuid: null, report: {name: fileName, status: 'failed'}};
         }
 
         const binaryBlob = await binaryResponse.blob();
@@ -176,14 +182,14 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
 
         if (uploadResponse?.jcr?.addNode?.uuid) {
             console.log(`Successfully uploaded image. UUID: ${uploadResponse.jcr.addNode.uuid}`);
-            return uploadResponse.jcr.addNode.uuid;
+            return {uuid: uploadResponse.jcr.addNode.uuid, report: {name: fileName, status: 'created'}};
         }
 
         console.warn(`Failed to get UUID for image at URL: ${url}`);
-        return null;
+        return {uuid: null, report: {name: fileName, status: 'failed'}};
     } catch (error) {
         console.error(`Error processing image for key ${key}:`, error);
-        return null;
+        return {uuid: null, report: {name: value?.url || 'unknown', status: 'failed'}};
     }
 };
 

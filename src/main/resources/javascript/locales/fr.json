@@ -16,6 +16,22 @@
     "processingFile": "Traitement du fichier JSON...",
     "path": "Chemin du contenu",
     "enterPathSuffix": "Entrez le suffixe du chemin de contenu",
-    "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501."
+    "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501.",
+    "reportTitle": "Résumé d'import",
+    "closeReport": "Fermer",
+    "column": {
+      "type": "Type",
+      "name": "Nom",
+      "status": "Statut",
+      "image": "Image",
+      "category": "Catégorie"
+    },
+    "status": {
+      "created": "créé",
+      "existing": "existe déjà",
+      "failed": "échec",
+      "added": "ajouté",
+      "notFound": "introuvable"
+    }
   }
 }

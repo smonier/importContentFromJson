@@ -19,6 +19,7 @@ import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/S
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
+import ImportReportDialog from '~/DesignSystem/ImportReportDialog';
 import styles from './ImportContent.component.scss';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils';
@@ -36,6 +37,8 @@ export default () => {
     const siteKey = window.contextJsParameters.siteKey;
     const [pathSuffix, setPathSuffix] = useState(''); // Editable suffix for the base path
     const [categoryTree, setCategoryTree] = useState(null);
+    const [report, setReport] = useState(null);
+    const [isReportOpen, setIsReportOpen] = useState(false);
 
     const [language, setLanguage] = useState(window.contextJsParameters.uilang);
     const [languages, setLanguages] = useState([]);
@@ -159,7 +162,6 @@ export default () => {
 
         if (file.type !== 'application/json') {
             console.error('Invalid file type. Please upload a JSON file.');
-            alert('Invalid file type. Please upload a JSON file.');
             return;
         }
 
@@ -180,13 +182,11 @@ export default () => {
                 setUploadedFileSample(sample); // Update the sample
             } catch (error) {
                 console.error('Error parsing JSON file:', error);
-                alert('Invalid JSON file. Please check the file contents.');
             }
         };
 
         reader.onerror = () => {
             console.error('Error reading file');
-            alert('Error reading file. Please try again.');
         };
 
         reader.readAsText(file); // Read the content of the new file
@@ -197,8 +197,7 @@ export default () => {
         const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
         const fullFilePath = pathSuffix ? `${baseFilePath}/${pathSuffix.trim()}` : baseFilePath;
 
-        const errorReport = []; // Array to keep track of skipped nodes or errors
-        let successCount = 0; // Counter for successfully created nodes
+        const importReport = {nodes: []};
 
         try {
             // Step 1: Ensure the folder exists
@@ -232,14 +231,20 @@ export default () => {
 
             // Step 2: Validate JSON keys against the node type properties
             if (!uploadedFileContent || !selectedContentType) {
-                // eslint-disable-next-line no-alert
-                alert('Please upload a valid JSON file and select a content type.');
+                console.error('Missing JSON file or content type selection.');
                 return;
             }
 
             const propertyDefinitions = properties; // These come from the `GetContentPropertiesQuery`
 
             for (const entry of uploadedFileContent) {
+                const contentName = entry['jcr:title'] ?
+                    entry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
+                    entry.name ?
+                        entry.name.replace(/\s+/g, '_').toLowerCase() :
+                        `content_${new Date().getTime()}`;
+                const nodeReport = {path: `${fullContentPath}/${contentName}`, status: 'created', images: [], categories: []};
+
                 const propertiesToSend = await Promise.all(
                     Object.keys(entry).map(async key => {
                         // Skip j:tagList if not defined in the content type
@@ -281,9 +286,9 @@ export default () => {
                         if (isMultiple) {
                             let values = '';
                             if (isImage) {
-                                // Logic for handling multiple images
-
-                                values = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                const {uuids, report: imgReport} = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                nodeReport.images.push(...imgReport);
+                                values = uuids;
                             } else {
                                 // Logic for handling multiple non-image values
 
@@ -298,8 +303,10 @@ export default () => {
                         }
 
                         if (isImage) {
-                            // Logic for handling single images
-                            const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                            const {uuid: newValue, report: imgReport} = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                            if (imgReport) {
+                                nodeReport.images.push(imgReport);
+                            }
                             return {
                                 name: key,
                                 value: newValue,
@@ -316,12 +323,6 @@ export default () => {
                     })
                 ).then(results => results.filter(Boolean)); // Filter out invalid properties
 
-                const contentName = entry['jcr:title'] ?
-                    entry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
-                    entry.name ?
-                        entry.name.replace(/\s+/g, '_').toLowerCase() :
-                        `content_${new Date().getTime()}`;
-
                 let contentUuid = null;
                 console.log('Properties to send:', JSON.stringify(propertiesToSend, null, 2));
                 try {
@@ -336,26 +337,20 @@ export default () => {
                     contentUuid = contentData?.jcr?.addNode?.uuid;
 
                     console.log(`Node created: ${fullContentPath}/${contentName}`);
-                    successCount++; // Increment the success counter
+                    nodeReport.status = 'created';
                 } catch (error) {
                     if (
                         error.message.includes('javax.jcr.ItemExistsException') ||
                         error.message.includes('This node already exists')
                     ) {
                         console.warn(`Node already exists: ${fullContentPath}/${contentName}`);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Node already exists'
-                        });
+                        nodeReport.status = 'existing';
                     } else {
                         console.error(`Error creating node: ${fullContentPath}/${contentName}`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Other error',
-                            details: error.message
-                        });
+                        nodeReport.status = 'failed';
                     }
 
+                    importReport.nodes.push(nodeReport);
                     continue;
                 }
 
@@ -371,11 +366,6 @@ export default () => {
                         console.log(`Tags added to ${fullContentPath}/${contentName}`);
                     } catch (error) {
                         console.error(`Error adding tags to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding tags',
-                            details: error.message
-                        });
                     }
                 }
 
@@ -387,15 +377,14 @@ export default () => {
                         let defaultCategoryUuids = [];
                         if (Array.isArray(entry['j:defaultCategory'])) {
                             for (let categoryName of entry['j:defaultCategory']) {
-                                // Normalize categoryName: lowercase + replace spaces with dashes
                                 categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
-
                                 const categoryUuid = categoryCache.get(categoryName);
-
                                 if (categoryUuid) {
                                     defaultCategoryUuids.push(categoryUuid);
+                                    nodeReport.categories.push({name: categoryName, status: 'added'});
                                 } else {
                                     console.warn(`Category ${categoryName} not found in cache.`);
+                                    nodeReport.categories.push({name: categoryName, status: 'notFound'});
                                 }
                             }
                         }
@@ -411,10 +400,10 @@ export default () => {
                         }
                     } catch (error) {
                         console.error(`Error adding categories to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding categories',
-                            details: error.message
+                        nodeReport.categories.forEach(cat => {
+                            if (cat.status === 'added') {
+                                cat.status = 'failed';
+                            }
                         });
                     }
                 }
@@ -433,29 +422,18 @@ export default () => {
                         console.log(`Vanity URL '${cleanUrl}' added to ${fullContentPath}/${contentName}`);
                     } catch (error) {
                         console.error(`Error adding vanity URL to ${fullContentPath}/${contentName}:`, error);
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding vanity URL',
-                            details: error.message
-                        });
                     }
                 }
+                importReport.nodes.push(nodeReport);
             }
 
-            // Step 4: Report success and errors
-            if (errorReport.length > 0) {
-                console.warn('Import completed with some issues:');
-                console.table(errorReport);
-                alert(
-                    `Import completed with some issues. ${successCount} nodes were successfully created. Check the console for details.`
-                );
-            } else {
-                console.log('Import completed successfully without errors!');
-                alert(`${successCount} nodes were successfully created!`);
-            }
+            setReport(importReport);
+            setIsReportOpen(true);
+            console.log('Import completed');
         } catch (error) {
             console.error('Error during import:', error);
-            alert('An error occurred during the import process.');
+            setReport({nodes: [{path: 'Import process', status: 'failed'}]});
+            setIsReportOpen(true);
         } finally {
             setIsLoading(false); // Stop loading spinner
         }
@@ -471,6 +449,8 @@ export default () => {
                     </div>
                 </div>
             )}
+
+            <ImportReportDialog open={isReportOpen} report={report} onClose={() => setIsReportOpen(false)}/>
 
             <Header
                 title={t('label.header', {siteInfo: siteKey})}

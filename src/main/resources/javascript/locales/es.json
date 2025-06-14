@@ -16,6 +16,22 @@
     "processingFile": "Procesando archivo JSON...",
     "path": "Ruta del contenido",
     "enterPathSuffix": "Introduzca el sufijo de la ruta del contenido",
-    "enterPathSuffixHelp": "Se permiten directorios recursivos, como /news/202501."
+    "enterPathSuffixHelp": "Se permiten directorios recursivos, como /news/202501.",
+    "reportTitle": "Resumen de importación",
+    "closeReport": "Cerrar",
+    "column": {
+      "type": "Tipo",
+      "name": "Nombre",
+      "status": "Estado",
+      "image": "Imagen",
+      "category": "Categoría"
+    },
+    "status": {
+      "created": "creado",
+      "existing": "ya existe",
+      "failed": "falló",
+      "added": "añadido",
+      "notFound": "no encontrado"
+    }
   }
 }
