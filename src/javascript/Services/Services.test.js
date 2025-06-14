@@ -23,6 +23,7 @@ describe('image handlers', () => {
         expect(res.uuid).toBe('uuid123');
         expect(res.status).toBe('created');
         expect(fetch).toHaveBeenCalled();
+        expect(addFileToJcr.mock.calls[0][0].variables.fileHandle.name).toBe('img.png');
     });
 
     test('handleMultipleImages accepts array of string urls', async () => {
@@ -35,6 +36,8 @@ describe('image handlers', () => {
             {uuid: 'uuid1', status: 'created', name: 'b.png'}
         ]);
         expect(fetch).toHaveBeenCalledTimes(2);
+        expect(addFileToJcr.mock.calls[0][0].variables.fileHandle.name).toBe('a.png');
+        expect(addFileToJcr.mock.calls[1][0].variables.fileHandle.name).toBe('b.png');
     });
 
     test('handleMultipleImages accepts comma separated string', async () => {
@@ -47,5 +50,7 @@ describe('image handlers', () => {
             {uuid: 'uuid2', status: 'created', name: 'b.png'}
         ]);
         expect(fetch).toHaveBeenCalledTimes(2);
+        expect(addFileToJcr.mock.calls[0][0].variables.fileHandle.name).toBe('a.png');
+        expect(addFileToJcr.mock.calls[1][0].variables.fileHandle.name).toBe('b.png');
     });
 });
