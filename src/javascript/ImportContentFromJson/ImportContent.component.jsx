@@ -27,6 +27,7 @@ import LanguageSelector from './LanguageSelector.jsx';
 import FileUploader from './FileUploader.jsx';
 import PropertiesList from './PropertiesList.jsx';
 import ImportPreviewDialog from './ImportPreviewDialog.jsx';
+import ImportReportDialog from './ImportReportDialog.jsx';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils.jsx';
 import {
@@ -43,6 +44,8 @@ export default () => {
     const [activeTab, setActiveTab] = useState(0);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const [report, setReport] = useState(null);
 
     // --- Content type & properties -----------------------------------------
     const [selectedContentType, setSelectedContentType] = useState(null);
@@ -337,6 +340,7 @@ export default () => {
         let imageFailCount = 0;
         let categorySuccessCount = 0;
         let categoryFailCount = 0;
+        const reportData = {nodes: [], images: [], categories: []};
 
         try {
             await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
@@ -351,6 +355,16 @@ export default () => {
             const propertyDefinitions = properties;
 
             for (const mappedEntry of jsonPreview) {
+                const contentName = mappedEntry['jcr:title'] ?
+                    mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
+                    mappedEntry.name ?
+                        mappedEntry.name.replace(/\s+/g, '_').toLowerCase() :
+                        `content_${new Date().getTime()}`;
+                const nodeReport = {name: `${fullContentPath}/${contentName}`, status: 'created'};
+
+                const imageResultsBuffer = [];
+                const categoryResultsBuffer = [];
+
                 const propertiesToSend = await Promise.all(
                     Object.keys(mappedEntry).map(async key => {
                         if (key === 'j:tagList' || key === 'j:defaultCategory') {
@@ -377,7 +391,13 @@ export default () => {
                         if (isMultiple) {
                             let values = '';
                             if (isImage) {
-                                values = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                const imgRes = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                imgRes.forEach(r => {
+                                    imageResultsBuffer.push({name: r.name, status: r.status, node: nodeReport.name});
+                                });
+                                imageSuccessCount += imgRes.filter(r => r.status !== 'failed').length;
+                                imageFailCount += imgRes.filter(r => r.status === 'failed').length;
+                                values = imgRes.map(r => r.uuid).filter(Boolean);
                             } else {
                                 values = handleMultipleValues(value, key);
                             }
@@ -391,11 +411,16 @@ export default () => {
 
                         if (isImage) {
                             try {
-                                const newValue = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
-                                imageSuccessCount++;
+                                const imgRes = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
+                                imageResultsBuffer.push({name: imgRes.name, status: imgRes.status, node: nodeReport.name});
+                                if (imgRes.status !== 'failed') {
+                                    imageSuccessCount++;
+                                } else {
+                                    imageFailCount++;
+                                }
                                 return {
                                     name: key,
-                                    value: newValue,
+                                    value: imgRes.uuid,
                                     language: propertyDefinition?.internationalized ? selectedLanguage : undefined
                                 };
                             } catch (err) {
@@ -412,12 +437,7 @@ export default () => {
                         };
                     })
                 ).then(results => results.filter(Boolean));
-
-                const contentName = mappedEntry['jcr:title'] ?
-                    mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
-                    mappedEntry.name ?
-                        mappedEntry.name.replace(/\s+/g, '_').toLowerCase() :
-                        `content_${new Date().getTime()}`;
+                reportData.images.push(...imageResultsBuffer);
 
                 let contentUuid = null;
                 try {
@@ -442,14 +462,16 @@ export default () => {
                         details = ''; // No need to show stack trace for expected conflict
                     }
 
+                    nodeReport.status = reason === 'Node already exists' ? 'already exists' : 'failed';
                     errorReport.push({
                         node: `${fullContentPath}/${contentName}`,
                         reason,
                         details
                     });
-
+                    reportData.nodes.push(nodeReport);
                     continue;
                 }
+                reportData.nodes.push(nodeReport);
 
                 if (contentUuid && mappedEntry['j:tagList']) {
                     try {
@@ -481,13 +503,22 @@ export default () => {
                         if (defaultCategoryUuids.length > 0) {
                             try {
                                 await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
-                                categorySuccessCount++;
+                                categorySuccessCount += defaultCategoryUuids.length;
+                                mappedEntry['j:defaultCategory'].forEach(cat => {
+                                    categoryResultsBuffer.push({name: cat, status: 'created', node: nodeReport.name});
+                                });
                             } catch (err) {
-                                categoryFailCount++;
+                                categoryFailCount += defaultCategoryUuids.length;
+                                mappedEntry['j:defaultCategory'].forEach(cat => {
+                                    categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
+                                });
                                 errorReport.push({node: contentName, reason: 'Error adding categories', details: err.message});
                             }
                         } else {
-                            categoryFailCount++;
+                            categoryFailCount += (mappedEntry['j:defaultCategory'] || []).length;
+                            (mappedEntry['j:defaultCategory'] || []).forEach(cat => {
+                                categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
+                            });
                             errorReport.push({node: contentName, reason: 'No matching category UUID found', details: ''});
                         }
                     } catch (error) {
@@ -498,6 +529,8 @@ export default () => {
                         });
                     }
                 }
+
+                reportData.categories.push(...categoryResultsBuffer);
 
                 if (contentUuid) {
                     try {
@@ -537,18 +570,13 @@ export default () => {
             console.info(`🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed`);
             console.groupEnd();
 
-            const summaryMessage = `Import Summary:
-                    ✅ Success: ${successCount}
-                    ❌ Failed: ${failedCount}
-                    🖼️ Images: ${imageSuccessCount} success, ${imageFailCount} failed
-                    🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed
-                    
-                    ${failedCount > 0 ? 'Some errors occurred. Check console for details.' : 'All items imported successfully!'}`;
-
-            alert(summaryMessage);
+            setReport(reportData);
+            setIsReportOpen(true);
         } catch (error) {
             console.error('Error during import:', error);
-            alert('An error occurred during the import process.');
+            reportData.nodes.push({name: 'import', status: 'failed'});
+            setReport(reportData);
+            setIsReportOpen(true);
         } finally {
             setIsLoading(false);
             setIsPreviewOpen(false);
@@ -735,6 +763,12 @@ export default () => {
                 onClose={() => setIsPreviewOpen(false)}
                 onDownload={handleDownloadJson}
                 onStart={startImport}
+            />
+            <ImportReportDialog
+                open={isReportOpen}
+                report={report}
+                t={t}
+                onClose={() => setIsReportOpen(false)}
             />
         </>
     );

@@ -32,6 +32,12 @@
     "uploadGeneratedFile": "Téléverser un fichier JSON généré",
     "invalidGeneratedFile": "Le fichier importé ne correspond pas au type de contenu sélectionné."
     ,"loadContentTypesError": "Échec du chargement des types de contenu.",
-    "loadPropertiesError": "Échec du chargement des propriétés."
+    "loadPropertiesError": "Échec du chargement des propriétés.",
+    "reportTitle": "Rapport d'import",
+    "closeReport": "Fermer le rapport",
+    "node": "Nœud",
+    "image": "Image",
+    "category": "Catégorie",
+    "status": "Statut"
   }
 }

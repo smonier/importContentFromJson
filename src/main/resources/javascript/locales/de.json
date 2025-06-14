@@ -32,6 +32,12 @@
     "uploadGeneratedFile": "Generierte JSON-Datei hochladen",
     "invalidGeneratedFile": "Die importierte Datei entspricht nicht dem ausgewählten Inhaltstyp.",
     "loadContentTypesError": "Laden der Inhaltstypen fehlgeschlagen.",
-    "loadPropertiesError": "Laden der Eigenschaften fehlgeschlagen."
+    "loadPropertiesError": "Laden der Eigenschaften fehlgeschlagen.",
+    "reportTitle": "Importbericht",
+    "closeReport": "Bericht schließen",
+    "node": "Knoten",
+    "image": "Bild",
+    "category": "Kategorie",
+    "status": "Status"
   }
 }
