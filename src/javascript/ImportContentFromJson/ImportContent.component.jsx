@@ -462,7 +462,7 @@ export default () => {
                     let reason = 'Other error';
                     let details = error.message;
 
-                    if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('This node already exists')) {
+                    if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('already exists')) {
                         reason = 'Node already exists';
                         details = ''; // No need to show stack trace for expected conflict
                         skippedCount++;
