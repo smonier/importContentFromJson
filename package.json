@@ -10,7 +10,7 @@
     "watch": "yarn webpack --watch",
     "clean": "rimraf *.log src/main/resources/javascript/apps",
     "clean:all": "yarn clean && rimraf node_modules node",
-    "test": "jest --coverage ./src/javascript",
+    "test": "jest --coverage",
     "tdd": "jest --watch ./src/javascript",
     "lint:js": "eslint --ext js,jsx src",
     "lint:js:fix": "yarn lint:js --fix src",
@@ -91,6 +91,8 @@
     "sync-pom-version-to-package": "^1.6.1",
     "webpack": "^5.91.0",
     "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "jest": "^29.6.4",
+    "babel-jest": "^29.6.4"
   }
 }
