@@ -350,40 +350,22 @@ export default () => {
         setActiveTab(newValue);
     };
 
-    const handleImport = () => {
-        console.log('Import button clicked - manual mapping');
-        // Only run validation if structure has not been validated
-        if (!isValidJson) {
-            if (!uploadedFileContent || !selectedContentType) {
-                if (!uploadedFileContent) {
-                    alert('Please upload a valid JSON file.');
-                } else if (!selectedContentType) {
-                    alert('Please select a content type.');
-                }
+    const handleGenerateJson = () => {
+        console.log('Generate JSON button clicked - manual mapping');
 
-                return;
-            }
-
-            // Structure validation: check if uploadedFileContent matches properties
-            const firstItem = Array.isArray(uploadedFileContent) ? uploadedFileContent[0] : uploadedFileContent;
-            if (!firstItem || typeof firstItem !== 'object') {
+        if (!uploadedFileContent || !selectedContentType) {
+            if (!uploadedFileContent) {
                 alert('Please upload a valid JSON file.');
-                return;
+            } else if (!selectedContentType) {
+                alert('Please select a content type.');
             }
 
-            const allowedKeys = properties.map(p => p.name);
-            const jsonKeys = Object.keys(firstItem || {});
-            const invalidKeys = jsonKeys.filter(k => !allowedKeys.includes(k) && k !== 'j:tagList' && k !== 'j:defaultCategory');
-            if (invalidKeys.length > 0) {
-                alert('Please upload a valid JSON file.');
-                return;
-            }
-
-            setIsValidJson(true);
+            return;
         }
 
         const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties);
         setMappedPreview(preview);
+        setIsValidJson(true); // Generated JSON is considered valid
         setIsPreviewOpen(true);
     };
 
@@ -425,6 +407,11 @@ export default () => {
         const reportData = {nodes: [], images: [], categories: [], path: fullContentPath};
 
         try {
+            if (!previewData) {
+                alert('Please upload a valid JSON file.');
+                return;
+            }
+
             if (!isValidJson) {
                 alert('Please upload a valid JSON file.');
                 return;
@@ -739,8 +726,8 @@ export default () => {
                                 (!selectedContentType || !uploadedFileContent) :
                                 (!selectedContentType || !generatedFileContent || generatedFileError)
                         }
-                        label={t('label.importFromJson')}
-                        onClick={activeTab === 0 ? handleImport : importGeneratedFile}
+                        label={activeTab === 0 ? t('label.generateJsonFile') : t('label.importFromJson')}
+                        onClick={activeTab === 0 ? handleGenerateJson : importGeneratedFile}
                     />
                 ]}
             />

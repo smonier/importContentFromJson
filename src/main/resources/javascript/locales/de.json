@@ -3,6 +3,7 @@
     "buttonAction": "Inhalte aus JSON in das JCR importieren",
     "header": "Inhalte aus JSON in das JCR importieren - Website {{siteInfo}}",
     "importFromJson": "Aus JSON importieren",
+    "generateJsonFile": "JSON-Datei generieren",
     "selectContentType": "Wählen Sie einen Inhaltstyp zum Importieren aus",
     "properties": "Verfügbare Eigenschaften",
     "loadingContentTypes": "Wird geladen ...",
