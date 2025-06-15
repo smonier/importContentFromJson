@@ -421,7 +421,7 @@ export default () => {
         let imageFailCount = 0;
         let categorySuccessCount = 0;
         let categoryFailCount = 0;
-        const reportData = {nodes: [], images: [], categories: []};
+        const reportData = {nodes: [], images: [], categories: [], path: fullContentPath};
 
         try {
             if (!isValidJson) {

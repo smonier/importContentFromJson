@@ -40,5 +40,6 @@
     "category": "Catégorie",
     "nodePath": "Chemin du nœud",
     "status": "Statut"
+    ,"reportPathPrefix": "Créé sous :"
   }
 }

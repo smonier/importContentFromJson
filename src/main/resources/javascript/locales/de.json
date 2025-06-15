@@ -40,5 +40,6 @@
     "category": "Kategorie",
     "nodePath": "Knotenpfad",
     "status": "Status"
+    ,"reportPathPrefix": "Erstellt unter:"
   }
 }
