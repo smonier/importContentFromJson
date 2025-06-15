@@ -64,6 +64,8 @@ export default () => {
     const [generatedFileContent, setGeneratedFileContent] = useState(null);
     const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
+    // --- JSON validation flag -----------------------------------------------
+    const [isValidJson, setIsValidJson] = useState(false);
 
     // --- Path & categories --------------------------------------------------
     const siteKey = window.contextJsParameters.siteKey;
@@ -225,6 +227,7 @@ export default () => {
         // Clear previous file state
         setUploadedFileName('');
         setUploadedFileContent(null);
+        setIsValidJson(false);
 
         if (!file) {
             console.error('No file selected');
@@ -254,14 +257,17 @@ export default () => {
                     const rows = result.data;
                     setUploadedFileContent(rows);
                     setFileFields(result.meta?.fields || Object.keys(rows[0] || {}));
+                    setIsValidJson(false); // Not JSON, so not valid for JSON import
                 } else {
                     const jsonData = JSON.parse(event.target.result);
                     setUploadedFileContent(jsonData); // Store full JSON content
                     const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
                     setFileFields(Object.keys(firstItem || {}));
+                    setIsValidJson(false); // Structure validation will set to true
                 }
             } catch (error) {
                 console.error('Error parsing file:', error);
+                setIsValidJson(false);
                 alert('Invalid file. Please check the file contents.');
             }
         };
@@ -296,6 +302,22 @@ export default () => {
             try {
                 const jsonData = JSON.parse(event.target.result);
                 const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
+
+                // === JSON Structure Validation ===
+                console.group('=== JSON Structure Validation ===');
+                console.info('Validating against selected content type properties');
+                const jsonKeys = Object.keys(firstItem || {});
+                const allowedKeys = properties.map(p => p.name);
+                const invalidKeys = jsonKeys.filter(k => !allowedKeys.includes(k) && k !== 'j:tagList' && k !== 'j:defaultCategory');
+                if (invalidKeys.length > 0) {
+                    console.warn('❌ Invalid properties found in uploaded JSON:', invalidKeys);
+                } else {
+                    console.info('✅ All properties valid');
+                }
+
+                console.groupEnd();
+                // === END JSON Structure Validation ===
+
                 const fileProps = Object.keys(firstItem || {});
                 const allowed = properties.map(p => p.name);
                 const invalid = fileProps.filter(p => !allowed.includes(p) && p !== 'j:tagList' && p !== 'j:defaultCategory');
@@ -322,10 +344,34 @@ export default () => {
 
     const handleImport = () => {
         console.log('Import button clicked - manual mapping');
-        if (!uploadedFileContent || !selectedContentType) {
-            // eslint-disable-next-line no-alert
-            alert('Please upload a valid JSON file and select a content type.');
-            return;
+        // Only run validation if structure has not been validated
+        if (!isValidJson) {
+            if (!uploadedFileContent || !selectedContentType) {
+                if (!uploadedFileContent) {
+                    alert('Please upload a valid JSON file.');
+                } else if (!selectedContentType) {
+                    alert('Please select a content type.');
+                }
+
+                return;
+            }
+
+            // Structure validation: check if uploadedFileContent matches properties
+            const firstItem = Array.isArray(uploadedFileContent) ? uploadedFileContent[0] : uploadedFileContent;
+            if (!firstItem || typeof firstItem !== 'object') {
+                alert('Please upload a valid JSON file.');
+                return;
+            }
+
+            const allowedKeys = properties.map(p => p.name);
+            const jsonKeys = Object.keys(firstItem || {});
+            const invalidKeys = jsonKeys.filter(k => !allowedKeys.includes(k) && k !== 'j:tagList' && k !== 'j:defaultCategory');
+            if (invalidKeys.length > 0) {
+                alert('Please upload a valid JSON file.');
+                return;
+            }
+
+            setIsValidJson(true);
         }
 
         const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties);
@@ -339,6 +385,28 @@ export default () => {
         const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
         const fullFilePath = pathSuffix ? `${baseFilePath}/${pathSuffix.trim()}` : baseFilePath;
 
+        // === Pre-import Validation ===
+        console.group('=== Pre-import Validation ===');
+        const contentPathExists = await nodeExists(fullContentPath, checkPath);
+        const filePathExists = await nodeExists(fullFilePath, checkPath);
+
+        if (!contentPathExists) {
+            console.info(`📁 Content path does not exist. Creating: ${fullContentPath}`);
+            await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
+        } else {
+            console.info(`📁 Content path exists: ${fullContentPath}`);
+        }
+
+        if (!filePathExists) {
+            console.info(`📁 File path does not exist. Creating: ${fullFilePath}`);
+            await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
+        } else {
+            console.info(`📁 File path exists: ${fullFilePath}`);
+        }
+
+        console.groupEnd();
+        // === END Pre-import Validation ===
+
         const errorReport = [];
         let successCount = 0;
         let skippedCount = 0;
@@ -349,12 +417,13 @@ export default () => {
         const reportData = {nodes: [], images: [], categories: []};
 
         try {
-            await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
-            await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
+            if (!jsonPreview) {
+                alert('Please upload a valid JSON file.');
+                return;
+            }
 
-            if (!jsonPreview || !selectedContentType) {
-                // eslint-disable-next-line no-alert
-                alert('Please upload a valid JSON file and select a content type.');
+            if (!selectedContentType) {
+                alert('Please select a content type.');
                 return;
             }
 
@@ -432,6 +501,7 @@ export default () => {
                                 } else {
                                     imageFailCount++;
                                 }
+
                                 return {
                                     name: key,
                                     value: imgRes.uuid,
@@ -486,6 +556,7 @@ export default () => {
                     reportData.nodes.push(nodeReport);
                     continue;
                 }
+
                 reportData.nodes.push(nodeReport);
 
                 if (contentUuid && mappedEntry['j:tagList']) {
@@ -571,6 +642,7 @@ export default () => {
             if (skippedNodes > 0) {
                 console.info(`⏭️ Skipped: ${skippedNodes}`);
             }
+
             console.warn(`❌ Failed: ${failedCount}`);
 
             // Detailed summary
@@ -709,10 +781,12 @@ export default () => {
                         >
                             <Tab
                             className={styles.tab}
+                            variant="heading"
                             label={<Typography>{t('label.manualMapping')}</Typography>}
                         />
                             <Tab
                             className={styles.tab}
+                            variant="heading"
                             label={<Typography>{t('label.reImportGeneratedFile')}</Typography>}
                         />
                         </Tabs>
