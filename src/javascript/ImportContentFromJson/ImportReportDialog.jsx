@@ -8,7 +8,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         return null;
     }
 
-    const {nodes = [], images = [], categories = []} = report;
+    const {nodes = [], images = [], categories = [], path} = report;
 
     const renderTable = (items, firstHeader) => (
         <table style={{width: '100%', borderCollapse: 'collapse', marginBottom: '16px'}}>
@@ -35,6 +35,11 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         <Dialog fullWidth open={open} maxWidth="md" onClose={onClose}>
             <DialogTitle>{t('label.reportTitle')}</DialogTitle>
             <DialogContent dividers>
+                {path && (
+                    <div style={{fontSize: '0.85rem', marginBottom: '8px'}}>
+                        {t('label.reportPathPrefix')} {path}
+                    </div>
+                )}
                 {nodes.length > 0 && renderTable(nodes, t('label.node'))}
                 {images.length > 0 && renderTable(images, t('label.image'))}
                 {categories.length > 0 && renderTable(categories, t('label.category'))}

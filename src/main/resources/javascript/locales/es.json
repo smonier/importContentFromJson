@@ -40,5 +40,6 @@
     "category": "Categoría",
     "nodePath": "Ruta del nodo",
     "status": "Estado"
+    ,"reportPathPrefix": "Creado en:" 
   }
 }

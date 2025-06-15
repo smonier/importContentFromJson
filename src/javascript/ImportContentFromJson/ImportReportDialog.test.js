@@ -11,6 +11,7 @@ describe('ImportReportDialog', () => {
 
     test('renders node path column', () => {
         const report = {
+            path: '/content',
             images: [{name: 'img.png', status: 'created', node: '/content/imgNode'}]
         };
         const html = ReactDOMServer.renderToStaticMarkup(
@@ -19,5 +20,6 @@ describe('ImportReportDialog', () => {
 
         expect(html).toContain(en.label.nodePath);
         expect(html).toContain('/content/imgNode');
+        expect(html).toContain('/content');
     });
 });
