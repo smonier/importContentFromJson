@@ -424,7 +424,7 @@ export default () => {
         const reportData = {nodes: [], images: [], categories: []};
 
         try {
-            if (!jsonPreview) {
+            if (!isValidJson) {
                 alert('Please upload a valid JSON file.');
                 return;
             }
@@ -435,6 +435,12 @@ export default () => {
             }
 
             const propertyDefinitions = properties;
+
+            if (!Array.isArray(jsonPreview)) {
+                alert('JSON file format is invalid or not properly parsed.');
+                console.error('jsonPreview is not an array:', jsonPreview);
+                return;
+            }
 
             for (const mappedEntry of jsonPreview) {
                 const contentName = mappedEntry['jcr:title'] ?
