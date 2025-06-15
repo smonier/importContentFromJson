@@ -386,7 +386,7 @@ export default () => {
         setIsPreviewOpen(true);
     };
 
-    const startImport = async () => {
+    const startImport = async (previewData = jsonPreview) => {
         console.log('Starting import');
         setIsLoading(true);
         const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
@@ -436,13 +436,13 @@ export default () => {
 
             const propertyDefinitions = properties;
 
-            if (!Array.isArray(jsonPreview)) {
+            if (!Array.isArray(previewData)) {
                 alert('JSON file format is invalid or not properly parsed.');
-                console.error('jsonPreview is not an array:', jsonPreview);
+                console.error('jsonPreview is not an array:', previewData);
                 return;
             }
 
-            for (const mappedEntry of jsonPreview) {
+            for (const mappedEntry of previewData) {
                 const contentName = mappedEntry['jcr:title'] ?
                     mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
                     mappedEntry.name ?
@@ -646,7 +646,7 @@ export default () => {
             }
 
             // Final import summary report
-            const totalAttempts = jsonPreview.length;
+            const totalAttempts = previewData.length;
             const failedCount = errorReport.filter(e => e.reason !== 'Node already exists').length;
             const skippedNodes = errorReport.filter(e => e.reason === 'Node already exists').length;
 
@@ -709,7 +709,8 @@ export default () => {
         }
 
         setJsonPreview(generatedFileContent);
-        startImport();
+        // Use local variable to avoid stale state issues
+        startImport(generatedFileContent);
     };
 
     return (
