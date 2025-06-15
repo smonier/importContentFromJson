@@ -38,6 +38,7 @@
     "node": "Nodo",
     "image": "Imagen",
     "category": "Categoría",
+    "nodePath": "Ruta del nodo",
     "status": "Estado"
   }
 }

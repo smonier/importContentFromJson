@@ -38,6 +38,7 @@
     "node": "Knoten",
     "image": "Bild",
     "category": "Kategorie",
+    "nodePath": "Knotenpfad",
     "status": "Status"
   }
 }

@@ -38,6 +38,7 @@
     "node": "Nœud",
     "image": "Image",
     "category": "Catégorie",
+    "nodePath": "Chemin du nœud",
     "status": "Statut"
   }
 }
