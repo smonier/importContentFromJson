@@ -64,6 +64,7 @@ export default () => {
     const [generatedFileContent, setGeneratedFileContent] = useState(null);
     const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
+    const [mappedPreview, setMappedPreview] = useState(null);
     // --- JSON validation flag -----------------------------------------------
     // Indicates that the currently selected import file (either a freshly
     // uploaded JSON/CSV or a previously generated JSON file) has passed
@@ -382,7 +383,7 @@ export default () => {
         }
 
         const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties);
-        setJsonPreview(preview);
+        setMappedPreview(preview);
         setIsPreviewOpen(true);
     };
 
@@ -687,13 +688,13 @@ export default () => {
         }
     };
 
-    const handleDownloadJson = () => {
+    const handleDownloadJson = (preview = jsonPreview) => {
         console.log('Download button clicked');
-        if (!jsonPreview) {
+        if (!preview) {
             return;
         }
 
-        const blob = new Blob([JSON.stringify(jsonPreview, null, 2)], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify(preview, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -863,11 +864,11 @@ export default () => {
             </Dialog>
             <ImportPreviewDialog
                 open={isPreviewOpen}
-                previewData={jsonPreview}
+                previewData={mappedPreview}
                 t={t}
                 onClose={() => setIsPreviewOpen(false)}
-                onDownload={handleDownloadJson}
-                onStart={startImport}
+                onDownload={() => handleDownloadJson(mappedPreview)}
+                onStart={() => startImport(mappedPreview)}
             />
             <ImportReportDialog
                 open={isReportOpen}
