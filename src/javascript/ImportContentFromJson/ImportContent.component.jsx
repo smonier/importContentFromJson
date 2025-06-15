@@ -65,6 +65,10 @@ export default () => {
     const [generatedFileError, setGeneratedFileError] = useState('');
     const [jsonPreview, setJsonPreview] = useState(null);
     // --- JSON validation flag -----------------------------------------------
+    // Indicates that the currently selected import file (either a freshly
+    // uploaded JSON/CSV or a previously generated JSON file) has passed
+    // structure validation. Manual uploads reset the flag while generated file
+    // uploads will set it to true once validated.
     const [isValidJson, setIsValidJson] = useState(false);
 
     // --- Path & categories --------------------------------------------------
@@ -284,6 +288,7 @@ export default () => {
         setGeneratedFileName('');
         setGeneratedFileContent(null);
         setGeneratedFileError('');
+        setIsValidJson(false);
 
         if (!file) {
             return;
@@ -325,9 +330,11 @@ export default () => {
                 if (invalid.length > 0) {
                     setGeneratedFileError(t('label.invalidGeneratedFile'));
                     console.log('Generated JSON validation failed', invalid);
+                    setIsValidJson(false);
                 } else {
                     setGeneratedFileName(file.name);
                     setGeneratedFileContent(jsonData);
+                    setIsValidJson(true);
                     console.log('Generated JSON validation succeeded');
                 }
             } catch (e) {
