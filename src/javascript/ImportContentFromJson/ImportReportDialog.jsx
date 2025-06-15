@@ -15,6 +15,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
             <thead>
                 <tr>
                     <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{firstHeader}</th>
+                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.nodePath')}</th>
                     <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.status')}</th>
                 </tr>
             </thead>
@@ -22,6 +23,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
                 {items.map((item, index) => (
                     <tr key={index}>
                         <td style={{padding: '4px 8px'}}>{item.name}</td>
+                        <td style={{padding: '4px 8px'}}>{item.node || ''}</td>
                         <td style={{padding: '4px 8px'}}>{item.status}</td>
                     </tr>
                 ))}

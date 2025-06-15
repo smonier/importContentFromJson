@@ -38,6 +38,7 @@
     ,"node": "Node"
     ,"image": "Image"
     ,"category": "Category"
+    ,"nodePath": "Node path"
     ,"status": "Status"
   }
 }
