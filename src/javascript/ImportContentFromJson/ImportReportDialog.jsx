@@ -11,7 +11,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     const {nodes = [], images = [], categories = [], path} = report;
 
     const renderTable = (items, firstHeader) => (
-        <table style={{width: '100%', borderCollapse: 'collapse', marginBottom: '16px'}}>
+        <table style={{width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '0.85rem'}}>
             <thead>
                 <tr>
                     <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{firstHeader}</th>
