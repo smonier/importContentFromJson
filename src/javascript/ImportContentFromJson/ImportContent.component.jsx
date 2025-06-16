@@ -40,9 +40,12 @@ import {
 export default () => {
     const {t} = useTranslation('importContentFromJson');
 
+    const TAG_LIST_FIELD = 'j:tagList';
+    const DEFAULT_CATEGORY_FIELD = 'j:defaultCategory';
+
     const extraFields = [
-        {name: 'j:tagList', displayName: 'Tags'},
-        {name: 'j:defaultCategory', displayName: 'Default category'}
+        {name: TAG_LIST_FIELD, displayName: 'Tags'},
+        {name: DEFAULT_CATEGORY_FIELD, displayName: 'Default category'}
     ];
 
     // --- UI state ------------------------------------------------------------
@@ -210,10 +213,17 @@ export default () => {
                         mapping[field.name] = field.name;
                     }
                 });
+
+                [TAG_LIST_FIELD, DEFAULT_CATEGORY_FIELD].forEach(fieldName => {
+                    if (fileFields.includes(fieldName) && !mapping[fieldName]) {
+                        mapping[fieldName] = fieldName;
+                    }
+                });
+
                 return mapping;
             });
         }
-    }, [properties, extraFields, fileFields]);
+    }, [properties, extraFields, fileFields, TAG_LIST_FIELD, DEFAULT_CATEGORY_FIELD]);
 
     const categoryCache = useRef(new Map()); // Store categories as { name: uuid }
 
@@ -324,7 +334,7 @@ export default () => {
                 console.info('Validating against selected content type properties');
                 const jsonKeys = Object.keys(firstItem || {});
                 const allowedKeys = properties.map(p => p.name);
-                const invalidKeys = jsonKeys.filter(k => !allowedKeys.includes(k) && k !== 'j:tagList' && k !== 'j:defaultCategory');
+                const invalidKeys = jsonKeys.filter(k => !allowedKeys.includes(k) && k !== TAG_LIST_FIELD && k !== DEFAULT_CATEGORY_FIELD);
                 if (invalidKeys.length > 0) {
                     console.warn('❌ Invalid properties found in uploaded JSON:', invalidKeys);
                 } else {
@@ -336,7 +346,7 @@ export default () => {
 
                 const fileProps = Object.keys(firstItem || {});
                 const allowed = properties.map(p => p.name);
-                const invalid = fileProps.filter(p => !allowed.includes(p) && p !== 'j:tagList' && p !== 'j:defaultCategory');
+                const invalid = fileProps.filter(p => !allowed.includes(p) && p !== TAG_LIST_FIELD && p !== DEFAULT_CATEGORY_FIELD);
 
                 if (invalid.length > 0) {
                     setGeneratedFileError(t('label.invalidGeneratedFile'));
@@ -466,7 +476,7 @@ export default () => {
 
                 const propertiesToSend = await Promise.all(
                     Object.keys(mappedEntry).map(async key => {
-                        if (key === 'j:tagList' || key === 'j:defaultCategory') {
+                        if (key === TAG_LIST_FIELD || key === DEFAULT_CATEGORY_FIELD) {
                             return null;
                         }
 
@@ -575,9 +585,9 @@ export default () => {
 
                 reportData.nodes.push(nodeReport);
 
-                if (contentUuid && Array.isArray(mappedEntry['j:tagList']) && mappedEntry['j:tagList'].length > 0) {
+                if (contentUuid && Array.isArray(mappedEntry[TAG_LIST_FIELD]) && mappedEntry[TAG_LIST_FIELD].length > 0) {
                     try {
-                        await addTags({variables: {path: contentUuid, tags: mappedEntry['j:tagList']}});
+                        await addTags({variables: {path: contentUuid, tags: mappedEntry[TAG_LIST_FIELD]}});
                     } catch (error) {
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
@@ -587,13 +597,13 @@ export default () => {
                     }
                 }
 
-                if (contentUuid && Array.isArray(mappedEntry['j:defaultCategory']) && mappedEntry['j:defaultCategory'].length > 0) {
+                if (contentUuid && Array.isArray(mappedEntry[DEFAULT_CATEGORY_FIELD]) && mappedEntry[DEFAULT_CATEGORY_FIELD].length > 0) {
                     try {
                         await fetchCategoriesOnce();
 
                         let defaultCategoryUuids = [];
-                        if (Array.isArray(mappedEntry['j:defaultCategory'])) {
-                            for (let categoryName of mappedEntry['j:defaultCategory']) {
+                        if (Array.isArray(mappedEntry[DEFAULT_CATEGORY_FIELD])) {
+                            for (let categoryName of mappedEntry[DEFAULT_CATEGORY_FIELD]) {
                                 categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
                                 const categoryUuid = categoryCache.current.get(categoryName);
                                 if (categoryUuid) {
@@ -606,19 +616,19 @@ export default () => {
                             try {
                                 await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
                                 categorySuccessCount += defaultCategoryUuids.length;
-                                mappedEntry['j:defaultCategory'].forEach(cat => {
+                                mappedEntry[DEFAULT_CATEGORY_FIELD].forEach(cat => {
                                     categoryResultsBuffer.push({name: cat, status: 'created', node: nodeReport.name});
                                 });
                             } catch (err) {
                                 categoryFailCount += defaultCategoryUuids.length;
-                                mappedEntry['j:defaultCategory'].forEach(cat => {
+                                mappedEntry[DEFAULT_CATEGORY_FIELD].forEach(cat => {
                                     categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
                                 });
                                 errorReport.push({node: contentName, reason: 'Error adding categories', details: err.message});
                             }
                         } else {
-                            categoryFailCount += (mappedEntry['j:defaultCategory'] || []).length;
-                            (mappedEntry['j:defaultCategory'] || []).forEach(cat => {
+                            categoryFailCount += (mappedEntry[DEFAULT_CATEGORY_FIELD] || []).length;
+                            (mappedEntry[DEFAULT_CATEGORY_FIELD] || []).forEach(cat => {
                                 categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
                             });
                             errorReport.push({node: contentName, reason: 'No matching category UUID found', details: ''});
