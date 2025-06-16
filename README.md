@@ -199,7 +199,11 @@ Store Locator Module, available here : https://store.jahia.com/contents/modules-
  ```
 ---
 ## Screenshots
-![Field mapping screenshot](./src/main/resources/images/importContentFromJson.png)
+![Field mapping screenshot](./src/main/resources/images/importJson-mapping.png)
+![Field mapping screenshot](./src/main/resources/images/importJson-import.png)
+![Field mapping screenshot](./src/main/resources/images/importJson-report.png)
+
+
 Example of the Field Mapping interface showing JCR properties mapped to CSV columns.
 
 ```
