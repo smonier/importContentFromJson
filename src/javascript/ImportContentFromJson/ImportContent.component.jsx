@@ -12,13 +12,14 @@ import {
     AddTags,
     CheckIfCategoryExists,
     AddCategories,
+    UpdateContentMutation,
     AddVanityUrl,
     GET_SITE_LANGUAGES
 } from '~/gql-queries/ImportContent.gql-queries';
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
-import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab} from '@mui/material';
+import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab, Checkbox, FormControlLabel} from '@mui/material';
 
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
@@ -87,6 +88,9 @@ export default () => {
     const [pathSuffix, setPathSuffix] = useState('');
     const [categoryTree, setCategoryTree] = useState(null);
 
+    // Override existing content option
+    const [overrideExisting, setOverrideExisting] = useState(false);
+
     // --- Languages ----------------------------------------------------------
     const initialLanguage = window.contextJsParameters.uilang;
     const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage);
@@ -152,6 +156,9 @@ export default () => {
     });
     const [addCategories] = useMutation(AddCategories, {
         onError: error => console.error('AddCategories error', error)
+    });
+    const [updateContent] = useMutation(UpdateContentMutation, {
+        onError: error => console.error('UpdateContent error', error)
     });
     const [addVanityUrl] = useMutation(AddVanityUrl, {
         onError: error => console.error('AddVanityUrl error', error)
@@ -402,8 +409,8 @@ export default () => {
 
         // === Pre-import Validation ===
         console.group('=== Pre-import Validation ===');
-        const contentPathExists = await nodeExists(fullContentPath, checkPath);
-        const filePathExists = await nodeExists(fullFilePath, checkPath);
+        const {exists: contentPathExists} = await nodeExists(fullContentPath, checkPath);
+        const {exists: filePathExists} = await nodeExists(fullFilePath, checkPath);
 
         if (!contentPathExists) {
             console.info(`📁 Content path does not exist. Creating: ${fullContentPath}`);
@@ -464,8 +471,8 @@ export default () => {
                 const fullNodePath = `${fullContentPath}/${contentName}`;
                 const nodeReport = {name: fullNodePath, status: 'created'};
 
-                const exists = await nodeExists(fullNodePath, checkPath);
-                if (exists) {
+                const {exists, uuid: existingUuid} = await nodeExists(fullNodePath, checkPath);
+                if (exists && !overrideExisting) {
                     reportData.nodes.push({name: fullNodePath, status: 'already exists'});
                     skippedCount++;
                     continue;
@@ -551,33 +558,41 @@ export default () => {
 
                 let contentUuid = null;
                 try {
-                    const {data: contentData} = await createContent({
-                        variables: {
-                            path: fullContentPath,
-                            name: contentName,
-                            primaryNodeType: selectedContentType,
-                            properties: propertiesToSend
+                    if (exists && overrideExisting) {
+                        const {data: updateData} = await updateContent({
+                            variables: {
+                                pathOrId: existingUuid,
+                                properties: propertiesToSend
+                            }
+                        });
+                        contentUuid = updateData?.jcr?.mutateNode?.uuid || existingUuid;
+                        nodeReport.status = 'updated';
+                        console.info(`Content updated: ${fullNodePath}`);
+                    } else {
+                        const {data: contentData} = await createContent({
+                            variables: {
+                                path: fullContentPath,
+                                name: contentName,
+                                primaryNodeType: selectedContentType,
+                                properties: propertiesToSend
+                            }
+                        });
+                        contentUuid = contentData?.jcr?.addNode?.uuid;
+                        nodeReport.status = 'created';
+                        if (contentUuid) {
+                            console.info(`Content created: ${fullNodePath}`);
                         }
-                    });
-                    contentUuid = contentData?.jcr?.addNode?.uuid;
+                    }
+
                     if (contentUuid) {
                         successCount++;
                     }
                 } catch (error) {
-                    let reason = 'Other error';
-                    let details = error.message;
-
-                    if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('already exists')) {
-                        reason = 'Node already exists';
-                        details = ''; // No need to show stack trace for expected conflict
-                        skippedCount++;
-                    }
-
-                    nodeReport.status = reason === 'Node already exists' ? 'already exists' : 'failed';
+                    nodeReport.status = 'failed';
                     errorReport.push({
                         node: `${fullContentPath}/${contentName}`,
-                        reason,
-                        details
+                        reason: 'Mutation error',
+                        details: error.message
                     });
                     reportData.nodes.push(nodeReport);
                     continue;
@@ -774,6 +789,10 @@ export default () => {
                         </div>
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
                         </Typography>
+                        <FormControlLabel
+                            control={<Checkbox checked={overrideExisting} onChange={e => setOverrideExisting(e.target.checked)}/>} 
+                            label={t('label.overrideExisting')}
+                        />
                         <LanguageSelector
                             languages={siteLanguages}
                             selectedLanguage={selectedLanguage}

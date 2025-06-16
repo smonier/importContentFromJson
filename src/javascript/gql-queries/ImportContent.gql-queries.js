@@ -69,6 +69,7 @@ export const CheckPathQuery = gql`
     query CheckPathQuery($path: String!) {
         jcr {
             nodeByPath(path: $path) {
+                uuid
                 path
                 workspace
             }
