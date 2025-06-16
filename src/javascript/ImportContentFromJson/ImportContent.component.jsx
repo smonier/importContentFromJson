@@ -40,6 +40,11 @@ import {
 export default () => {
     const {t} = useTranslation('importContentFromJson');
 
+    const extraFields = [
+        {name: 'j:tagList', displayName: 'Tags'},
+        {name: 'j:defaultCategory', displayName: 'Default category'}
+    ];
+
     // --- UI state ------------------------------------------------------------
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
@@ -192,7 +197,7 @@ export default () => {
     }, [propertiesData]);
 
     useEffect(() => {
-        if (properties.length > 0 && fileFields.length > 0) {
+        if ((properties.length > 0 || extraFields.length > 0) && fileFields.length > 0) {
             setFieldMappings(prev => {
                 const mapping = {...prev};
                 properties.forEach(prop => {
@@ -200,10 +205,15 @@ export default () => {
                         mapping[prop.name] = prop.name;
                     }
                 });
+                extraFields.forEach(field => {
+                    if (fileFields.includes(field.name) && !mapping[field.name]) {
+                        mapping[field.name] = field.name;
+                    }
+                });
                 return mapping;
             });
         }
-    }, [properties, fileFields]);
+    }, [properties, extraFields, fileFields]);
 
     const categoryCache = useRef(new Map()); // Store categories as { name: uuid }
 
@@ -363,7 +373,12 @@ export default () => {
             return;
         }
 
-        const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties, ['j:tagList', 'j:defaultCategory']);
+        const preview = generatePreviewData(
+            uploadedFileContent,
+            fieldMappings,
+            properties,
+            extraFields.map(f => f.name)
+        );
         setMappedPreview(preview);
         setIsValidJson(true); // Generated JSON is considered valid
         setIsPreviewOpen(true);
@@ -808,6 +823,7 @@ export default () => {
                             {properties.length > 0 && fileFields.length > 0 && (
                                 <FieldMapping
                                     properties={properties}
+                                    extraFields={extraFields}
                                     fileFields={fileFields}
                                     fieldMappings={fieldMappings}
                                     setFieldMappings={setFieldMappings}

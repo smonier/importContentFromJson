@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {Dropdown, Typography} from '@jahia/moonstone';
 import styles from './FieldMapping.scss';
 
-export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMappings, t}) => {
+export const FieldMapping = ({properties, extraFields = [], fileFields, fieldMappings, setFieldMappings, t}) => {
     const dropdownData = [{label: t('label.none'), value: ''},
         ...fileFields.map(field => ({label: field, value: field}))];
 
@@ -40,12 +40,30 @@ export const FieldMapping = ({properties, fileFields, fieldMappings, setFieldMap
                     />
                 </div>
             ))}
+            {extraFields.map(field => (
+                <div key={field.name} className={styles.mappingRow}>
+                    <Typography variant="body" className={styles.propertyName}>{field.displayName || field.name}</Typography>
+                    <Dropdown
+                        data={dropdownData}
+                        value={fieldMappings[field.name] || ''}
+                        placeholder={t('label.selectPlaceholder')}
+                        className={styles.dropdown}
+                        onChange={(e, item) => handleChange(field.name, item.value)}
+                    />
+                </div>
+            ))}
         </div>
     );
 };
 
 FieldMapping.propTypes = {
     properties: PropTypes.array.isRequired,
+    extraFields: PropTypes.arrayOf(
+        PropTypes.shape({
+            name: PropTypes.string.isRequired,
+            displayName: PropTypes.string
+        })
+    ),
     fileFields: PropTypes.array.isRequired,
     fieldMappings: PropTypes.object.isRequired,
     setFieldMappings: PropTypes.func.isRequired,
