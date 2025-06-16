@@ -31,3 +31,29 @@ describe('generatePreviewData extra fields', () => {
         expect(res[0]['j:defaultCategory']).toEqual(['cat']);
     });
 });
+
+describe('generatePreviewData basic tag handling', () => {
+    test('comma separated strings become arrays', () => {
+        const uploaded = [{tags: 'a,b,c'}];
+        const fieldMappings = {'j:tagList': 'tags'};
+
+        const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
+        expect(res[0]['j:tagList']).toEqual(['a', 'b', 'c']);
+    });
+
+    test('missing values produce empty arrays', () => {
+        const uploaded = [{}];
+        const fieldMappings = {'j:tagList': 'tags'};
+
+        const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
+        expect(res[0]['j:tagList']).toEqual([]);
+    });
+
+    test('custom field mappings are respected', () => {
+        const uploaded = [{customTags: 'x,y'}];
+        const fieldMappings = {'j:tagList': 'customTags'};
+
+        const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
+        expect(res[0]['j:tagList']).toEqual(['x', 'y']);
+    });
+});
