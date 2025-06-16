@@ -116,6 +116,18 @@ export const CreateContentMutation = gql`
         }
     }`;
 
+export const UpdateContentMutation = gql`
+    mutation UpdateContentMutation($pathOrId: String!, $properties: [InputJCRProperty] = []) {
+        jcr(workspace: EDIT) {
+            mutateNode(pathOrId: $pathOrId) {
+                setPropertiesBatch(properties: $properties) {
+                    path
+                }
+                uuid
+            }
+        }
+    }`;
+
 export const CreateFileMutation = gql`
     mutation uploadFile(
         $nameInJCR: String!, 
