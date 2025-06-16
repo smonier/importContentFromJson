@@ -18,6 +18,7 @@
     "path": "Content path",
     "enterPathSuffix": "Enter content path suffix",
     "enterPathSuffixHelp": "Recursive folders are allowed, e.g. /news/202501.",
+    "overrideExisting": "Override existing content",
     "selectLanguage": "Select the target language for import",
     "fieldMapping": "Field mapping",
     "previewTitle": "Generated JSON preview",

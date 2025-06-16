@@ -18,6 +18,7 @@
     "path": "Inhaltspfad",
     "enterPathSuffix": "Inhaltspfad-Suffix eingeben",
     "enterPathSuffixHelp": "Rekursive Ordner sind erlaubt, z.B. /news/202501.",
+    "overrideExisting": "Vorhandenen Inhalt überschreiben",
     "selectLanguage": "Zielsprache für den Import auswählen",
     "fieldMapping": "Feldzuordnung",
     "previewTitle": "Vorschau des generierten JSON",

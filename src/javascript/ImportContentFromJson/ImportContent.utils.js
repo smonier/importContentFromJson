@@ -32,15 +32,16 @@ export const ensurePathExists = async (fullPath, nodeType, checkPath, createPath
  *
  * @param {string} fullPath Full JCR path of the node to check.
  * @param {Function} checkPath GraphQL lazy query function to check the path.
- * @returns {boolean} True if the node exists, false otherwise.
+ * @returns {{exists: boolean, uuid: string|null}} Result with existence flag and node UUID if found.
  */
 export const nodeExists = async (fullPath, checkPath) => {
     try {
         const {data} = await checkPath({variables: {path: fullPath}});
-        return Boolean(data?.jcr?.nodeByPath);
+        const node = data?.jcr?.nodeByPath;
+        return {exists: Boolean(node), uuid: node?.uuid || null};
     } catch (e) {
         // In case of any error just assume the node does not exist
-        return false;
+        return {exists: false, uuid: null};
     }
 };
 
