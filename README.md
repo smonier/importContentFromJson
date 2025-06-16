@@ -209,6 +209,33 @@ Example of the Field Mapping interface showing JCR properties mapped to CSV colu
 - Available content types and their properties are fetched via GraphQL.
 - Only fields matching the content type properties are imported.
 
+### Unsplash Access Key
+- The module can fetch images from the Unsplash API when a JSON entry defines `"url": "unsplash"`.
+- Configure the API key through the module properties using the `unsplash.accessKey` setting.
+
+Create or edit the file `org.jahia.se.modules.importContentFromJson.cfg` under `META-INF/configurations`:
+
+```properties
+unsplash.accessKey=YOUR-UNSPLASH-ACCESS-KEY
+```
+
+Once set, the importer resolves Unsplash images based on the provided `query` field and stores them in the JCR.
+
+Example JSON snippet:
+
+```json
+{
+  "image": {
+    "url": "unsplash",
+    "query": "forest"
+  }
+}
+```
+
+### Image Proxy Servlet
+- External images are downloaded through `/image-proxy/*` provided by `ImageProxyServlet.java`.
+- This proxy endpoint avoids CORS issues when fetching images before they are uploaded.
+
 ---
 
 ## GraphQL Queries and Mutations
