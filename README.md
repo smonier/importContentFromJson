@@ -48,13 +48,25 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 
     ```bash
     npm install or yarn   # ensures `papaparse` and other packages are installed
-    ```
+   ```
 
 3. Build and deploy server:
 
     ```bash
-   mvn clean install    
+   mvn clean install
    ```
+
+### Running Tests
+
+Ensure Node.js (version 18 or later recommended) is installed.
+
+```bash
+yarn test
+```
+or
+```bash
+npm test
+```
 
 ---
 
