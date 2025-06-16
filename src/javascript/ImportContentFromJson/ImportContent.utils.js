@@ -116,6 +116,14 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
             }
         });
 
+        // Ensure tag and category arrays exist even if not mapped
+        if (!Array.isArray(mappedEntry['j:tagList'])) {
+            mappedEntry['j:tagList'] = [];
+        }
+        if (!Array.isArray(mappedEntry['j:defaultCategory'])) {
+            mappedEntry['j:defaultCategory'] = [];
+        }
+
         return mappedEntry;
     });
 };
