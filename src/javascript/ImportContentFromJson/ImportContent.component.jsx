@@ -790,7 +790,13 @@ export default () => {
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>                        {t('label.enterPathSuffixHelp')}
                         </Typography>
                         <FormControlLabel
-                            control={<Checkbox checked={overrideExisting} onChange={e => setOverrideExisting(e.target.checked)}/>} 
+                            control={
+                                <Checkbox
+                                    checked={overrideExisting}
+                                    onChange={e => setOverrideExisting(e.target.checked)}
+                                    sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
+                                />
+                            }
                             label={t('label.overrideExisting')}
                         />
                         <LanguageSelector
