@@ -363,7 +363,7 @@ export default () => {
             return;
         }
 
-        const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties);
+        const preview = generatePreviewData(uploadedFileContent, fieldMappings, properties, ['j:tagList', 'j:defaultCategory']);
         setMappedPreview(preview);
         setIsValidJson(true); // Generated JSON is considered valid
         setIsPreviewOpen(true);
@@ -560,7 +560,7 @@ export default () => {
 
                 reportData.nodes.push(nodeReport);
 
-                if (contentUuid && mappedEntry['j:tagList']) {
+                if (contentUuid && Array.isArray(mappedEntry['j:tagList']) && mappedEntry['j:tagList'].length > 0) {
                     try {
                         await addTags({variables: {path: contentUuid, tags: mappedEntry['j:tagList']}});
                     } catch (error) {
@@ -572,7 +572,7 @@ export default () => {
                     }
                 }
 
-                if (contentUuid && mappedEntry['j:defaultCategory']) {
+                if (contentUuid && Array.isArray(mappedEntry['j:defaultCategory']) && mappedEntry['j:defaultCategory'].length > 0) {
                     try {
                         await fetchCategoriesOnce();
 

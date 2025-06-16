@@ -65,7 +65,7 @@ export const flattenCategoryTree = (nodes, cache) => {
  * @param {Array} properties Definitions of the selected content type properties.
  * @returns {Array} Array of mapped entries ready for import.
  */
-export const generatePreviewData = (uploadedFileContent, fieldMappings, properties) => {
+export const generatePreviewData = (uploadedFileContent, fieldMappings, properties, extraFields = []) => {
     if (!uploadedFileContent) {
         return [];
     }
@@ -73,11 +73,12 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
     return uploadedFileContent.map(rawEntry => {
         const mappedEntry = {};
         Object.entries(fieldMappings).forEach(([propName, fileField]) => {
-            if (rawEntry[fileField] === undefined) {
+            const sourceKey = rawEntry[fileField] !== undefined ? fileField : propName;
+            if (rawEntry[sourceKey] === undefined) {
                 return;
             }
 
-            let value = rawEntry[fileField];
+            let value = rawEntry[sourceKey];
             const propertyDefinition = properties.find(prop => prop.name === propName);
             const isImage = propertyDefinition?.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
             const isMultiple = propertyDefinition?.multiple;
@@ -98,13 +99,22 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
             mappedEntry[propName] = value;
         });
 
-        if (rawEntry['j:tagList']) {
-            mappedEntry['j:tagList'] = rawEntry['j:tagList'];
-        }
+        extraFields.forEach(field => {
+            const sourceKey = fieldMappings[field] || field;
+            let value = rawEntry[sourceKey];
 
-        if (rawEntry['j:defaultCategory']) {
-            mappedEntry['j:defaultCategory'] = rawEntry['j:defaultCategory'];
-        }
+            if (typeof value === 'string') {
+                value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+            }
+
+            if (Array.isArray(value)) {
+                mappedEntry[field] = value;
+            } else if (value !== undefined && value !== null) {
+                mappedEntry[field] = [value];
+            } else {
+                mappedEntry[field] = [];
+            }
+        });
 
         return mappedEntry;
     });
