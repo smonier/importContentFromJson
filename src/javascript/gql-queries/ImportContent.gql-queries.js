@@ -3,7 +3,7 @@ import {gql} from '@apollo/client';
 export const GetContentTypeQuery = gql`
     query SiteContentTypesQuery($siteKey: String!, $language:String!) {
         jcr {
-            nodeTypes(filter: {includeMixins: false, siteKey: $siteKey, includeTypes: ["jmix:droppableContent", "jnt:page", "jnt:file"], excludeTypes: ["jmix:studioOnly", "jmix:hiddenType", "jnt:editableFile"]}) {
+            nodeTypes(filter: {includeMixins: false, siteKey: $siteKey, includeTypes: ["jnt:content","jmix:droppableContent", "jnt:page", "jnt:file"], excludeTypes: ["jmix:studioOnly", "jmix:hiddenType", "jnt:editableFile"]}) {
                 nodes {
                     name
                     displayName(language: $language)
