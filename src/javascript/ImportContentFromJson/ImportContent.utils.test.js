@@ -3,7 +3,7 @@ import {generatePreviewData} from './ImportContent.utils.js';
 describe('generatePreviewData extra fields', () => {
     test('maps and parses tag and category fields', () => {
         const uploaded = [{title: 'T', tags: 'tag1, tag2', cats: 'cat1'}];
-        const fieldMappings = { 'jcr:title': 'title', 'j:tagList': 'tags', 'j:defaultCategory': 'cats' };
+        const fieldMappings = {'jcr:title': 'title', 'j:tagList': 'tags', 'j:defaultCategory': 'cats'};
         const properties = [{name: 'jcr:title'}];
 
         const res = generatePreviewData(uploaded, fieldMappings, properties, ['j:tagList', 'j:defaultCategory']);
@@ -13,7 +13,7 @@ describe('generatePreviewData extra fields', () => {
     });
 
     test('fallback to property name and ensure arrays', () => {
-        const uploaded = [{ }];
+        const uploaded = [{}];
         const fieldMappings = {};
         const properties = [];
 
@@ -56,6 +56,14 @@ describe('generatePreviewData basic tag handling', () => {
         const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
         expect(res[0]['j:tagList']).toEqual(['x', 'y']);
     });
+
+    test('json array strings become arrays', () => {
+        const uploaded = [{tags: '[]'}];
+        const fieldMappings = {'j:tagList': 'tags'};
+
+        const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
+        expect(res[0]['j:tagList']).toEqual([]);
+    });
 });
 
 describe('generatePreviewData mapping removal', () => {
@@ -74,5 +82,25 @@ describe('generatePreviewData mapping removal', () => {
 
         const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
         expect(res[0]['j:tagList']).toEqual([]);
+    });
+});
+
+describe('generatePreviewData multiple property handling', () => {
+    test('wraps single values into arrays for multiple properties', () => {
+        const uploaded = [{options: 'swimmingPool'}];
+        const fieldMappings = {options: 'options'};
+        const properties = [{name: 'options', multiple: true}];
+
+        const res = generatePreviewData(uploaded, fieldMappings, properties);
+        expect(res[0].options).toEqual(['swimmingPool']);
+    });
+
+    test('parses json array strings for multiple properties', () => {
+        const uploaded = [{options: '["a","b"]'}];
+        const fieldMappings = {options: 'options'};
+        const properties = [{name: 'options', multiple: true}];
+
+        const res = generatePreviewData(uploaded, fieldMappings, properties);
+        expect(res[0].options).toEqual(['a', 'b']);
     });
 });

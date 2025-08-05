@@ -39,7 +39,7 @@ export const nodeExists = async (fullPath, checkPath) => {
         const {data} = await checkPath({variables: {path: fullPath}});
         const node = data?.jcr?.nodeByPath;
         return {exists: Boolean(node), uuid: node?.uuid || null};
-    } catch (e) {
+    } catch (_) {
         // In case of any error just assume the node does not exist
         return {exists: false, uuid: null};
     }
@@ -78,7 +78,7 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
                 return;
             }
 
-            const sourceKey = rawEntry[fileField] !== undefined ? fileField : propName;
+            const sourceKey = rawEntry[fileField] === undefined ? propName : fileField;
             if (rawEntry[sourceKey] === undefined) {
                 return;
             }
@@ -93,11 +93,29 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
                     if (typeof value === 'string') {
                         value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
                     }
+
                     if (Array.isArray(value)) {
                         value = value.map(v => (typeof v === 'string' ? {url: v} : v));
                     }
                 } else if (typeof value === 'string') {
                     value = {url: value};
+                }
+            } else if (isMultiple) {
+                if (typeof value === 'string') {
+                    const trimmed = value.trim();
+                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                        try {
+                            value = JSON.parse(trimmed);
+                        } catch (_) {
+                            value = trimmed.slice(1, -1).split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                        }
+                    } else {
+                        value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                    }
+                } else if (value !== undefined && value !== null) {
+                    value = Array.isArray(value) ? value : [value];
+                } else {
+                    value = [];
                 }
             }
 
@@ -116,7 +134,16 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
             let value = rawEntry[sourceKey];
 
             if (typeof value === 'string') {
-                value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                const trimmed = value.trim();
+                if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                    try {
+                        value = JSON.parse(trimmed);
+                    } catch (_) {
+                        value = trimmed.slice(1, -1).split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                    }
+                } else {
+                    value = value.split(/[;,]/).map(v => v.trim()).filter(Boolean);
+                }
             }
 
             if (Array.isArray(value)) {
@@ -132,6 +159,7 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
         if (!Array.isArray(mappedEntry['j:tagList'])) {
             mappedEntry['j:tagList'] = [];
         }
+
         if (!Array.isArray(mappedEntry['j:defaultCategory'])) {
             mappedEntry['j:defaultCategory'] = [];
         }
