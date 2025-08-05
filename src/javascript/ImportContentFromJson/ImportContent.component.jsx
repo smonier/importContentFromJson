@@ -211,18 +211,18 @@ export default () => {
             setFieldMappings(prev => {
                 const mapping = {...prev};
                 properties.forEach(prop => {
-                    if (fileFields.includes(prop.name) && !mapping[prop.name]) {
+                    if (fileFields.includes(prop.name) && mapping[prop.name] === undefined) {
                         mapping[prop.name] = prop.name;
                     }
                 });
                 extraFields.forEach(field => {
-                    if (fileFields.includes(field.name) && !mapping[field.name]) {
+                    if (fileFields.includes(field.name) && mapping[field.name] === undefined) {
                         mapping[field.name] = field.name;
                     }
                 });
 
                 [TAG_LIST_FIELD, DEFAULT_CATEGORY_FIELD].forEach(fieldName => {
-                    if (fileFields.includes(fieldName) && !mapping[fieldName]) {
+                    if (fileFields.includes(fieldName) && mapping[fieldName] === undefined) {
                         mapping[fieldName] = fieldName;
                     }
                 });
