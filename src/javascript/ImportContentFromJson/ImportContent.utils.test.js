@@ -57,3 +57,22 @@ describe('generatePreviewData basic tag handling', () => {
         expect(res[0]['j:tagList']).toEqual(['x', 'y']);
     });
 });
+
+describe('generatePreviewData mapping removal', () => {
+    test('ignores properties explicitly unmapped', () => {
+        const uploaded = [{title: 'T'}];
+        const fieldMappings = {'jcr:title': null};
+        const properties = [{name: 'jcr:title'}];
+
+        const res = generatePreviewData(uploaded, fieldMappings, properties);
+        expect(res[0]['jcr:title']).toBeUndefined();
+    });
+
+    test('unmapped extra fields produce empty arrays', () => {
+        const uploaded = [{'j:tagList': 'a,b'}];
+        const fieldMappings = {'j:tagList': null};
+
+        const res = generatePreviewData(uploaded, fieldMappings, [], ['j:tagList']);
+        expect(res[0]['j:tagList']).toEqual([]);
+    });
+});

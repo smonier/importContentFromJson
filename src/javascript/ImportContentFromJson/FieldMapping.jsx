@@ -11,10 +11,10 @@ export const FieldMapping = ({properties, extraFields = [], fileFields, fieldMap
         console.log('Field mapping changed', propertyName, '->', value);
         setFieldMappings(prev => {
             const updated = {...prev};
-            if (!value) {
-                delete updated[propertyName];
-            } else {
+            if (value) {
                 updated[propertyName] = value;
+            } else {
+                updated[propertyName] = null;
             }
 
             return updated;

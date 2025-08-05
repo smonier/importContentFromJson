@@ -74,6 +74,10 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
     return uploadedFileContent.map(rawEntry => {
         const mappedEntry = {};
         Object.entries(fieldMappings).forEach(([propName, fileField]) => {
+            if (!fileField) {
+                return;
+            }
+
             const sourceKey = rawEntry[fileField] !== undefined ? fileField : propName;
             if (rawEntry[sourceKey] === undefined) {
                 return;
@@ -101,7 +105,14 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
         });
 
         extraFields.forEach(field => {
-            const sourceKey = fieldMappings[field] || field;
+            const mappedField = fieldMappings[field];
+
+            if (mappedField === null) {
+                mappedEntry[field] = [];
+                return;
+            }
+
+            const sourceKey = mappedField || field;
             let value = rawEntry[sourceKey];
 
             if (typeof value === 'string') {
