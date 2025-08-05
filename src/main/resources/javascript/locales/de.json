@@ -42,6 +42,10 @@
     "category": "Kategorie",
     "nodePath": "Knotenpfad",
     "status": "Status"
-    ,"reportPathPrefix": "Erstellt unter:"
+    ,"reportPathPrefix": "Erstellt unter:",
+    "selectFolder": "Ordner auswählen",
+    "downloadReport": "Bericht herunterladen",
+    "reason": "Grund",
+    "details": "Details"
   }
 }

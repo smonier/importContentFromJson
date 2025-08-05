@@ -43,6 +43,9 @@
     ,"nodePath": "Node path"
     ,"status": "Status"
     ,"reportPathPrefix": "Created under:",
-    "selectFolder": "Select folder"
+    "selectFolder": "Select folder",
+    "downloadReport": "Download report",
+    "reason": "Reason",
+    "details": "Details"
   }
 }

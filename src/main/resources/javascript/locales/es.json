@@ -42,6 +42,10 @@
     "category": "Categoría",
     "nodePath": "Ruta del nodo",
     "status": "Estado"
-    ,"reportPathPrefix": "Creado en:" 
+    ,"reportPathPrefix": "Creado en:",
+    "selectFolder": "Seleccionar carpeta",
+    "downloadReport": "Descargar informe",
+    "reason": "Razón",
+    "details": "Detalles"
   }
 }

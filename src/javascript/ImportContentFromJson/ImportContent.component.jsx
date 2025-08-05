@@ -101,7 +101,7 @@ export default () => {
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetContentType error', error);
+            console.error('GetContentType error:', error.message);
             setContentTypeError(error);
         }
     });
@@ -109,7 +109,7 @@ export default () => {
     const [fetchProperties, {data: propertiesData}] = useLazyQuery(GetContentPropertiesQuery, {
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetContentProperties error', error);
+            console.error('GetContentProperties error:', error.message);
             setPropertiesError(error);
         }
     });
@@ -122,52 +122,52 @@ export default () => {
             }
         },
         onError: error => {
-            console.error('Fetch categories error', error);
+            console.error('Fetch categories error:', error.message);
         }
     });
 
     const [checkPath] = useLazyQuery(CheckPathQuery, {
         fetchPolicy: 'network-only',
-        onError: error => console.error('CheckPath error', error)
+        onError: error => console.error('CheckPath error:', error.message)
     });
     const [createPath] = useMutation(CreatePathMutation, {
-        onError: error => console.error('CreatePath error', error)
+        onError: error => console.error('CreatePath error:', error.message)
     });
     const [createContent] = useMutation(CreateContentMutation, {
         onError: error => {
             if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('already exists')) {
                 console.info('CreateContent skipped - node already exists');
             } else {
-                console.error('CreateContent error', error);
+                console.error('CreateContent error:', error.message);
             }
         }
     });
     const [checkImageExists] = useLazyQuery(CheckImageExists, {
-        onError: error => console.error('CheckImageExists error', error)
+        onError: error => console.error('CheckImageExists error:', error.message)
     });
     const [addFileToJcr] = useMutation(CreateFileMutation, {
-        onError: error => console.error('CreateFile error', error)
+        onError: error => console.error('CreateFile error:', error.message)
     });
     const [addTags] = useMutation(AddTags, {
-        onError: error => console.error('AddTags error', error)
+        onError: error => console.error('AddTags error:', error.message)
     });
     const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists, {
-        onError: error => console.error('CheckIfCategoryExists error', error)
+        onError: error => console.error('CheckIfCategoryExists error:', error.message)
     });
     const [addCategories] = useMutation(AddCategories, {
-        onError: error => console.error('AddCategories error', error)
+        onError: error => console.error('AddCategories error:', error.message)
     });
     const [updateContent] = useMutation(UpdateContentMutation, {
-        onError: error => console.error('UpdateContent error', error)
+        onError: error => console.error('UpdateContent error:', error.message)
     });
     const [addVanityUrl] = useMutation(AddVanityUrl, {
-        onError: error => console.error('AddVanityUrl error', error)
+        onError: error => console.error('AddVanityUrl error:', error.message)
     });
     const [fetchSiteLanguages, {data: siteLanguagesData}] = useLazyQuery(GET_SITE_LANGUAGES, {
         variables: {workspace: 'EDIT', scope: `/sites/${siteKey}`},
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetSiteLanguages error', error);
+            console.error('GetSiteLanguages error:', error.message);
             setLanguageError(error);
         }
     });
@@ -246,7 +246,7 @@ export default () => {
                 flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
             }
         } catch (error) {
-            console.error('GraphQL Category Fetch Error:', error);
+            console.error('GraphQL Category Fetch Error:', error.message);
         }
     };
 
@@ -298,7 +298,7 @@ export default () => {
                     setIsValidJson(false); // Structure validation will set to true
                 }
             } catch (error) {
-                console.error('Error parsing file:', error);
+            console.error('Error parsing file:', error.message);
                 setIsValidJson(false);
                 alert('Invalid file. Please check the file contents.');
             }
@@ -436,7 +436,7 @@ export default () => {
         let imageFailCount = 0;
         let categorySuccessCount = 0;
         let categoryFailCount = 0;
-        const reportData = {nodes: [], images: [], categories: [], path: fullContentPath};
+        const reportData = {nodes: [], images: [], categories: [], errors: [], path: fullContentPath};
 
         try {
             if (!previewData) {
@@ -475,6 +475,7 @@ export default () => {
                 if (exists && !overrideExisting) {
                     reportData.nodes.push({name: fullNodePath, status: 'already exists'});
                     skippedCount++;
+                    errorReport.push({node: fullNodePath, reason: 'Node already exists', details: ''});
                     continue;
                 }
 
@@ -702,10 +703,12 @@ export default () => {
             console.info(`🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed`);
             console.groupEnd();
 
+            reportData.errors = errorReport;
             setReport(reportData);
             setIsReportOpen(true);
         } catch (error) {
-            console.error('Error during import:', error);
+            console.error('Error during import:', error.message);
+            reportData.errors.push({node: 'import', reason: 'Unexpected error', details: error.message});
             reportData.nodes.push({name: 'import', status: 'failed'});
             setReport(reportData);
             setIsReportOpen(true);
