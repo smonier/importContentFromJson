@@ -1,3 +1,4 @@
+import {ApolloError} from '@apollo/client';
 import {createApi} from 'unsplash-js';
 
 const proxyServer = '/image-proxy?url='; // Replace with your actual proxy server URL
@@ -80,17 +81,30 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             continue;
         }
 
+        const fileName = extractFileName(url, index);
+        const imagePath = `${baseFilePath}/${pathSuffix}/${fileName}`;
+        let existingNode = null;
+
         try {
-            const fileName = extractFileName(url, index);
-            const imagePath = `${baseFilePath}/${pathSuffix}/${fileName}`;
             const {data} = await checkImageExists({variables: {path: imagePath}});
-            const existingNode = data?.jcr?.nodeByPath;
-            if (existingNode) {
-                console.log(`Image exists: ${existingNode.name}. Using UUID: ${existingNode.uuid}`);
-                results.push({uuid: existingNode.uuid, status: 'already exists', name: fileName});
+            existingNode = data?.jcr?.nodeByPath;
+        } catch (error) {
+            if (error instanceof ApolloError && error.message.includes('PathNotFoundException')) {
+                existingNode = null;
+            } else {
+                console.error(`Error checking image at path ${imagePath}:`, error);
+                results.push({uuid: null, status: 'failed', name: fileName});
                 continue;
             }
+        }
 
+        if (existingNode) {
+            console.log(`Image exists: ${existingNode.name}. Using UUID: ${existingNode.uuid}`);
+            results.push({uuid: existingNode.uuid, status: 'already exists', name: fileName});
+            continue;
+        }
+
+        try {
             const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
             const binaryResponse = await fetch(proxiedUrl);
 
@@ -149,9 +163,20 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
 
         const fileName = extractFileName(url, 1);
         const imagePath = `${baseFilePath}/${pathSuffix}/${fileName}`;
-        const {data} = await checkImageExists({variables: {path: imagePath}});
+        let existingNode = null;
 
-        const existingNode = data?.jcr?.nodeByPath;
+        try {
+            const {data} = await checkImageExists({variables: {path: imagePath}});
+            existingNode = data?.jcr?.nodeByPath;
+        } catch (error) {
+            if (error instanceof ApolloError && error.message.includes('PathNotFoundException')) {
+                existingNode = null;
+            } else {
+                console.error(`Error checking image at path ${imagePath}:`, error);
+                return {uuid: null, status: 'failed', name: ''};
+            }
+        }
+
         if (existingNode) {
             console.log(`Image exists: ${existingNode.name}. Using UUID: ${existingNode.uuid}`);
             return {uuid: existingNode.uuid, status: 'already exists', name: fileName};
