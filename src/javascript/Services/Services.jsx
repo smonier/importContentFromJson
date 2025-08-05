@@ -42,7 +42,7 @@ const fetchUnsplashImages = async (query, perPage = 10) => {
             }))
             .filter(image => image.url !== ''); // Ensure only valid URLs are returned
     } catch (error) {
-        console.error('Error fetching images from Unsplash:', error);
+        console.error('Error fetching images from Unsplash:', error.message);
         return [];
     }
 };
@@ -92,7 +92,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             if (error instanceof ApolloError && error.message.includes('PathNotFoundException')) {
                 existingNode = null;
             } else {
-                console.error(`Error checking image at path ${imagePath}:`, error);
+                console.error(`Error checking image at path ${imagePath}:`, error.message);
                 results.push({uuid: null, status: 'failed', name: fileName});
                 continue;
             }
@@ -135,7 +135,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
                 results.push({uuid: null, status: 'failed', name: fileName});
             }
         } catch (error) {
-            console.error(`Error processing image at index ${index}:`, error);
+            console.error(`Error processing image at index ${index}:`, error.message);
             results.push({uuid: null, status: 'failed', name: fileName});
         }
     }
@@ -172,7 +172,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
             if (error instanceof ApolloError && error.message.includes('PathNotFoundException')) {
                 existingNode = null;
             } else {
-                console.error(`Error checking image at path ${imagePath}:`, error);
+                console.error(`Error checking image at path ${imagePath}:`, error.message);
                 return {uuid: null, status: 'failed', name: ''};
             }
         }
@@ -212,7 +212,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
         console.warn(`Failed to get UUID for image at URL: ${url}`);
         return {uuid: null, status: 'failed', name: fileName};
     } catch (error) {
-        console.error(`Error processing image for key ${key}:`, error);
+        console.error(`Error processing image for key ${key}:`, error.message);
         return {uuid: null, status: 'failed', name: ''};
     }
 };
