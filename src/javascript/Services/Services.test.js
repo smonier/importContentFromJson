@@ -1,3 +1,4 @@
+import {ApolloError} from '@apollo/client';
 import {handleSingleImage, handleMultipleImages} from './Services.jsx';
 
 describe('image handlers', () => {
@@ -52,5 +53,37 @@ describe('image handlers', () => {
         expect(fetch).toHaveBeenCalledTimes(2);
         expect(addFileToJcr.mock.calls[0][0].variables.fileHandle.name).toBe('a.png');
         expect(addFileToJcr.mock.calls[1][0].variables.fileHandle.name).toBe('b.png');
+    });
+
+    test('handleSingleImage uploads when checkImageExists throws PathNotFoundException', async () => {
+        const checkImageExists = jest.fn(() => Promise.reject(new ApolloError({errorMessage: 'PathNotFoundException'})));
+        const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuidPath'}}}}));
+
+        const res = await handleSingleImage('http://example.com/img.png', 'img', checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res.uuid).toBe('uuidPath');
+        expect(res.status).toBe('created');
+        expect(fetch).toHaveBeenCalled();
+    });
+
+    test('handleSingleImage fails when checkImageExists throws other error', async () => {
+        const checkImageExists = jest.fn(() => Promise.reject(new Error('boom')));
+        const addFileToJcr = jest.fn();
+
+        const res = await handleSingleImage('http://example.com/img.png', 'img', checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res.uuid).toBeNull();
+        expect(res.status).toBe('failed');
+        expect(fetch).not.toHaveBeenCalled();
+        expect(addFileToJcr).not.toHaveBeenCalled();
+    });
+
+    test('handleMultipleImages uploads when checkImageExists throws PathNotFoundException', async () => {
+        const checkImageExists = jest.fn(() => Promise.reject(new ApolloError({errorMessage: 'PathNotFoundException'})));
+        const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuid3'}}}}));
+
+        const res = await handleMultipleImages(['http://ex.com/a.png'], 'imgs', {}, checkImageExists, addFileToJcr, '/files', 'test');
+        expect(res).toEqual([
+            {uuid: 'uuid3', status: 'created', name: 'a.png'}
+        ]);
+        expect(fetch).toHaveBeenCalledTimes(1);
     });
 });
