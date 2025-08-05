@@ -42,6 +42,7 @@
     "category": "Catégorie",
     "nodePath": "Chemin du nœud",
     "status": "Statut"
-    ,"reportPathPrefix": "Créé sous :"
+    ,"reportPathPrefix": "Créé sous :",
+    "selectFolder": "Select. Repertoire"
   }
 }

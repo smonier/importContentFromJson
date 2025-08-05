@@ -741,6 +741,25 @@ export default () => {
         startImport(generatedFileContent);
     };
 
+    // --- Folder Picker Handler ---
+    const handleOpenPathPicker = () => {
+        const initialPath = pathSuffix ? `${baseContentPath}/${pathSuffix}` : baseContentPath;
+
+        window.CE_API.openPicker({
+            type: 'editorial',
+            initialSelectedItem: [initialPath],
+            site: window.jahiaGWTParameters.siteKey,
+            lang: window.jahiaGWTParameters.uilang,
+            isMultiple: false,
+            setValue: ([selected]) => {
+                if (selected?.path) {
+                    const selectedPath = selected.path.replace(`${baseContentPath}/`, '');
+                    setPathSuffix(selectedPath);
+                }
+            }
+        });
+    };
+
     return (
         <>
 
@@ -781,11 +800,15 @@ export default () => {
                                 {baseContentPath}/
                             </Typography>
                             <Input
-                            value={pathSuffix}
-                            placeholder={t('label.enterPathSuffix')}
-                            className={styles.pathSuffixInput}
-                            onChange={e => setPathSuffix(e.target.value)}
-                        />
+                                value={pathSuffix}
+                                placeholder={t('label.enterPathSuffix')}
+                                className={styles.pathSuffixInput}
+                                onChange={e => setPathSuffix(e.target.value)}
+                            />
+                            <Button
+                                label={t('label.selectFolder')}
+                                onClick={handleOpenPathPicker}
+                            />
                         </div>
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>
                             {t('label.enterPathSuffixHelp')}

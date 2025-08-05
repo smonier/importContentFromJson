@@ -42,6 +42,7 @@
     ,"category": "Category"
     ,"nodePath": "Node path"
     ,"status": "Status"
-    ,"reportPathPrefix": "Created under:" 
+    ,"reportPathPrefix": "Created under:",
+    "selectFolder": "Select folder"
   }
 }
