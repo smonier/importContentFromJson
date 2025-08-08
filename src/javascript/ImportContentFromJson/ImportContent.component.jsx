@@ -298,7 +298,7 @@ export default () => {
                     setIsValidJson(false); // Structure validation will set to true
                 }
             } catch (error) {
-            console.error('Error parsing file:', error.message);
+                console.error('Error parsing file:', error.message);
                 setIsValidJson(false);
                 alert('Invalid file. Please check the file contents.');
             }
@@ -464,9 +464,15 @@ export default () => {
 
             for (const mappedEntry of previewData) {
                 const contentName = mappedEntry['jcr:title'] ?
-                    mappedEntry['jcr:title'].replace(/\s+/g, '_').toLowerCase() :
+                    mappedEntry['jcr:title']
+                        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+                        .replace(/\s+/g, '_') // Replace spaces with underscores
+                        .toLowerCase() :
                     mappedEntry.name ?
-                        mappedEntry.name.replace(/\s+/g, '_').toLowerCase() :
+                        mappedEntry.name
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .replace(/\s+/g, '_')
+                            .toLowerCase() :
                         `content_${new Date().getTime()}`;
                 const fullNodePath = `${fullContentPath}/${contentName}`;
                 const nodeReport = {name: fullNodePath, status: 'created'};
