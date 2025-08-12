@@ -462,17 +462,19 @@ export default () => {
                 return;
             }
 
+            const normalizeName = value =>
+                value
+                    .normalize('NFD') // Split accents from letters
+                    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+                    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+                    .replace(/\s+/g, '_') // Replace spaces with underscores
+                    .toLowerCase();
+
             for (const mappedEntry of previewData) {
                 const contentName = mappedEntry['jcr:title'] ?
-                    mappedEntry['jcr:title']
-                        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
-                        .replace(/\s+/g, '_') // Replace spaces with underscores
-                        .toLowerCase() :
+                    normalizeName(mappedEntry['jcr:title']) :
                     mappedEntry.name ?
-                        mappedEntry.name
-                            .replace(/[^a-zA-Z0-9\s]/g, '')
-                            .replace(/\s+/g, '_')
-                            .toLowerCase() :
+                        normalizeName(mappedEntry.name) :
                         `content_${new Date().getTime()}`;
                 const fullNodePath = `${fullContentPath}/${contentName}`;
                 const nodeReport = {name: fullNodePath, status: 'created'};
