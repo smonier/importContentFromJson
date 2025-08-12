@@ -22,7 +22,7 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 ## Features
 
 - Import JSON **and CSV** files to a specified JCR content path. CSV parsing relies on [PapaParse](https://www.papaparse.com/).
-- Manual mapping of uploaded json or csv with existing content type properties
+- Manual mapping of uploaded json or csv with existing content type properties (jmix:mainResource only)
 - Support for both internationalized (i18n) and non-internationalized properties.
 - Validation of JSON fields against the selected content type properties.
 - Automatic folder creation if the specified path doesn’t exist.
