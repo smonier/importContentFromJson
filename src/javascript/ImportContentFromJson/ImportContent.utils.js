@@ -60,6 +60,40 @@ export const flattenCategoryTree = (nodes, cache) => {
 };
 
 /**
+ * Recursively extract all property paths from a JSON object.
+ * Nested objects are returned using dot notation (e.g. "properties.subtitle").
+ * @param {Object} obj Source object to inspect.
+ * @param {string} prefix Current path prefix.
+ * @returns {Array<string>} Flattened property paths.
+ */
+export const extractFileFields = (obj, prefix = '') => {
+    if (!obj || typeof obj !== 'object') {
+        return [];
+    }
+
+    return Object.keys(obj).flatMap(key => {
+        const value = obj[key];
+        const path = prefix ? `${prefix}.${key}` : key;
+
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            return extractFileFields(value, path);
+        }
+
+        return [path];
+    });
+};
+
+/**
+ * Safely retrieve a nested value from an object using dot notation.
+ * @param {Object} obj Source object.
+ * @param {string} path Dot-notated path (e.g. "properties.subtitle").
+ * @returns {*} Value found at the path or undefined.
+ */
+export const getValueByPath = (obj, path) => {
+    return path.split('.').reduce((acc, part) => (acc !== undefined && acc !== null ? acc[part] : undefined), obj);
+};
+
+/**
  * Build preview data according to field mappings and available properties.
  * @param {Array|Object} uploadedFileContent Parsed JSON or CSV rows.
  * @param {Object} fieldMappings Mapping between JCR properties and file fields.
@@ -78,12 +112,12 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
                 return;
             }
 
-            const sourceKey = rawEntry[fileField] === undefined ? propName : fileField;
-            if (rawEntry[sourceKey] === undefined) {
+            const valueFromFile = getValueByPath(rawEntry, fileField);
+            if (valueFromFile === undefined) {
                 return;
             }
 
-            let value = rawEntry[sourceKey];
+            let value = valueFromFile;
             const propertyDefinition = properties.find(prop => prop.name === propName);
             const isImage = propertyDefinition?.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
             const isMultiple = propertyDefinition?.multiple;
@@ -131,7 +165,7 @@ export const generatePreviewData = (uploadedFileContent, fieldMappings, properti
             }
 
             const sourceKey = mappedField || field;
-            let value = rawEntry[sourceKey];
+            let value = getValueByPath(rawEntry, sourceKey);
 
             if (typeof value === 'string') {
                 const trimmed = value.trim();

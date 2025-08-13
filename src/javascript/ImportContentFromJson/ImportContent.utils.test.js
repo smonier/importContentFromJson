@@ -104,3 +104,14 @@ describe('generatePreviewData multiple property handling', () => {
         expect(res[0].options).toEqual(['a', 'b']);
     });
 });
+
+describe('generatePreviewData nested field handling', () => {
+    test('maps value from nested path using dot notation', () => {
+        const uploaded = [{properties: {subtitle: 'Nested'}}];
+        const fieldMappings = {subtitle: 'properties.subtitle'};
+        const properties = [{name: 'subtitle'}];
+
+        const res = generatePreviewData(uploaded, fieldMappings, properties);
+        expect(res[0].subtitle).toBe('Nested');
+    });
+});
