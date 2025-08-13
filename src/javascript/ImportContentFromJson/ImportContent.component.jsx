@@ -35,7 +35,8 @@ import {
     ensurePathExists,
     flattenCategoryTree,
     generatePreviewData,
-    nodeExists
+    nodeExists,
+    extractFileFields
 } from '~/ImportContentFromJson/ImportContent.utils.js';
 
 export default () => {
@@ -294,7 +295,7 @@ export default () => {
                     const jsonData = JSON.parse(event.target.result);
                     setUploadedFileContent(jsonData); // Store full JSON content
                     const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
-                    setFileFields(Object.keys(firstItem || {}));
+                    setFileFields(extractFileFields(firstItem || {}));
                     setIsValidJson(false); // Structure validation will set to true
                 }
             } catch (error) {
