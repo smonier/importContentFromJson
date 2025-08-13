@@ -1,4 +1,4 @@
-import {generatePreviewData} from './ImportContent.utils.js';
+import {generatePreviewData, extractFileFields} from './ImportContent.utils.js';
 
 describe('generatePreviewData extra fields', () => {
     test('maps and parses tag and category fields', () => {
@@ -113,5 +113,22 @@ describe('generatePreviewData nested field handling', () => {
 
         const res = generatePreviewData(uploaded, fieldMappings, properties);
         expect(res[0].subtitle).toBe('Nested');
+    });
+});
+
+describe('nested array field extraction and mapping', () => {
+    test('extracts nested keys from arrays of objects', () => {
+        const obj = {properties: [{subtitle: 'Nested'}]};
+        const fields = extractFileFields(obj);
+        expect(fields).toContain('properties.subtitle');
+    });
+
+    test('maps value from array using dot notation', () => {
+        const uploaded = [{properties: [{subtitle: 'FromArray'}]}];
+        const fieldMappings = {subtitle: 'properties.subtitle'};
+        const properties = [{name: 'subtitle'}];
+
+        const res = generatePreviewData(uploaded, fieldMappings, properties);
+        expect(res[0].subtitle).toBe('FromArray');
     });
 });

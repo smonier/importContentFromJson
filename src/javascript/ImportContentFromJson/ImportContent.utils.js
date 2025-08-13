@@ -75,8 +75,16 @@ export const extractFileFields = (obj, prefix = '') => {
         const value = obj[key];
         const path = prefix ? `${prefix}.${key}` : key;
 
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-            return extractFileFields(value, path);
+        if (Array.isArray(value)) {
+            if (value.length > 0 && typeof value[0] === 'object') {
+                return [path, ...extractFileFields(value[0], path)];
+            }
+
+            return [path];
+        }
+
+        if (value && typeof value === 'object') {
+            return [path, ...extractFileFields(value, path)];
         }
 
         return [path];
@@ -90,7 +98,22 @@ export const extractFileFields = (obj, prefix = '') => {
  * @returns {*} Value found at the path or undefined.
  */
 export const getValueByPath = (obj, path) => {
-    return path.split('.').reduce((acc, part) => (acc !== undefined && acc !== null ? acc[part] : undefined), obj);
+    return path.split('.').reduce((acc, part) => {
+        if (acc === undefined || acc === null) {
+            return undefined;
+        }
+
+        if (Array.isArray(acc)) {
+            if (part.match(/^\d+$/)) {
+                return acc[Number(part)];
+            }
+
+            const first = acc[0];
+            return first ? first[part] : undefined;
+        }
+
+        return acc[part];
+    }, obj);
 };
 
 /**
