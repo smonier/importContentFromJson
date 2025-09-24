@@ -132,7 +132,10 @@ export default () => {
         onError: error => console.error('CheckPath error:', error.message)
     });
     const [createPath] = useMutation(CreatePathMutation, {
-        onError: error => console.error('CreatePath error:', error.message)
+        onError: error => {
+            console.error('CreatePath error:', error.message);
+            throw error;
+        }
     });
     const [createContent] = useMutation(CreateContentMutation, {
         onError: error => {
@@ -141,28 +144,44 @@ export default () => {
             } else {
                 console.error('CreateContent error:', error.message);
             }
+            throw error;
         }
     });
     const [checkImageExists] = useLazyQuery(CheckImageExists, {
         onError: error => console.error('CheckImageExists error:', error.message)
     });
     const [addFileToJcr] = useMutation(CreateFileMutation, {
-        onError: error => console.error('CreateFile error:', error.message)
+        onError: error => {
+            console.error('CreateFile error:', error.message);
+            throw error;
+        }
     });
     const [addTags] = useMutation(AddTags, {
-        onError: error => console.error('AddTags error:', error.message)
+        onError: error => {
+            console.error('AddTags error:', error.message);
+            throw error;
+        }
     });
     const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists, {
         onError: error => console.error('CheckIfCategoryExists error:', error.message)
     });
     const [addCategories] = useMutation(AddCategories, {
-        onError: error => console.error('AddCategories error:', error.message)
+        onError: error => {
+            console.error('AddCategories error:', error.message);
+            throw error;
+        }
     });
     const [updateContent] = useMutation(UpdateContentMutation, {
-        onError: error => console.error('UpdateContent error:', error.message)
+        onError: error => {
+            console.error('UpdateContent error:', error.message);
+            throw error;
+        }
     });
     const [addVanityUrl] = useMutation(AddVanityUrl, {
-        onError: error => console.error('AddVanityUrl error:', error.message)
+        onError: error => {
+            console.error('AddVanityUrl error:', error.message);
+            throw error;
+        }
     });
     const [fetchSiteLanguages, {data: siteLanguagesData}] = useLazyQuery(GET_SITE_LANGUAGES, {
         variables: {workspace: 'EDIT', scope: `/sites/${siteKey}`},
@@ -703,6 +722,10 @@ export default () => {
                             }
                         });
                         contentUuid = updateData?.jcr?.mutateNode?.uuid || existingUuid;
+                        if (!contentUuid) {
+                            throw new Error('Update mutation did not return a node UUID.');
+                        }
+
                         nodeReport.status = 'updated';
                         console.info(`Content updated: ${fullNodePath}`);
                     } else {
@@ -715,20 +738,21 @@ export default () => {
                             }
                         });
                         contentUuid = contentData?.jcr?.addNode?.uuid;
-                        nodeReport.status = 'created';
-                        if (contentUuid) {
-                            console.info(`Content created: ${fullNodePath}`);
+                        if (!contentUuid) {
+                            throw new Error('Create mutation did not return a node UUID.');
                         }
+
+                        nodeReport.status = 'created';
+                        console.info(`Content created: ${fullNodePath}`);
                     }
 
-                    if (contentUuid) {
-                        successCount++;
-                    }
+                    successCount++;
                 } catch (error) {
+                    const action = exists && overrideExisting ? 'update' : 'creation';
                     nodeReport.status = 'failed';
                     errorReport.push({
                         node: `${fullContentPath}/${contentName}`,
-                        reason: 'Mutation error',
+                        reason: `Content ${action} failed`,
                         details: error.message
                     });
                     reportData.nodes.push(nodeReport);
