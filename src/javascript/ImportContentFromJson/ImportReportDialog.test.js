@@ -55,6 +55,10 @@ describe('ImportReportDialog', () => {
         expect(html).toContain(en.label.summaryCreated);
         expect(html).toContain(en.label.summaryUpdated);
         expect(html).toContain(en.label.summaryFailed);
+        expect(html).toContain(en.label.reportNodesTitle);
+        expect(html).toContain(en.label.reportImagesTitle);
+        expect(html).toContain(en.label.reportCategoriesTitle);
+        expect(html).toContain(en.label.reportCategoriesDetailsTitle);
         expect(html).toContain(en.label.categorySummaryTitle);
         expect(html).toContain('News');
         expect(html).toContain(en.label.nodePath);
