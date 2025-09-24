@@ -21,8 +21,7 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     const summaryGridStyle = {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '12px',
-        marginBottom: '16px'
+        gap: '12px'
     };
     const summaryBlockStyle = {
         border: '1px solid #dcdcdc',
@@ -35,22 +34,28 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     const summaryMetaStyle = {fontSize: '0.8rem', color: '#555'};
     const summaryListStyle = {listStyle: 'none', padding: 0, margin: '8px 0 0 0', fontSize: '0.85rem'};
     const summaryListItemStyle = {display: 'flex', justifyContent: 'space-between', marginBottom: '4px'};
+    const sectionBaseStyle = {padding: '16px', borderRadius: '12px', marginBottom: '16px'};
+    const sectionTitleStyle = {fontWeight: 700, marginBottom: '16px', fontSize: '1rem'};
+    const subSectionTitleStyle = {fontWeight: 600, marginBottom: '8px'};
+    const tableStyle = {width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem'};
+    const headerCellStyle = {textAlign: 'left', borderBottom: '1px solid #ccc', padding: '6px 8px'};
+    const cellStyle = {padding: '6px 8px'};
 
     const renderTable = (items, firstHeader) => (
-        <table style={{width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '0.85rem'}}>
+        <table style={tableStyle}>
             <thead>
                 <tr>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{firstHeader}</th>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.nodePath')}</th>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.status')}</th>
+                    <th style={headerCellStyle}>{firstHeader}</th>
+                    <th style={headerCellStyle}>{t('label.nodePath')}</th>
+                    <th style={headerCellStyle}>{t('label.status')}</th>
                 </tr>
             </thead>
             <tbody>
                 {items.map((item, index) => (
                     <tr key={index}>
-                        <td style={{padding: '4px 8px'}}>{item.name}</td>
-                        <td style={{padding: '4px 8px'}}>{item.node || ''}</td>
-                        <td style={{padding: '4px 8px'}}>{item.status}</td>
+                        <td style={cellStyle}>{item.name}</td>
+                        <td style={cellStyle}>{item.node || ''}</td>
+                        <td style={cellStyle}>{item.status}</td>
                     </tr>
                 ))}
             </tbody>
@@ -58,20 +63,20 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     );
 
     const renderErrorTable = items => (
-        <table style={{width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '0.85rem'}}>
+        <table style={tableStyle}>
             <thead>
                 <tr>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.node')}</th>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.reason')}</th>
-                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc'}}>{t('label.details')}</th>
+                    <th style={headerCellStyle}>{t('label.node')}</th>
+                    <th style={headerCellStyle}>{t('label.reason')}</th>
+                    <th style={headerCellStyle}>{t('label.details')}</th>
                 </tr>
             </thead>
             <tbody>
                 {items.map((item, index) => (
                     <tr key={index}>
-                        <td style={{padding: '4px 8px'}}>{item.node}</td>
-                        <td style={{padding: '4px 8px'}}>{item.reason}</td>
-                        <td style={{padding: '4px 8px'}}>{item.details}</td>
+                        <td style={cellStyle}>{item.node}</td>
+                        <td style={cellStyle}>{item.reason}</td>
+                        <td style={cellStyle}>{item.details}</td>
                     </tr>
                 ))}
             </tbody>
@@ -154,11 +159,11 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         URL.revokeObjectURL(url);
     };
 
-    return (
-        <Dialog fullWidth open={open} maxWidth="md" onClose={onClose}>
-            <DialogTitle>{t('label.reportTitle')}</DialogTitle>
-            <DialogContent dividers>
-                <div style={{marginBottom: '8px', fontWeight: 600}}>{t('label.reportSummaryTitle')}</div>
+    const sections = [
+        {
+            id: 'summary',
+            title: t('label.reportSummaryTitle'),
+            content: (
                 <div style={summaryGridStyle}>
                     <div style={summaryBlockStyle}>
                         <div style={summaryTitleStyle}>{t('label.summaryContentType')}</div>
@@ -223,31 +228,88 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
                         </ul>
                     </div>
                 </div>
-                {nodes.length > 0 && renderTable(nodes, t('label.node'))}
-                {images.length > 0 && renderTable(images, t('label.image'))}
-                {categories.length > 0 && renderTable(categories, t('label.category'))}
-                {errors.length > 0 && renderErrorTable(errors)}
-                {categoryEntries.length > 0 && (
-                    <div style={{marginTop: '24px'}}>
-                        <div style={{fontWeight: 600, marginBottom: '8px'}}>{t('label.categorySummaryTitle')}</div>
-                        <table style={{width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem'}}>
-                            <thead>
-                                <tr>
-                                    <th style={{textAlign: 'left', borderBottom: '1px solid #ccc', padding: '4px 8px'}}>{t('label.category')}</th>
-                                    <th style={{textAlign: 'right', borderBottom: '1px solid #ccc', padding: '4px 8px'}}>{t('label.createdCount')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {categoryEntries.map(([categoryName, count]) => (
-                                    <tr key={categoryName}>
-                                        <td style={{padding: '4px 8px'}}>{categoryName}</td>
-                                        <td style={{padding: '4px 8px', textAlign: 'right'}}>{count}</td>
+            )
+        }
+    ];
+
+    if (nodes.length > 0) {
+        sections.push({
+            id: 'nodes',
+            title: t('label.reportNodesTitle'),
+            content: renderTable(nodes, t('label.node'))
+        });
+    }
+
+    if (errors.length > 0) {
+        sections.push({
+            id: 'errors',
+            title: t('label.reportErrorsTitle'),
+            content: renderErrorTable(errors)
+        });
+    }
+
+    if (images.length > 0) {
+        sections.push({
+            id: 'images',
+            title: t('label.reportImagesTitle'),
+            content: renderTable(images, t('label.image'))
+        });
+    }
+
+    if (categoryEntries.length > 0 || categories.length > 0) {
+        sections.push({
+            id: 'categories',
+            title: t('label.reportCategoriesTitle'),
+            content: (
+                <div>
+                    {categoryEntries.length > 0 && (
+                        <div style={{marginBottom: categories.length > 0 ? '16px' : 0}}>
+                            <div style={subSectionTitleStyle}>{t('label.categorySummaryTitle')}</div>
+                            <table style={tableStyle}>
+                                <thead>
+                                    <tr>
+                                        <th style={headerCellStyle}>{t('label.category')}</th>
+                                        <th style={{...headerCellStyle, textAlign: 'right'}}>{t('label.createdCount')}</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {categoryEntries.map(([categoryName, count]) => (
+                                        <tr key={categoryName}>
+                                            <td style={cellStyle}>{categoryName}</td>
+                                            <td style={{...cellStyle, textAlign: 'right'}}>{count}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {categories.length > 0 && (
+                        <div>
+                            <div style={subSectionTitleStyle}>{t('label.reportCategoriesDetailsTitle')}</div>
+                            {renderTable(categories, t('label.category'))}
+                        </div>
+                    )}
+                </div>
+            )
+        });
+    }
+
+    return (
+        <Dialog fullWidth open={open} maxWidth="md" onClose={onClose}>
+            <DialogTitle>{t('label.reportTitle')}</DialogTitle>
+            <DialogContent dividers>
+                {sections.map((section, index) => (
+                    <div
+                        key={section.id}
+                        style={{
+                            ...sectionBaseStyle,
+                            backgroundColor: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
+                        }}
+                    >
+                        <div style={sectionTitleStyle}>{section.title}</div>
+                        {section.content}
                     </div>
-                )}
+                ))}
             </DialogContent>
             <DialogActions>
                 <Button label={t('label.downloadReport')} onClick={handleDownload}/>
