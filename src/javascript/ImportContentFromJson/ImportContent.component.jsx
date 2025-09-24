@@ -437,7 +437,111 @@ export default () => {
         let imageFailCount = 0;
         let categorySuccessCount = 0;
         let categoryFailCount = 0;
-        const reportData = {nodes: [], images: [], categories: [], errors: [], path: fullContentPath};
+        const selectedContentTypeOption = contentTypes.find(type => type.value === selectedContentType);
+        const reportData = {
+            nodes: [],
+            images: [],
+            categories: [],
+            errors: [],
+            path: fullContentPath,
+            contentType: {
+                value: selectedContentType || '',
+                label: selectedContentTypeOption?.label || selectedContentType || ''
+            }
+        };
+        let totalAttempts = 0;
+        const computeSummary = () => {
+            const validNodeEntries = reportData.nodes.filter(item => item?.name && item.name !== 'import');
+            const nodeSummary = validNodeEntries.reduce((acc, item) => {
+                switch (item.status) {
+                case 'created':
+                    acc.created++;
+                    break;
+                case 'updated':
+                    acc.updated++;
+                    break;
+                case 'already exists':
+                    acc.skipped++;
+                    break;
+                case 'failed':
+                    acc.failed++;
+                    break;
+                default:
+                    break;
+                }
+
+                return acc;
+            }, {created: 0, updated: 0, failed: 0, skipped: 0});
+
+            const imageSummary = reportData.images.reduce((acc, item) => {
+                if (!item) {
+                    return acc;
+                }
+
+                switch (item.status) {
+                case 'created':
+                    acc.created++;
+                    break;
+                case 'updated':
+                    acc.updated++;
+                    break;
+                case 'already exists':
+                    acc.skipped++;
+                    break;
+                case 'failed':
+                    acc.failed++;
+                    break;
+                default:
+                    break;
+                }
+
+                return acc;
+            }, {created: 0, updated: 0, failed: 0, skipped: 0});
+
+            const categorySummary = reportData.categories.reduce((acc, item) => {
+                if (!item) {
+                    return acc;
+                }
+
+                const categoryName = item.name || t('label.unknownCategory');
+
+                switch (item.status) {
+                case 'created':
+                    acc.created++;
+                    acc.createdByName[categoryName] = (acc.createdByName[categoryName] || 0) + 1;
+                    break;
+                case 'already exists':
+                    acc.skipped++;
+                    break;
+                case 'failed':
+                    acc.failed++;
+                    break;
+                default:
+                    break;
+                }
+
+                return acc;
+            }, {created: 0, failed: 0, skipped: 0, createdByName: {}});
+
+            reportData.summary = {
+                contentType: reportData.contentType,
+                path: fullContentPath,
+                nodes: {
+                    processed: validNodeEntries.length,
+                    total: totalAttempts,
+                    ...nodeSummary
+                },
+                images: {
+                    processed: reportData.images.length,
+                    total: reportData.images.length,
+                    ...imageSummary
+                },
+                categories: {
+                    processed: reportData.categories.length,
+                    ...categorySummary
+                }
+            };
+        };
 
         try {
             if (!previewData) {
@@ -684,7 +788,7 @@ export default () => {
             }
 
             // Final import summary report
-            const totalAttempts = previewData.length;
+            totalAttempts = previewData.length;
             const failedCount = errorReport.filter(e => e.reason !== 'Node already exists').length;
             const skippedNodes = errorReport.filter(e => e.reason === 'Node already exists').length;
 
@@ -712,6 +816,7 @@ export default () => {
             console.info(`🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed`);
             console.groupEnd();
 
+            computeSummary();
             reportData.errors = errorReport;
             setReport(reportData);
             setIsReportOpen(true);
@@ -719,6 +824,7 @@ export default () => {
             console.error('Error during import:', error.message);
             reportData.errors.push({node: 'import', reason: 'Unexpected error', details: error.message});
             reportData.nodes.push({name: 'import', status: 'failed'});
+            computeSummary();
             setReport(reportData);
             setIsReportOpen(true);
         } finally {

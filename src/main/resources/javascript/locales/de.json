@@ -42,10 +42,26 @@
     "category": "Kategorie",
     "nodePath": "Knotenpfad",
     "status": "Status"
-    ,"reportPathPrefix": "Erstellt unter:",
-    "selectFolder": "Ordner auswählen",
-    "downloadReport": "Bericht herunterladen",
-    "reason": "Grund",
-    "details": "Details"
+    ,"reportPathPrefix": "Erstellt unter:"
+    ,"reportSummaryTitle": "Importübersicht"
+    ,"summaryContentType": "Inhaltstyp"
+    ,"summaryImportPath": "Importiert nach"
+    ,"summaryNodesTitle": "Inhalte"
+    ,"summaryImagesTitle": "Bilder"
+    ,"summaryTotalFound": "Insgesamt in Datei: {{count}}"
+    ,"summaryImagesTotal": "Gesamtbilder: {{count}}"
+    ,"summaryProcessed": "Verarbeitet: {{count}}"
+    ,"summaryCreated": "Erstellt"
+    ,"summaryUpdated": "Aktualisiert"
+    ,"summaryFailed": "Fehlgeschlagen"
+    ,"summarySkipped": "Übersprungen"
+    ,"categorySummaryTitle": "Erstellte Inhalte pro Kategorie"
+    ,"createdCount": "Anzahl erstellt"
+    ,"unknownCategory": "Unbekannte Kategorie"
+    ,"notAvailable": "Nicht verfügbar"
+    ,"selectFolder": "Ordner auswählen"
+    ,"downloadReport": "Bericht herunterladen"
+    ,"reason": "Grund"
+    ,"details": "Details"
   }
 }

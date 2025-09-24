@@ -42,10 +42,26 @@
     "category": "Categoría",
     "nodePath": "Ruta del nodo",
     "status": "Estado"
-    ,"reportPathPrefix": "Creado en:",
-    "selectFolder": "Seleccionar carpeta",
-    "downloadReport": "Descargar informe",
-    "reason": "Razón",
-    "details": "Detalles"
+    ,"reportPathPrefix": "Creado en:"
+    ,"reportSummaryTitle": "Resumen de importación"
+    ,"summaryContentType": "Tipo de contenido"
+    ,"summaryImportPath": "Importado en"
+    ,"summaryNodesTitle": "Elementos de contenido"
+    ,"summaryImagesTitle": "Imágenes"
+    ,"summaryTotalFound": "Total en el archivo: {{count}}"
+    ,"summaryImagesTotal": "Total de imágenes: {{count}}"
+    ,"summaryProcessed": "Procesados: {{count}}"
+    ,"summaryCreated": "Creados"
+    ,"summaryUpdated": "Actualizados"
+    ,"summaryFailed": "Fallidos"
+    ,"summarySkipped": "Omitidos"
+    ,"categorySummaryTitle": "Contenidos creados por categoría"
+    ,"createdCount": "Cantidad creada"
+    ,"unknownCategory": "Categoría desconocida"
+    ,"notAvailable": "No disponible"
+    ,"selectFolder": "Seleccionar carpeta"
+    ,"downloadReport": "Descargar informe"
+    ,"reason": "Razón"
+    ,"details": "Detalles"
   }
 }

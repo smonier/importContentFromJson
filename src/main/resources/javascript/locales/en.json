@@ -42,10 +42,26 @@
     ,"category": "Category"
     ,"nodePath": "Node path"
     ,"status": "Status"
-    ,"reportPathPrefix": "Created under:",
-    "selectFolder": "Select folder",
-    "downloadReport": "Download report",
-    "reason": "Reason",
-    "details": "Details"
+    ,"reportPathPrefix": "Created under:"
+    ,"reportSummaryTitle": "Import summary"
+    ,"summaryContentType": "Content type"
+    ,"summaryImportPath": "Imported to"
+    ,"summaryNodesTitle": "Content items"
+    ,"summaryImagesTitle": "Images"
+    ,"summaryTotalFound": "Total in file: {{count}}"
+    ,"summaryImagesTotal": "Total images: {{count}}"
+    ,"summaryProcessed": "Processed: {{count}}"
+    ,"summaryCreated": "Created"
+    ,"summaryUpdated": "Updated"
+    ,"summaryFailed": "Failed"
+    ,"summarySkipped": "Skipped"
+    ,"categorySummaryTitle": "Created content per category"
+    ,"createdCount": "Created count"
+    ,"unknownCategory": "Unknown category"
+    ,"notAvailable": "Not available"
+    ,"selectFolder": "Select folder"
+    ,"downloadReport": "Download report"
+    ,"reason": "Reason"
+    ,"details": "Details"
   }
 }

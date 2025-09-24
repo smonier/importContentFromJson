@@ -42,10 +42,26 @@
     "category": "Catégorie",
     "nodePath": "Chemin du nœud",
     "status": "Statut"
-    ,"reportPathPrefix": "Créé sous :",
-    "selectFolder": "Select. Repertoire",
-    "downloadReport": "Télécharger le rapport",
-    "reason": "Raison",
-    "details": "Détails"
+    ,"reportPathPrefix": "Créé sous :"
+    ,"reportSummaryTitle": "Résumé de l'import"
+    ,"summaryContentType": "Type de contenu"
+    ,"summaryImportPath": "Importé dans"
+    ,"summaryNodesTitle": "Éléments de contenu"
+    ,"summaryImagesTitle": "Images"
+    ,"summaryTotalFound": "Total dans le fichier : {{count}}"
+    ,"summaryImagesTotal": "Total d'images : {{count}}"
+    ,"summaryProcessed": "Traités : {{count}}"
+    ,"summaryCreated": "Créés"
+    ,"summaryUpdated": "Mises à jour"
+    ,"summaryFailed": "Échecs"
+    ,"summarySkipped": "Ignorés"
+    ,"categorySummaryTitle": "Contenus créés par catégorie"
+    ,"createdCount": "Nombre créé"
+    ,"unknownCategory": "Catégorie inconnue"
+    ,"notAvailable": "Non disponible"
+    ,"selectFolder": "Select. Repertoire"
+    ,"downloadReport": "Télécharger le rapport"
+    ,"reason": "Raison"
+    ,"details": "Détails"
   }
 }
