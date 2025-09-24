@@ -410,21 +410,44 @@ export default () => {
 
         // === Pre-import Validation ===
         console.group('=== Pre-import Validation ===');
-        const {exists: contentPathExists} = await nodeExists(fullContentPath, checkPath);
-        const {exists: filePathExists} = await nodeExists(fullFilePath, checkPath);
+        let contentPathExists = false;
+        let filePathExists = false;
 
+        try {
+            const {exists} = await nodeExists(fullContentPath, checkPath);
+            contentPathExists = exists;
+        } catch (e) {
+            if (e?.message?.includes('PathNotFoundException')) {
+                console.debug(`🔍 Content path not found (expected): ${fullContentPath}`);
+            } else {
+                console.error(`❌ Unexpected error checking content path: ${fullContentPath}`, e);
+            }
+        }
+
+        try {
+            const {exists} = await nodeExists(fullFilePath, checkPath);
+            filePathExists = exists;
+        } catch (e) {
+            if (e?.message?.includes('PathNotFoundException')) {
+                console.debug(`🔍 File path not found (expected): ${fullFilePath}`);
+            } else {
+                console.error(`❌ Unexpected error checking file path: ${fullFilePath}`, e);
+            }
+        }
+
+        // Now create if needed
         if (!contentPathExists) {
-            console.info(`📁 Content path does not exist. Creating: ${fullContentPath}`);
+            console.info(`📁 Creating content path: ${fullContentPath}`);
             await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
         } else {
-            console.info(`📁 Content path exists: ${fullContentPath}`);
+            console.info(`✅ Content path exists: ${fullContentPath}`);
         }
 
         if (!filePathExists) {
-            console.info(`📁 File path does not exist. Creating: ${fullFilePath}`);
+            console.info(`📁 Creating file path: ${fullFilePath}`);
             await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
         } else {
-            console.info(`📁 File path exists: ${fullFilePath}`);
+            console.info(`✅ File path exists: ${fullFilePath}`);
         }
 
         console.groupEnd();
@@ -454,20 +477,20 @@ export default () => {
             const validNodeEntries = reportData.nodes.filter(item => item?.name && item.name !== 'import');
             const nodeSummary = validNodeEntries.reduce((acc, item) => {
                 switch (item.status) {
-                case 'created':
-                    acc.created++;
-                    break;
-                case 'updated':
-                    acc.updated++;
-                    break;
-                case 'already exists':
-                    acc.skipped++;
-                    break;
-                case 'failed':
-                    acc.failed++;
-                    break;
-                default:
-                    break;
+                    case 'created':
+                        acc.created++;
+                        break;
+                    case 'updated':
+                        acc.updated++;
+                        break;
+                    case 'already exists':
+                        acc.skipped++;
+                        break;
+                    case 'failed':
+                        acc.failed++;
+                        break;
+                    default:
+                        break;
                 }
 
                 return acc;
@@ -479,20 +502,20 @@ export default () => {
                 }
 
                 switch (item.status) {
-                case 'created':
-                    acc.created++;
-                    break;
-                case 'updated':
-                    acc.updated++;
-                    break;
-                case 'already exists':
-                    acc.skipped++;
-                    break;
-                case 'failed':
-                    acc.failed++;
-                    break;
-                default:
-                    break;
+                    case 'created':
+                        acc.created++;
+                        break;
+                    case 'updated':
+                        acc.updated++;
+                        break;
+                    case 'already exists':
+                        acc.skipped++;
+                        break;
+                    case 'failed':
+                        acc.failed++;
+                        break;
+                    default:
+                        break;
                 }
 
                 return acc;
@@ -506,18 +529,18 @@ export default () => {
                 const categoryName = item.name || t('label.unknownCategory');
 
                 switch (item.status) {
-                case 'created':
-                    acc.created++;
-                    acc.createdByName[categoryName] = (acc.createdByName[categoryName] || 0) + 1;
-                    break;
-                case 'already exists':
-                    acc.skipped++;
-                    break;
-                case 'failed':
-                    acc.failed++;
-                    break;
-                default:
-                    break;
+                    case 'created':
+                        acc.created++;
+                        acc.createdByName[categoryName] = (acc.createdByName[categoryName] || 0) + 1;
+                        break;
+                    case 'already exists':
+                        acc.skipped++;
+                        break;
+                    case 'failed':
+                        acc.failed++;
+                        break;
+                    default:
+                        break;
                 }
 
                 return acc;

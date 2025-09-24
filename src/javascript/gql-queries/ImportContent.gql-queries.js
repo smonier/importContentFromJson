@@ -49,6 +49,7 @@ export const FetchContentForCSVQuery = gql`
                 name
                 value: uuid
                 label: displayName(language: $language)
+                workspace
                 descendants(typesFilter: {types: [$type]}) {
                     nodes {
                         name
@@ -146,7 +147,6 @@ export const CreateFileMutation = gql`
                         setValue(value: $mimeType)
                     }
                 }
-                createVersion
                 uuid
             }
         }
@@ -179,6 +179,7 @@ export const AddTags = gql`
                 mutateProperty(name:"j:tagList") {
                     setValues(values:$tags)
                 }
+                uuid
             }
         }
     }`;
@@ -191,6 +192,7 @@ export const AddCategories = gql`
                 mutateProperty(name:"j:defaultCategory") {
                     setValues(values:$categories)
                 }
+                uuid
             }
         }
     }`;

@@ -82,6 +82,30 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         const validNodes = nodes.filter(item => item?.name && item.name !== 'import');
         return validNodes.reduce((acc, item) => {
             switch (item.status) {
+                case 'created':
+                    acc.created++;
+                    break;
+                case 'updated':
+                    acc.updated++;
+                    break;
+                case 'already exists':
+                    acc.skipped++;
+                    break;
+                case 'failed':
+                    acc.failed++;
+                    break;
+                default:
+                    break;
+            }
+
+            acc.processed = (acc.processed || 0) + 1;
+            acc.total = (acc.total || 0) + 1;
+            return acc;
+        }, {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
+    };
+
+    const computeImageFallback = () => images.reduce((acc, item) => {
+        switch (item.status) {
             case 'created':
                 acc.created++;
                 break;
@@ -96,30 +120,6 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
                 break;
             default:
                 break;
-            }
-
-            acc.processed = (acc.processed || 0) + 1;
-            acc.total = (acc.total || 0) + 1;
-            return acc;
-        }, {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
-    };
-
-    const computeImageFallback = () => images.reduce((acc, item) => {
-        switch (item.status) {
-        case 'created':
-            acc.created++;
-            break;
-        case 'updated':
-            acc.updated++;
-            break;
-        case 'already exists':
-            acc.skipped++;
-            break;
-        case 'failed':
-            acc.failed++;
-            break;
-        default:
-            break;
         }
 
         acc.total++;
