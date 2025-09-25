@@ -91,6 +91,7 @@ export default () => {
 
     // Override existing content option
     const [overrideExisting, setOverrideExisting] = useState(false);
+    const [createVanityUrl, setCreateVanityUrl] = useState(true);
 
     // --- Languages ----------------------------------------------------------
     const initialLanguage = window.contextJsParameters.uilang;
@@ -479,6 +480,8 @@ export default () => {
         let imageFailCount = 0;
         let categorySuccessCount = 0;
         let categoryFailCount = 0;
+        let vanitySuccessCount = 0;
+        let vanityFailCount = 0;
         const selectedContentTypeOption = contentTypes.find(type => type.value === selectedContentType);
         const reportData = {
             nodes: [],
@@ -565,6 +568,10 @@ export default () => {
                 return acc;
             }, {created: 0, failed: 0, skipped: 0, createdByName: {}});
 
+            const vanitySkipped = createVanityUrl ?
+                Math.max(totalAttempts - (vanitySuccessCount + vanityFailCount), 0) :
+                totalAttempts;
+
             reportData.summary = {
                 contentType: reportData.contentType,
                 path: fullContentPath,
@@ -581,6 +588,12 @@ export default () => {
                 categories: {
                     processed: reportData.categories.length,
                     ...categorySummary
+                },
+                vanityUrls: {
+                    enabled: createVanityUrl,
+                    created: vanitySuccessCount,
+                    failed: vanityFailCount,
+                    skipped: vanitySkipped
                 }
             };
         };
@@ -820,11 +833,13 @@ export default () => {
 
                 reportData.categories.push(...categoryResultsBuffer);
 
-                if (contentUuid) {
+                if (contentUuid && createVanityUrl) {
                     try {
                         const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
                         await addVanityUrl({variables: {pathOrId: contentUuid, language: selectedLanguage, url: cleanUrl}});
+                        vanitySuccessCount++;
                     } catch (error) {
+                        vanityFailCount++;
                         errorReport.push({
                             node: `${fullContentPath}/${contentName}`,
                             reason: 'Error adding vanity URL',
@@ -978,17 +993,33 @@ export default () => {
                         <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>
                             {t('label.enterPathSuffixHelp')}
                         </Typography>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={overrideExisting}
-                                    sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
-                                    onChange={e => setOverrideExisting(e.target.checked)}
-                                />
-                            }
-                            className={styles.overrideExisting}
-                            label={t('label.overrideExisting')}
-                        />
+                        <div className={styles.optionsSection}>
+                            <Typography variant="subheading" className={styles.optionsTitle}>
+                                {t('label.options')}
+                            </Typography>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={overrideExisting}
+                                        sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
+                                        onChange={e => setOverrideExisting(e.target.checked)}
+                                    />
+                                }
+                                className={styles.optionItem}
+                                label={t('label.overrideExisting')}
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={createVanityUrl}
+                                        sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
+                                        onChange={e => setCreateVanityUrl(e.target.checked)}
+                                    />
+                                }
+                                className={styles.optionItem}
+                                label={t('label.createVanityUrl')}
+                            />
+                        </div>
                         <LanguageSelector
                             languages={siteLanguages}
                             selectedLanguage={selectedLanguage}
@@ -1007,11 +1038,13 @@ export default () => {
                             onChange={(e, item) => handleContentTypeChange(item.value)}
                         />
                         {contentTypeError && (
-                        <Typography variant="body" className={styles.errorMessage}>
-                            {t('label.loadContentTypesError')}
-                        </Typography>
-                    )}
-                        <PropertiesList properties={properties} error={propertiesError} t={t}/>
+                            <Typography variant="body" className={styles.errorMessage}>
+                                {t('label.loadContentTypesError')}
+                            </Typography>
+                        )}
+                        {selectedContentType && (
+                            <PropertiesList properties={properties} error={propertiesError} t={t}/>
+                        )}
                     </div>
 
                     <div className={styles.rightPanel}>

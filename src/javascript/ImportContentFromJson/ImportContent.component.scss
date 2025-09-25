@@ -245,8 +245,24 @@ $font-family: 'Roboto', sans-serif;
 .baseContentPathHelp {
     margin-bottom: 10px; /* Adjust as needed */
 }
-.overrideExisting {
-    margin-bottom: 24px; /* Adjust as needed */
+.optionsSection {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 24px;
+    background-color: #fcfcfc;
+}
+
+.optionsTitle {
+    margin-bottom: 8px;
+}
+
+.optionItem {
+    margin-bottom: 8px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 }
 .errorMessage {
     color: red;

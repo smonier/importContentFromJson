@@ -145,6 +145,15 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     const imageSummary = {...computeImageFallback(), ...(summary.images || {})};
     const createdCategories = summary.categories?.createdByName || computeCreatedCategoriesFallback();
     const categoryEntries = Object.entries(createdCategories).filter(([, count]) => count > 0);
+    const vanitySummary = {
+        enabled: summary.vanityUrls?.enabled ?? false,
+        created: summary.vanityUrls?.created ?? 0,
+        failed: summary.vanityUrls?.failed ?? 0,
+        skipped: summary.vanityUrls?.skipped ?? 0
+    };
+    const vanityStatusLabel = vanitySummary.enabled ?
+        t('label.summaryVanityUrlsStatusEnabled') :
+        t('label.summaryVanityUrlsStatusDisabled');
 
     const contentTypeName = summary.contentType?.label || contentType?.label || contentType?.value || t('label.notAvailable');
     const importPath = summary.path || path || '';
@@ -225,6 +234,24 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
                                     <strong>{imageSummary.skipped}</strong>
                                 </li>
                             ) : null}
+                        </ul>
+                    </div>
+                    <div style={summaryBlockStyle}>
+                        <div style={summaryTitleStyle}>{t('label.summaryVanityUrlsTitle')}</div>
+                        <div style={summaryValueStyle}>{vanityStatusLabel}</div>
+                        <ul style={summaryListStyle}>
+                            <li style={summaryListItemStyle}>
+                                <span>{t('label.summaryCreated')}</span>
+                                <strong>{vanitySummary.created || 0}</strong>
+                            </li>
+                            <li style={summaryListItemStyle}>
+                                <span>{t('label.summaryFailed')}</span>
+                                <strong>{vanitySummary.failed || 0}</strong>
+                            </li>
+                            <li style={summaryListItemStyle}>
+                                <span>{t('label.summarySkipped')}</span>
+                                <strong>{vanitySummary.skipped || 0}</strong>
+                            </li>
                         </ul>
                     </div>
                 </div>

@@ -19,6 +19,8 @@
     "enterPathSuffix": "Entrez le suffixe du chemin de contenu",
     "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501.",
     "overrideExisting": "Écraser le contenu existant",
+    "options": "Options",
+    "createVanityUrl": "Créer des URL simplifiées",
     "selectLanguage": "Sélectionnez la langue de destination pour l'import",
     "fieldMapping": "Correspondance des champs",
     "previewTitle": "Aperçu du JSON généré",
@@ -67,6 +69,9 @@
     ,"selectFolder": "Select. Repertoire"
     ,"downloadReport": "Télécharger le rapport"
     ,"reason": "Raison"
-    ,"details": "Détails"
+    ,"details": "Détails",
+    ,"summaryVanityUrlsTitle": "URLs simplifiées",
+    ,"summaryVanityUrlsStatusEnabled": "Création activée",
+    ,"summaryVanityUrlsStatusDisabled": "Création désactivée"
   }
 }

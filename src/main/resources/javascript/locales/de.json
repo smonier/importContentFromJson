@@ -19,6 +19,8 @@
     "enterPathSuffix": "Inhaltspfad-Suffix eingeben",
     "enterPathSuffixHelp": "Rekursive Ordner sind erlaubt, z.B. /news/202501.",
     "overrideExisting": "Vorhandenen Inhalt überschreiben",
+    "options": "Optionen",
+    "createVanityUrl": "Vanity-URLs erstellen",
     "selectLanguage": "Zielsprache für den Import auswählen",
     "fieldMapping": "Feldzuordnung",
     "previewTitle": "Vorschau des generierten JSON",
@@ -67,6 +69,9 @@
     ,"selectFolder": "Ordner auswählen"
     ,"downloadReport": "Bericht herunterladen"
     ,"reason": "Grund"
-    ,"details": "Details"
+    ,"details": "Details",
+    ,"summaryVanityUrlsTitle": "Vanity-URLs",
+    ,"summaryVanityUrlsStatusEnabled": "Erstellung aktiviert",
+    ,"summaryVanityUrlsStatusDisabled": "Erstellung deaktiviert"
   }
 }

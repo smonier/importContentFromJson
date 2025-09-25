@@ -19,6 +19,8 @@
     "enterPathSuffix": "Introduzca el sufijo de la ruta de contenido",
     "enterPathSuffixHelp": "Se permiten carpetas recursivas, por ejemplo: /news/202501.",
     "overrideExisting": "Sobrescribir contenido existente",
+    "options": "Opciones",
+    "createVanityUrl": "Crear URL personalizadas",
     "selectLanguage": "Seleccione el idioma de destino para la importación",
     "fieldMapping": "Mapeo de campos",
     "previewTitle": "Vista previa del JSON generado",
@@ -67,6 +69,9 @@
     ,"selectFolder": "Seleccionar carpeta"
     ,"downloadReport": "Descargar informe"
     ,"reason": "Razón"
-    ,"details": "Detalles"
+    ,"details": "Detalles",
+    ,"summaryVanityUrlsTitle": "URL personalizadas",
+    ,"summaryVanityUrlsStatusEnabled": "Creación habilitada",
+    ,"summaryVanityUrlsStatusDisabled": "Creación deshabilitada"
   }
 }
