@@ -19,6 +19,8 @@
     "enterPathSuffix": "Enter content path suffix",
     "enterPathSuffixHelp": "Recursive folders are allowed, e.g. /news/202501.",
     "overrideExisting": "Override existing content",
+    "options": "Options",
+    "createVanityUrl": "Create vanity URLs",
     "selectLanguage": "Select the target language for import",
     "fieldMapping": "Field mapping",
     "previewTitle": "Generated JSON preview",
@@ -67,6 +69,9 @@
     ,"selectFolder": "Select folder"
     ,"downloadReport": "Download report"
     ,"reason": "Reason"
-    ,"details": "Details"
+    ,"details": "Details",
+    ,"summaryVanityUrlsTitle": "Vanity URLs",
+    ,"summaryVanityUrlsStatusEnabled": "Creation enabled",
+    ,"summaryVanityUrlsStatusDisabled": "Creation disabled"
   }
 }
