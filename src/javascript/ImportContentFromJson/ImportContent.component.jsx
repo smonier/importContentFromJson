@@ -145,6 +145,7 @@ export default () => {
             } else {
                 console.error('CreateContent error:', error.message);
             }
+
             throw error;
         }
     });
@@ -1008,6 +1009,7 @@ export default () => {
                                 className={styles.optionItem}
                                 label={t('label.overrideExisting')}
                             />
+                            <br/>
                             <FormControlLabel
                                 control={
                                     <Checkbox

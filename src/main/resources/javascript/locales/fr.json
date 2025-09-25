@@ -20,7 +20,7 @@
     "enterPathSuffixHelp": "Les répertoires récursifs sont autorisés, comme /news/202501.",
     "overrideExisting": "Écraser le contenu existant",
     "options": "Options",
-    "createVanityUrl": "Créer des URL simplifiées",
+    "createVanityUrl": "Créer des URL simplifiées (/<dossier>/<nomSystème>)",
     "selectLanguage": "Sélectionnez la langue de destination pour l'import",
     "fieldMapping": "Correspondance des champs",
     "previewTitle": "Aperçu du JSON généré",
@@ -34,8 +34,8 @@
     "manualMapping": "Correspondance manuelle",
     "reImportGeneratedFile": "Réimporter un fichier JSON généré",
     "uploadGeneratedFile": "Téléverser un fichier JSON généré",
-    "invalidGeneratedFile": "Le fichier importé ne correspond pas au type de contenu sélectionné."
-    ,"loadContentTypesError": "Échec du chargement des types de contenu.",
+    "invalidGeneratedFile": "Le fichier importé ne correspond pas au type de contenu sélectionné.",
+    "loadContentTypesError": "Échec du chargement des types de contenu.",
     "loadPropertiesError": "Échec du chargement des propriétés.",
     "reportTitle": "Rapport d'import",
     "closeReport": "Fermer le rapport",
@@ -43,35 +43,35 @@
     "image": "Image",
     "category": "Catégorie",
     "nodePath": "Chemin du nœud",
-    "status": "Statut"
-    ,"reportPathPrefix": "Créé sous :"
-    ,"reportSummaryTitle": "Résumé de l'import"
-    ,"summaryContentType": "Type de contenu"
-    ,"summaryImportPath": "Importé dans"
-    ,"summaryNodesTitle": "Éléments de contenu"
-    ,"summaryImagesTitle": "Images"
-    ,"summaryTotalFound": "Total dans le fichier : {{count}}"
-    ,"summaryImagesTotal": "Total d'images : {{count}}"
-    ,"summaryProcessed": "Traités : {{count}}"
-    ,"summaryCreated": "Créés"
-    ,"summaryUpdated": "Mises à jour"
-    ,"summaryFailed": "Échecs"
-    ,"summarySkipped": "Ignorés"
-    ,"reportNodesTitle": "Nœuds de contenu"
-    ,"reportErrorsTitle": "Erreurs"
-    ,"reportImagesTitle": "Images"
-    ,"reportCategoriesTitle": "Catégories"
-    ,"reportCategoriesDetailsTitle": "Détails des catégories"
-    ,"categorySummaryTitle": "Contenus créés par catégorie"
-    ,"createdCount": "Nombre créé"
-    ,"unknownCategory": "Catégorie inconnue"
-    ,"notAvailable": "Non disponible"
-    ,"selectFolder": "Select. Repertoire"
-    ,"downloadReport": "Télécharger le rapport"
-    ,"reason": "Raison"
-    ,"details": "Détails",
-    ,"summaryVanityUrlsTitle": "URLs simplifiées",
-    ,"summaryVanityUrlsStatusEnabled": "Création activée",
-    ,"summaryVanityUrlsStatusDisabled": "Création désactivée"
+    "status": "Statut",
+    "reportPathPrefix": "Créé sous :",
+    "reportSummaryTitle": "Résumé de l'import",
+    "summaryContentType": "Type de contenu",
+    "summaryImportPath": "Importé dans",
+    "summaryNodesTitle": "Éléments de contenu",
+    "summaryImagesTitle": "Images",
+    "summaryTotalFound": "Total dans le fichier : {{count}}",
+    "summaryImagesTotal": "Total d'images : {{count}}",
+    "summaryProcessed": "Traités : {{count}}",
+    "summaryCreated": "Créés",
+    "summaryUpdated": "Mises à jour",
+    "summaryFailed": "Échecs",
+    "summarySkipped": "Ignorés",
+    "reportNodesTitle": "Nœuds de contenu",
+    "reportErrorsTitle": "Erreurs",
+    "reportImagesTitle": "Images",
+    "reportCategoriesTitle": "Catégories",
+    "reportCategoriesDetailsTitle": "Détails des catégories",
+    "categorySummaryTitle": "Contenus créés par catégorie",
+    "createdCount": "Nombre créé",
+    "unknownCategory": "Catégorie inconnue",
+    "notAvailable": "Non disponible",
+    "selectFolder": "Select. Repertoire",
+    "downloadReport": "Télécharger le rapport",
+    "reason": "Raison",
+    "details": "Détails",
+    "summaryVanityUrlsTitle": "URLs simplifiées",
+    "summaryVanityUrlsStatusEnabled": "Création activée",
+    "summaryVanityUrlsStatusDisabled": "Création désactivée"
   }
 }

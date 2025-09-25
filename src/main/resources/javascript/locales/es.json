@@ -20,7 +20,7 @@
     "enterPathSuffixHelp": "Se permiten carpetas recursivas, por ejemplo: /news/202501.",
     "overrideExisting": "Sobrescribir contenido existente",
     "options": "Opciones",
-    "createVanityUrl": "Crear URL personalizadas",
+    "createVanityUrl": "Crear URL personalizadas (/<carpeta>/<nombreSistema>)",
     "selectLanguage": "Seleccione el idioma de destino para la importación",
     "fieldMapping": "Mapeo de campos",
     "previewTitle": "Vista previa del JSON generado",
@@ -43,35 +43,35 @@
     "image": "Imagen",
     "category": "Categoría",
     "nodePath": "Ruta del nodo",
-    "status": "Estado"
-    ,"reportPathPrefix": "Creado en:"
-    ,"reportSummaryTitle": "Resumen de importación"
-    ,"summaryContentType": "Tipo de contenido"
-    ,"summaryImportPath": "Importado en"
-    ,"summaryNodesTitle": "Elementos de contenido"
-    ,"summaryImagesTitle": "Imágenes"
-    ,"summaryTotalFound": "Total en el archivo: {{count}}"
-    ,"summaryImagesTotal": "Total de imágenes: {{count}}"
-    ,"summaryProcessed": "Procesados: {{count}}"
-    ,"summaryCreated": "Creados"
-    ,"summaryUpdated": "Actualizados"
-    ,"summaryFailed": "Fallidos"
-    ,"summarySkipped": "Omitidos"
-    ,"reportNodesTitle": "Nodos de contenido"
-    ,"reportErrorsTitle": "Errores"
-    ,"reportImagesTitle": "Imágenes"
-    ,"reportCategoriesTitle": "Categorías"
-    ,"reportCategoriesDetailsTitle": "Detalles de categorías"
-    ,"categorySummaryTitle": "Contenidos creados por categoría"
-    ,"createdCount": "Cantidad creada"
-    ,"unknownCategory": "Categoría desconocida"
-    ,"notAvailable": "No disponible"
-    ,"selectFolder": "Seleccionar carpeta"
-    ,"downloadReport": "Descargar informe"
-    ,"reason": "Razón"
-    ,"details": "Detalles",
-    ,"summaryVanityUrlsTitle": "URL personalizadas",
-    ,"summaryVanityUrlsStatusEnabled": "Creación habilitada",
-    ,"summaryVanityUrlsStatusDisabled": "Creación deshabilitada"
+    "status": "Estado",
+    "reportPathPrefix": "Creado en:",
+    "reportSummaryTitle": "Resumen de importación",
+    "summaryContentType": "Tipo de contenido",
+    "summaryImportPath": "Importado en",
+    "summaryNodesTitle": "Elementos de contenido",
+    "summaryImagesTitle": "Imágenes",
+    "summaryTotalFound": "Total en el archivo: {{count}}",
+    "summaryImagesTotal": "Total de imágenes: {{count}}",
+    "summaryProcessed": "Procesados: {{count}}",
+    "summaryCreated": "Creados",
+    "summaryUpdated": "Actualizados",
+    "summaryFailed": "Fallidos",
+    "summarySkipped": "Omitidos",
+    "reportNodesTitle": "Nodos de contenido",
+    "reportErrorsTitle": "Errores",
+    "reportImagesTitle": "Imágenes",
+    "reportCategoriesTitle": "Categorías",
+    "reportCategoriesDetailsTitle": "Detalles de categorías",
+    "categorySummaryTitle": "Contenidos creados por categoría",
+    "createdCount": "Cantidad creada",
+    "unknownCategory": "Categoría desconocida",
+    "notAvailable": "No disponible",
+    "selectFolder": "Seleccionar carpeta",
+    "downloadReport": "Descargar informe",
+    "reason": "Razón",
+    "details": "Detalles",
+    "summaryVanityUrlsTitle": "URL personalizadas",
+    "summaryVanityUrlsStatusEnabled": "Creación habilitada",
+    "summaryVanityUrlsStatusDisabled": "Creación deshabilitada"
   }
 }

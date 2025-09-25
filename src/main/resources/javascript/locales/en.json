@@ -20,7 +20,7 @@
     "enterPathSuffixHelp": "Recursive folders are allowed, e.g. /news/202501.",
     "overrideExisting": "Override existing content",
     "options": "Options",
-    "createVanityUrl": "Create vanity URLs",
+    "createVanityUrl": "Create vanity URLs (/<folder>/<systemName>)",
     "selectLanguage": "Select the target language for import",
     "fieldMapping": "Field mapping",
     "previewTitle": "Generated JSON preview",
@@ -36,42 +36,42 @@
     "uploadGeneratedFile": "Upload a generated JSON file",
     "invalidGeneratedFile": "The imported file does not match the selected content type.",
     "loadContentTypesError": "Failed to load content types.",
-    "loadPropertiesError": "Failed to load properties."
-    ,"reportTitle": "Import report"
-    ,"closeReport": "Close report"
-    ,"node": "Node"
-    ,"image": "Image"
-    ,"category": "Category"
-    ,"nodePath": "Node path"
-    ,"status": "Status"
-    ,"reportPathPrefix": "Created under:"
-    ,"reportSummaryTitle": "Import summary"
-    ,"summaryContentType": "Content type"
-    ,"summaryImportPath": "Imported to"
-    ,"summaryNodesTitle": "Content items"
-    ,"summaryImagesTitle": "Images"
-    ,"summaryTotalFound": "Total in file: {{count}}"
-    ,"summaryImagesTotal": "Total images: {{count}}"
-    ,"summaryProcessed": "Processed: {{count}}"
-    ,"summaryCreated": "Created"
-    ,"summaryUpdated": "Updated"
-    ,"summaryFailed": "Failed"
-    ,"summarySkipped": "Skipped"
-    ,"reportNodesTitle": "Content nodes"
-    ,"reportErrorsTitle": "Errors"
-    ,"reportImagesTitle": "Images"
-    ,"reportCategoriesTitle": "Categories"
-    ,"reportCategoriesDetailsTitle": "Category details"
-    ,"categorySummaryTitle": "Created content per category"
-    ,"createdCount": "Created count"
-    ,"unknownCategory": "Unknown category"
-    ,"notAvailable": "Not available"
-    ,"selectFolder": "Select folder"
-    ,"downloadReport": "Download report"
-    ,"reason": "Reason"
-    ,"details": "Details",
-    ,"summaryVanityUrlsTitle": "Vanity URLs",
-    ,"summaryVanityUrlsStatusEnabled": "Creation enabled",
-    ,"summaryVanityUrlsStatusDisabled": "Creation disabled"
+    "loadPropertiesError": "Failed to load properties.",
+    "reportTitle": "Import report",
+    "closeReport": "Close report",
+    "node": "Node",
+    "image": "Image",
+    "category": "Category",
+    "nodePath": "Node path",
+    "status": "Status",
+    "reportPathPrefix": "Created under:",
+    "reportSummaryTitle": "Import summary",
+    "summaryContentType": "Content type",
+    "summaryImportPath": "Imported to",
+    "summaryNodesTitle": "Content items",
+    "summaryImagesTitle": "Images",
+    "summaryTotalFound": "Total in file: {{count}}",
+    "summaryImagesTotal": "Total images: {{count}}",
+    "summaryProcessed": "Processed: {{count}}",
+    "summaryCreated": "Created",
+    "summaryUpdated": "Updated",
+    "summaryFailed": "Failed",
+    "summarySkipped": "Skipped",
+    "reportNodesTitle": "Content nodes",
+    "reportErrorsTitle": "Errors",
+    "reportImagesTitle": "Images",
+    "reportCategoriesTitle": "Categories",
+    "reportCategoriesDetailsTitle": "Category details",
+    "categorySummaryTitle": "Created content per category",
+    "createdCount": "Created count",
+    "unknownCategory": "Unknown category",
+    "notAvailable": "Not available",
+    "selectFolder": "Select folder",
+    "downloadReport": "Download report",
+    "reason": "Reason",
+    "details": "Details",
+    "summaryVanityUrlsTitle": "Vanity URLs",
+    "summaryVanityUrlsStatusEnabled": "Creation enabled",
+    "summaryVanityUrlsStatusDisabled": "Creation disabled"
   }
 }
