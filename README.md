@@ -74,7 +74,7 @@ npm test
 
 ## Usage
 
-1. Access the module’s UI within the CMS interface (jContent -> Additional).
+1. Access the module’s UI within the CMS interface (jContent -> Content Tools).
 2. Follow these steps to import content:
     - **Select the base content path.**
     - **Choose a content type.**
@@ -382,6 +382,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - CSV files must include a header row. Only comma-separated values are supported.
 - Use the sample JSON preview to verify file content before importing.
 - For advanced configurations, consult the module documentation or support team.
-
 
 
