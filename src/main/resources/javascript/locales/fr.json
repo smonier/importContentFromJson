@@ -73,5 +73,8 @@
     "summaryVanityUrlsTitle": "URLs simplifiées",
     "summaryVanityUrlsStatusEnabled": "Création activée",
     "summaryVanityUrlsStatusDisabled": "Création désactivée"
+  },
+  "accordion": {
+    "title": "Outils de contenu"
   }
 }

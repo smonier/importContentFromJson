@@ -73,5 +73,8 @@
     "summaryVanityUrlsTitle": "URL personalizadas",
     "summaryVanityUrlsStatusEnabled": "Creación habilitada",
     "summaryVanityUrlsStatusDisabled": "Creación deshabilitada"
+  },
+  "accordion": {
+    "title": "Herramientas de contenido"
   }
 }
