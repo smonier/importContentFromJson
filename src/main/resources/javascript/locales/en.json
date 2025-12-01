@@ -1,7 +1,7 @@
 {
   "label": {
-    "buttonAction": "Import content into the JCR from JSON",
-    "header": "Import content into the JCR from JSON - Site {{siteInfo}}",
+    "buttonAction": "Import content into the JCR",
+    "header": "Import content into the JCR from JSON or CSV - Site {{siteInfo}}",
     "importFromJson": "Import from JSON",
     "generateJsonFile": "Generate JSON file",
     "selectContentType": "Select a content type to import",

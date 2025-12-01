@@ -1,7 +1,7 @@
 {
   "label": {
-    "buttonAction": "Importer du contenu dans le JCR à partir de JSON",
-    "header": "Importer du contenu dans le JCR à partir de JSON - Site {{siteInfo}}",
+    "buttonAction": "Importer du contenu dans le JCR",
+    "header": "Importer du contenu dans le JCR à partir de JSON ou CSV- Site {{siteInfo}}",
     "importFromJson": "Importer depuis JSON",
     "generateJsonFile": "Générer le fichier JSON",
     "selectContentType": "Sélectionnez un type de contenu à importer",

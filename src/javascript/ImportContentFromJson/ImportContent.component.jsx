@@ -624,7 +624,7 @@ export default () => {
             }
 
             const normalizeName = value =>
-                value
+                String(value)
                     .normalize('NFD') // Split accents from letters
                     .replace(/[\u0300-\u036f]/g, '') // Remove accents
                     .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
