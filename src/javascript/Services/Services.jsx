@@ -1,7 +1,58 @@
 import {ApolloError} from '@apollo/client';
 import {createApi} from 'unsplash-js';
 
-const proxyServer = '/image-proxy?url='; // Replace with your actual proxy server URL
+const proxyServer = '/image-proxy?url=';
+const localFileProxyServer = '/local-file-proxy?path=';
+
+/**
+ * Check if URL is a local file path (file:// protocol)
+ * @param {string} url - The URL to check
+ * @returns {boolean} - True if it's a file:// URL
+ */
+const isLocalFilePath = url => {
+    if (!url || typeof url !== 'string') {
+        return false;
+    }
+
+    return url.trim().toLowerCase().startsWith('file://');
+};
+
+/**
+ * Fetch image from local file path on server
+ * @param {string} filePath - The file:// path
+ * @returns {Promise<Response>} - Fetch response
+ */
+const fetchLocalFile = async filePath => {
+    // Remove file:// prefix for the server endpoint
+    const cleanPath = filePath.startsWith('file://') ? filePath.substring(7) : filePath;
+    const proxiedUrl = `${localFileProxyServer}${encodeURIComponent(cleanPath)}`;
+    return fetch(proxiedUrl);
+};
+
+/**
+ * Fetch image from remote URL
+ * @param {string} url - The HTTP(S) URL
+ * @returns {Promise<Response>} - Fetch response
+ */
+const fetchRemoteImage = async url => {
+    const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
+    return fetch(proxiedUrl);
+};
+
+/**
+ * Fetch image from either local file path or remote URL
+ * @param {string} url - The URL (file:// or http(s)://)
+ * @returns {Promise<Response>} - Fetch response
+ */
+const fetchImage = async url => {
+    if (isLocalFilePath(url)) {
+        console.log(`Fetching local file: ${url}`);
+        return fetchLocalFile(url);
+    }
+
+    console.log(`Fetching remote image: ${url}`);
+    return fetchRemoteImage(url);
+};
 
 const extractFileName = (url, index) => {
     const fileNameWithParams = url.substring(url.lastIndexOf('/') + 1); // Get last part after "/"
@@ -105,8 +156,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
         }
 
         try {
-            const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
-            const binaryResponse = await fetch(proxiedUrl);
+            const binaryResponse = await fetchImage(url);
 
             if (!binaryResponse.ok) {
                 console.warn(`Failed to fetch image at URL: ${url}. Response status: ${binaryResponse.status}`);
@@ -182,8 +232,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
             return {uuid: existingNode.uuid, status: 'already exists', name: fileName};
         }
 
-        const proxiedUrl = `${proxyServer}${encodeURIComponent(url)}`;
-        const binaryResponse = await fetch(proxiedUrl);
+        const binaryResponse = await fetchImage(url);
 
         if (!binaryResponse.ok) {
             console.warn(`Failed to fetch image at URL: ${url}. Response status: ${binaryResponse.status}`);

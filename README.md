@@ -172,6 +172,7 @@ npm test
     - **Click “Import From JSON”** to initiate the process.
 3. Ensure the data file follows the structure below and matches the names of the properties of the selected Content Type:
 
+**Standard JSON import with remote images:**
 ```json
        [
          {
@@ -186,6 +187,55 @@ npm test
                {
                   "url": "https://img.freepik.com/photos-premium/banniere-nature-forestiere-ai-generative_73944-31146.jpg"
                },
+               {
+                  "url": "https://st3.depositphotos.com/2189145/17529/i/450/depositphotos_175291112-stock-photo-hilly-field-beautiful-sky-hilly.jpg"
+               }
+            ]
+         }
+       ]
+ ```
+
+**Import with local server file paths:**
+```json
+       [
+         {
+            "jcr:title": "Product with Local Images",
+            "teaser": "Using images from server filesystem",
+            "image": {
+               "url": "file:///var/jahia/import-assets/products/main-product.jpg"
+            },
+            "images": [
+               {
+                  "url": "file:///var/jahia/import-assets/products/gallery/view1.jpg"
+               },
+               {
+                  "url": "file:///var/jahia/import-assets/products/gallery/view2.jpg"
+               }
+            ]
+         }
+       ]
+ ```
+
+**Mixed import (remote + local + Unsplash):**
+```json
+       [
+         {
+            "jcr:title": "Mixed Image Sources Example",
+            "image": {
+               "url": "unsplash",
+               "query": "Dubai Marina"
+            },
+            "images": [
+               {
+                  "url": "https://example.com/remote-image.jpg"
+               },
+               {
+                  "url": "file:///var/jahia/assets/local-image.jpg"
+               }
+            ]
+         }
+       ]
+ ```
                {
                   "url": "https://st3.depositphotos.com/2189145/17529/i/450/depositphotos_175291112-stock-photo-hilly-field-beautiful-sky-hilly.jpg"
                }
@@ -211,6 +261,28 @@ Multiple values declared for the property images (WeakReference)
          }
        ]
  ```
+
+**Import images from local server file paths** (using `file://` protocol)
+```json
+       [
+         {
+            ...,
+            "image": {
+               "url": "file:///var/jahia/import-assets/product-image.jpg"
+            },
+            "images": [
+               {
+                  "url": "file:///var/jahia/import-assets/gallery/image1.jpg"
+               },
+               {
+                  "url": "file:///var/jahia/import-assets/gallery/image2.jpg"
+               }
+            ],
+            ...
+         }
+       ]
+ ```
+> **Note:** Local file paths must be accessible from the Jahia server. The module will read files directly from the server's filesystem. Ensure proper file permissions and security restrictions are in place.
 
 Multiple values declared for Tag property  
 ```json
@@ -343,6 +415,12 @@ Example JSON snippet:
 - External images are downloaded through `/image-proxy/*` provided by `ImageProxyServlet.java`.
 - This proxy endpoint avoids CORS issues when fetching images before they are uploaded.
 
+### Local File Proxy Servlet
+- Local server files can be imported using the `file://` protocol through `/local-file-proxy/*` provided by `LocalFileProxyServlet.java`.
+- This allows importing images and files directly from the server's filesystem without external downloads.
+- **Security:** Path traversal protection is enforced to prevent unauthorized file access.
+- Example: `"url": "file:///var/jahia/import-assets/product.jpg"`
+
 ---
 
 ## GraphQL Queries and Mutations
@@ -460,6 +538,33 @@ mutation CreatePathMutation($path: String!, $name: String!) {
 ---
 
 ## Changelog
+
+### Version 1.1.5-SNAPSHOT
+
+#### New Features 🎉
+- **Local File Import Support**: Import images from server filesystem using `file://` protocol
+  - New `LocalFileProxyServlet.java` handles local file access
+  - Automatic detection of `file://` URLs in image properties
+  - Works with both single and multiple image imports
+  - Path traversal protection for security
+  - Example: `"url": "file:///var/jahia/import-assets/image.jpg"`
+
+#### UI Modernization 🎨
+- **Moonstone Component Migration**: Replaced Material-UI components with custom Moonstone-styled components
+  - New custom Modal component (`Modal.jsx`) replacing MUI Dialog
+  - New custom Tabs component (`Tabs.jsx`) replacing MUI Tabs
+  - New custom Checkbox component (`Checkbox.jsx`) replacing MUI FormControlLabel
+  - Reduced bundle size and improved performance
+
+- **Font Size Reduction**: More compact and professional UI
+  - Base font reduced from 16px to 14px (0.875rem)
+  - Headings, subheadings, and captions proportionally reduced
+  - Improved information density while maintaining readability
+
+- **Layout Improvements**
+  - Reduced padding and margins throughout
+  - Better visual hierarchy with adjusted spacing
+  - Cleaner, modern design consistent with Jahia Moonstone
 
 ### Version 1.1.4
 
