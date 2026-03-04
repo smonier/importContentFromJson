@@ -19,8 +19,9 @@ import {
 import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
-import {Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab, Checkbox, FormControlLabel} from '@mui/material';
-
+import Modal from '~/DesignSystem/Modal';
+import {Tabs, Tab} from '~/DesignSystem/Tabs';
+import {Checkbox} from '~/DesignSystem/Checkbox';
 import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
 import styles from './ImportContent.component.scss';
 import FieldMapping from './FieldMapping.jsx';
@@ -38,6 +39,17 @@ import {
     nodeExists,
     extractFileFields
 } from '~/ImportContentFromJson/ImportContent.utils.js';
+import {
+    validateFile,
+    sanitizeNodeName,
+    validatePath,
+    sanitizePath,
+    validateArraySize,
+    validateImageUrl
+} from '~/ImportContentFromJson/ImportContent.validation';
+import logger from '~/ImportContentFromJson/ImportContent.logger';
+import {processBatch, checkMemoryAvailability} from '~/ImportContentFromJson/ImportContent.performance';
+import {MAX_FILE_SIZE, ERROR_MESSAGES} from '~/ImportContentFromJson/ImportContent.constants';
 
 export default () => {
     const {t} = useTranslation('importContentFromJson');
@@ -103,7 +115,7 @@ export default () => {
     const [fetchContentTypes, {data: contentTypeData}] = useLazyQuery(GetContentTypeQuery, {
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetContentType error:', error.message);
+            logger.error('GetContentType error', {error: error.message});
             setContentTypeError(error);
         }
     });
@@ -111,7 +123,7 @@ export default () => {
     const [fetchProperties, {data: propertiesData}] = useLazyQuery(GetContentPropertiesQuery, {
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetContentProperties error:', error.message);
+            logger.error('GetContentProperties error', {error: error.message});
             setPropertiesError(error);
         }
     });
@@ -124,64 +136,64 @@ export default () => {
             }
         },
         onError: error => {
-            console.error('Fetch categories error:', error.message);
+            logger.error('Fetch categories error', {error: error.message});
         }
     });
 
     const [checkPath] = useLazyQuery(CheckPathQuery, {
         fetchPolicy: 'network-only',
-        onError: error => console.error('CheckPath error:', error.message)
+        onError: error => logger.error('CheckPath error', {error: error.message})
     });
     const [createPath] = useMutation(CreatePathMutation, {
         onError: error => {
-            console.error('CreatePath error:', error.message);
+            logger.error('CreatePath error', {error: error.message});
             throw error;
         }
     });
     const [createContent] = useMutation(CreateContentMutation, {
         onError: error => {
             if (error.message.includes('javax.jcr.ItemExistsException') || error.message.includes('already exists')) {
-                console.info('CreateContent skipped - node already exists');
+                logger.info('CreateContent skipped - node already exists');
             } else {
-                console.error('CreateContent error:', error.message);
+                logger.error('CreateContent error', {error: error.message});
             }
 
             throw error;
         }
     });
     const [checkImageExists] = useLazyQuery(CheckImageExists, {
-        onError: error => console.error('CheckImageExists error:', error.message)
+        onError: error => logger.error('CheckImageExists error', {error: error.message})
     });
     const [addFileToJcr] = useMutation(CreateFileMutation, {
         onError: error => {
-            console.error('CreateFile error:', error.message);
+            logger.error('CreateFile error', {error: error.message});
             throw error;
         }
     });
     const [addTags] = useMutation(AddTags, {
         onError: error => {
-            console.error('AddTags error:', error.message);
+            logger.error('AddTags error', {error: error.message});
             throw error;
         }
     });
     const [checkIfCategoryExists] = useLazyQuery(CheckIfCategoryExists, {
-        onError: error => console.error('CheckIfCategoryExists error:', error.message)
+        onError: error => logger.error('CheckIfCategoryExists error', {error: error.message})
     });
     const [addCategories] = useMutation(AddCategories, {
         onError: error => {
-            console.error('AddCategories error:', error.message);
+            logger.error('AddCategories error', {error: error.message});
             throw error;
         }
     });
     const [updateContent] = useMutation(UpdateContentMutation, {
         onError: error => {
-            console.error('UpdateContent error:', error.message);
+            logger.error('UpdateContent error', {error: error.message});
             throw error;
         }
     });
     const [addVanityUrl] = useMutation(AddVanityUrl, {
         onError: error => {
-            console.error('AddVanityUrl error:', error.message);
+            logger.error('AddVanityUrl error', {error: error.message});
             throw error;
         }
     });
@@ -189,7 +201,7 @@ export default () => {
         variables: {workspace: 'EDIT', scope: `/sites/${siteKey}`},
         fetchPolicy: 'network-only',
         onError: error => {
-            console.error('GetSiteLanguages error:', error.message);
+            logger.error('GetSiteLanguages error', {error: error.message});
             setLanguageError(error);
         }
     });
@@ -222,8 +234,30 @@ export default () => {
     }, [siteLanguagesData]);
 
     useEffect(() => {
-        if (propertiesData?.jcr?.nodeTypes?.nodes?.[0]?.properties) {
-            setProperties(propertiesData.jcr.nodeTypes.nodes[0].properties);
+        if (propertiesData?.jcr?.nodeTypes?.nodes?.[0]) {
+            const nodeType = propertiesData.jcr.nodeTypes.nodes[0];
+            const mainProperties = nodeType.properties || [];
+            
+            // Collect properties from extendedBy mixins
+            const extendedProperties = [];
+            if (nodeType.extendedBy?.nodes) {
+                nodeType.extendedBy.nodes.forEach(mixin => {
+                    if (mixin.properties && mixin.properties.length > 0) {
+                        // Add mixin info to each property for grouping
+                        mixin.properties.forEach(prop => {
+                            extendedProperties.push({
+                                ...prop,
+                                mixinName: mixin.name,
+                                mixinDisplayName: mixin.displayName
+                            });
+                        });
+                    }
+                });
+            }
+            
+            // Combine main properties and extended properties
+            const allProperties = [...mainProperties, ...extendedProperties];
+            setProperties(allProperties);
             setPropertiesError(null);
         }
     }, [propertiesData]);
@@ -264,11 +298,11 @@ export default () => {
         try {
             const {data} = await checkIfCategoryExists();
             if (data?.jcr?.nodeByPath?.children?.nodes) {
-                console.log('Category Tree Loaded:', data.jcr.nodeByPath.children.nodes);
+                logger.debug('Category Tree Loaded', {count: data.jcr.nodeByPath.children.nodes.length});
                 flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
             }
         } catch (error) {
-            console.error('GraphQL Category Fetch Error:', error.message);
+            logger.error('GraphQL Category Fetch Error', {error: error.message});
         }
     };
 
@@ -284,23 +318,24 @@ export default () => {
         setIsValidJson(false);
 
         if (!file) {
-            console.error('No file selected');
+            logger.error('No file selected');
             return;
         }
 
-        console.log('File uploaded', file.name);
+        // Validate file
+        const validation = validateFile(file);
+        if (!validation.valid) {
+            logger.error('File validation failed', {error: validation.error});
+            alert(validation.error);
+            return;
+        }
+
+        logger.info('File uploaded', {name: file.name, size: file.size});
 
         const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
         const isCsv = file.type === 'text/csv' || file.type === 'application/vnd.ms-excel' || file.name.toLowerCase().endsWith('.csv');
 
-        if (!isJson && !isCsv) {
-            const invalidMsg = t('label.invalidFile');
-            console.error(invalidMsg);
-            alert(invalidMsg);
-            return;
-        }
-
-        setUploadedFileName(file.name); // Set the new file name
+        setUploadedFileName(file.name);
 
         const reader = new FileReader();
 
@@ -308,21 +343,40 @@ export default () => {
             try {
                 if (isCsv) {
                     const result = Papa.parse(event.target.result, {header: true});
-                    const rows = result.data;
+                    const rows = result.data.filter(row => Object.values(row).some(val => val));
+                    
+                    // Validate array size
+                    const sizeValidation = validateArraySize(rows);
+                    if (!sizeValidation.valid) {
+                        logger.error('CSV size validation failed', {error: sizeValidation.error});
+                        alert(sizeValidation.error);
+                        return;
+                    }
+                    
                     setUploadedFileContent(rows);
                     setFileFields(result.meta?.fields || Object.keys(rows[0] || {}));
-                    setIsValidJson(false); // Not JSON, so not valid for JSON import
+                    setIsValidJson(false);
                 } else {
                     const jsonData = JSON.parse(event.target.result);
-                    setUploadedFileContent(jsonData); // Store full JSON content
-                    const firstItem = Array.isArray(jsonData) ? jsonData[0] : jsonData;
+                    const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];
+                    
+                    // Validate array size
+                    const sizeValidation = validateArraySize(dataArray);
+                    if (!sizeValidation.valid) {
+                        logger.error('JSON size validation failed', {error: sizeValidation.error});
+                        alert(sizeValidation.error);
+                        return;
+                    }
+                    
+                    setUploadedFileContent(jsonData);
+                    const firstItem = dataArray[0];
                     setFileFields(extractFileFields(firstItem || {}));
-                    setIsValidJson(false); // Structure validation will set to true
+                    setIsValidJson(false);
                 }
             } catch (error) {
-                console.error('Error parsing file:', error.message);
+                logger.error('Error parsing file', {error: error.message});
                 setIsValidJson(false);
-                alert('Invalid file. Please check the file contents.');
+                alert(ERROR_MESSAGES.INVALID_JSON);
             }
         };
 
@@ -400,13 +454,13 @@ export default () => {
     };
 
     const handleGenerateJson = () => {
-        console.log('Generate JSON button clicked - manual mapping');
+        logger.info('Generate JSON button clicked - manual mapping');
 
         if (!uploadedFileContent || !selectedContentType) {
             if (!uploadedFileContent) {
-                alert('Please upload a valid JSON file.');
+                alert(ERROR_MESSAGES.NO_FILE_UPLOADED);
             } else if (!selectedContentType) {
-                alert('Please select a content type.');
+                alert(ERROR_MESSAGES.NO_CONTENT_TYPE);
             }
 
             return;
@@ -424,13 +478,24 @@ export default () => {
     };
 
     const startImport = async (previewData = jsonPreview) => {
-        console.log('Starting import');
+        logger.info('Starting import');
         setIsLoading(true);
-        const fullContentPath = pathSuffix ? `${baseContentPath}/${pathSuffix.trim()}` : baseContentPath;
-        const fullFilePath = pathSuffix ? `${baseFilePath}/${pathSuffix.trim()}` : baseFilePath;
+        
+        // Validate and sanitize path
+        const pathValidation = validatePath(pathSuffix);
+        if (!pathValidation.valid) {
+            logger.error('Path validation failed', {error: pathValidation.error});
+            alert(pathValidation.error);
+            setIsLoading(false);
+            return;
+        }
+        
+        const sanitizedPath = sanitizePath(pathSuffix);
+        const fullContentPath = sanitizedPath ? `${baseContentPath}/${sanitizedPath}` : baseContentPath;
+        const fullFilePath = sanitizedPath ? `${baseFilePath}/${sanitizedPath}` : baseFilePath;
 
         // === Pre-import Validation ===
-        console.group('=== Pre-import Validation ===');
+        logger.group('=== Pre-import Validation ===');
         let contentPathExists = false;
         let filePathExists = false;
 
@@ -439,9 +504,9 @@ export default () => {
             contentPathExists = exists;
         } catch (e) {
             if (e?.message?.includes('PathNotFoundException')) {
-                console.debug(`🔍 Content path not found (expected): ${fullContentPath}`);
+                logger.debug('Content path not found (expected)', {path: fullContentPath});
             } else {
-                console.error(`❌ Unexpected error checking content path: ${fullContentPath}`, e);
+                logger.error('Unexpected error checking content path', {path: fullContentPath, error: e.message});
             }
         }
 
@@ -450,28 +515,28 @@ export default () => {
             filePathExists = exists;
         } catch (e) {
             if (e?.message?.includes('PathNotFoundException')) {
-                console.debug(`🔍 File path not found (expected): ${fullFilePath}`);
+                logger.debug('File path not found (expected)', {path: fullFilePath});
             } else {
-                console.error(`❌ Unexpected error checking file path: ${fullFilePath}`, e);
+                logger.error('Unexpected error checking file path', {path: fullFilePath, error: e.message});
             }
         }
 
         // Now create if needed
         if (!contentPathExists) {
-            console.info(`📁 Creating content path: ${fullContentPath}`);
+            logger.info('Creating content path', {path: fullContentPath});
             await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
         } else {
-            console.info(`✅ Content path exists: ${fullContentPath}`);
+            logger.debug('Content path exists', {path: fullContentPath});
         }
 
         if (!filePathExists) {
-            console.info(`📁 Creating file path: ${fullFilePath}`);
+            logger.info('Creating file path', {path: fullFilePath});
             await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
         } else {
-            console.info(`✅ File path exists: ${fullFilePath}`);
+            logger.debug('File path exists', {path: fullFilePath});
         }
 
-        console.groupEnd();
+        logger.groupEnd();
         // === END Pre-import Validation ===
 
         const errorReport = [];
@@ -601,42 +666,32 @@ export default () => {
 
         try {
             if (!previewData) {
-                alert('Please upload a valid JSON file.');
+                alert(ERROR_MESSAGES.NO_FILE_UPLOADED);
                 return;
             }
 
             if (!isValidJson) {
-                alert('Please upload a valid JSON file.');
+                alert(ERROR_MESSAGES.INVALID_JSON);
                 return;
             }
 
             if (!selectedContentType) {
-                alert('Please select a content type.');
+                alert(ERROR_MESSAGES.NO_CONTENT_TYPE);
                 return;
             }
 
             const propertyDefinitions = properties;
 
             if (!Array.isArray(previewData)) {
-                alert('JSON file format is invalid or not properly parsed.');
-                console.error('jsonPreview is not an array:', previewData);
+                logger.error('Invalid preview data format', {isArray: Array.isArray(previewData)});
+                alert(ERROR_MESSAGES.INVALID_JSON);
                 return;
             }
 
-            const normalizeName = value =>
-                String(value)
-                    .normalize('NFD') // Split accents from letters
-                    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-                    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
-                    .replace(/\s+/g, '_') // Replace spaces with underscores
-                    .toLowerCase();
-
             for (const mappedEntry of previewData) {
-                const contentName = mappedEntry['jcr:title'] ?
-                    normalizeName(mappedEntry['jcr:title']) :
-                    mappedEntry.name ?
-                        normalizeName(mappedEntry.name) :
-                        `content_${new Date().getTime()}`;
+                const contentName = sanitizeNodeName(
+                    mappedEntry['jcr:title'] || mappedEntry.name || `content_${Date.now()}`
+                );
                 const fullNodePath = `${fullContentPath}/${contentName}`;
                 const nodeReport = {name: fullNodePath, status: 'created'};
 
@@ -726,12 +781,23 @@ export default () => {
                 ).then(results => results.filter(Boolean));
                 reportData.images.push(...imageResultsBuffer);
 
+                // Determine required mixins based on properties being set
+                const requiredMixins = new Set(['jmix:editorialContent']);
+                propertiesToSend.forEach(prop => {
+                    const propertyDef = propertyDefinitions.find(p => p.name === prop.name);
+                    if (propertyDef && propertyDef.mixinName) {
+                        requiredMixins.add(propertyDef.mixinName);
+                    }
+                });
+                const mixinsArray = Array.from(requiredMixins);
+
                 let contentUuid = null;
                 try {
                     if (exists && overrideExisting) {
                         const {data: updateData} = await updateContent({
                             variables: {
                                 pathOrId: existingUuid,
+                                mixins: mixinsArray,
                                 properties: propertiesToSend
                             }
                         });
@@ -748,6 +814,7 @@ export default () => {
                                 path: fullContentPath,
                                 name: contentName,
                                 primaryNodeType: selectedContentType,
+                                mixins: mixinsArray,
                                 properties: propertiesToSend
                             }
                         });
@@ -973,7 +1040,7 @@ export default () => {
             />
                 <div className={styles.container}>
                     <div className={styles.leftPanel}>
-                        <Typography variant="heading" className={styles.heading}>
+                        <Typography variant="subheading" className={styles.heading}>
                             {t('label.path')}
                         </Typography>
                         <div className={styles.pathContainer}>
@@ -995,30 +1062,17 @@ export default () => {
                             {t('label.enterPathSuffixHelp')}
                         </Typography>
                         <div className={styles.optionsSection}>
-                            <Typography variant="subheading" className={styles.optionsTitle}>
+                            <Typography variant="caption" className={styles.optionsTitle}>
                                 {t('label.options')}
                             </Typography>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={overrideExisting}
-                                        sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
-                                        onChange={e => setOverrideExisting(e.target.checked)}
-                                    />
-                                }
-                                className={styles.optionItem}
+                            <Checkbox
+                                checked={overrideExisting}
+                                onChange={e => setOverrideExisting(e.target.checked)}
                                 label={t('label.overrideExisting')}
                             />
-                            <br/>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={createVanityUrl}
-                                        sx={{'&.Mui-checked': {color: 'var(--color-accent)'}}}
-                                        onChange={e => setCreateVanityUrl(e.target.checked)}
-                                    />
-                                }
-                                className={styles.optionItem}
+                            <Checkbox
+                                checked={createVanityUrl}
+                                onChange={e => setCreateVanityUrl(e.target.checked)}
                                 label={t('label.createVanityUrl')}
                             />
                         </div>
@@ -1029,7 +1083,7 @@ export default () => {
                             t={t}
                             onChange={setSelectedLanguage}
                         />
-                        <Typography variant="heading" className={styles.heading}>
+                        <Typography variant="subheading" className={styles.heading}>
                             {t('label.selectContentType')}
                         </Typography>
                         <Dropdown
@@ -1050,26 +1104,13 @@ export default () => {
                     </div>
 
                     <div className={styles.rightPanel}>
-                        <Tabs
-                        value={activeTab}
-                        className={styles.tabs}
-                        TabIndicatorProps={{style: {backgroundColor: 'var(--color-accent)'}}}
-                        onChange={handleTabChange}
-                        >
-                            <Tab
-                            className={styles.tab}
-                            variant="heading"
-                            label={<Typography>{t('label.manualMapping')}</Typography>}
-                        />
-                            <Tab
-                            className={styles.tab}
-                            variant="heading"
-                            label={<Typography>{t('label.reImportGeneratedFile')}</Typography>}
-                        />
+                        <Tabs value={activeTab} onChange={handleTabChange}>
+                            <Tab label={t('label.manualMapping')} />
+                            <Tab label={t('label.reImportGeneratedFile')} />
                         </Tabs>
                         {activeTab === 0 && (
                         <div className={styles.tabContent}>
-                            <Typography variant="heading" className={styles.heading}>
+                            <Typography variant="subheading" className={styles.heading}>
                                 {t('label.uploadFile')}
                             </Typography>
                             <FileUploader
@@ -1094,7 +1135,7 @@ export default () => {
                     )}
                         {activeTab === 1 && (
                         <div className={styles.tabContent}>
-                            <Typography variant="heading" className={styles.heading}>
+                            <Typography variant="subheading" className={styles.heading}>
                                 {t('label.uploadGeneratedFile')}
                             </Typography>
                             <FileUploader
@@ -1116,15 +1157,18 @@ export default () => {
                     </div>
                 </div>
             </div>
-            <Dialog fullWidth open={isFilePreviewOpen} maxWidth="md" onClose={() => setIsFilePreviewOpen(false)}>
-                <DialogTitle>{t('label.filePreviewTitle')}</DialogTitle>
-                <DialogContent dividers>
-                    <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
-                </DialogContent>
-                <DialogActions>
-                    <Button label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
-                </DialogActions>
-            </Dialog>
+            <Modal
+                open={isFilePreviewOpen}
+                onClose={() => setIsFilePreviewOpen(false)}
+                title={t('label.filePreviewTitle')}
+                maxWidth="md"
+                fullWidth
+                actions={[
+                    <Button key="close" label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
+                ]}
+            >
+                <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
+            </Modal>
             <ImportPreviewDialog
                 open={isPreviewOpen}
                 previewData={mappedPreview}

@@ -8,7 +8,7 @@ import styles from './ImportContent.component.scss';
  */
 const LanguageSelector = ({languages, selectedLanguage, onChange, error, t}) => (
     <>
-        <Typography variant="heading" className={styles.heading}>
+        <Typography variant="subheading" className={styles.heading}>
             {t('label.selectLanguage')}
         </Typography>
         <Dropdown

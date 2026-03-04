@@ -9,12 +9,14 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 ## Table of Contents
 
 - [Features](#features)
+- [Production Readiness & Security](#production-readiness--security)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [GraphQL Queries and Mutations](#graphql-queries-and-mutations)
 - [Error Handling](#error-handling)
 - [Customization](#customization)
+- [Changelog](#changelog)
 - [License](#license)
 
 ---
@@ -36,6 +38,93 @@ The **ImportContentFromJson** module facilitates importing content into Jahia JC
 - Categories will be attached if matching existing system name
 - Support unsplash API to create related images (need API Key)
 - Create a Vanity URL automatically "/folder/title"
+
+---
+
+## Production Readiness & Security
+
+This module implements enterprise-grade security and performance features suitable for production environments:
+
+### Security Features
+
+- **Input Validation & Sanitization**
+  - File size limits (default: 10MB max) to prevent DoS attacks
+  - File type validation (JSON/CSV only)
+  - Path traversal protection preventing "../" attacks
+  - JCR node name sanitization (removes special characters, limits length to 32 chars)
+  - XSS prevention through URL validation and string sanitization
+  - JSON structure validation with size limits (max 1000 items)
+
+- **Secure Logging**
+  - Environment-aware logging (verbose in development, minimal in production)
+  - Automatic sanitization of sensitive data in logs
+  - Structured error messages without exposing internal details
+  - No credentials or tokens logged
+
+- **URL & Image Security**
+  - Whitelist-based protocol validation (https:// only for external images)
+  - Image URL validation before fetching
+  - Proxy servlet for CORS-safe image downloads
+  - Prevention of SSRF attacks through URL sanitization
+
+### Performance Optimizations
+
+- **Batch Processing**
+  - Configurable batch size (default: 50 items per batch)
+  - Memory-efficient processing for large imports
+  - Automatic memory availability checks
+
+- **Rate Limiting**
+  - API call throttling (100ms delay between calls)
+  - Prevents overwhelming the JCR repository
+  - Configurable through constants
+
+- **Concurrent Operations**
+  - Parallel processing for independent operations
+  - Retry logic with exponential backoff (max 3 retries)
+  - Error isolation to prevent cascade failures
+
+- **Resource Management**
+  - Debounced user inputs to reduce unnecessary processing
+  - Performance monitoring and measurement utilities
+  - Garbage collection hints for large imports
+
+### Configuration Constants
+
+All security and performance parameters are centralized in `ImportContent.constants.js`:
+
+```javascript
+// File size limits
+MAX_FILE_SIZE: 10 * 1024 * 1024  // 10MB
+
+// Import limits
+MAX_ITEMS_PER_IMPORT: 1000       // Maximum items per import
+BATCH_SIZE: 50                    // Items per batch
+
+// Rate limiting
+API_CALL_DELAY: 100              // Milliseconds between API calls
+MAX_RETRIES: 3                   // Maximum retry attempts
+RETRY_DELAY: 1000                // Initial retry delay (ms)
+```
+
+### Best Practices for Production
+
+1. **Before Deployment**
+   - Set `NODE_ENV=production` to enable production logging mode
+   - Review and adjust MAX_FILE_SIZE based on server capacity
+   - Configure appropriate BATCH_SIZE for your JCR repository
+   - Test with realistic data volumes
+
+2. **Monitoring**
+   - Monitor server logs for errors and warnings
+   - Track import performance metrics
+   - Watch for memory usage during large imports
+
+3. **User Permissions**
+   - Ensure users have appropriate JCR permissions for target paths
+   - Restrict access to sensitive content paths
+   - Review Jahia security roles and ACLs
+
 ---
 
 ## Installation
@@ -367,6 +456,97 @@ mutation CreatePathMutation($path: String!, $name: String!) {
 - **Field Mapping**: Extend or modify the `processJsonData` function to handle additional JSON fields.
 - **Styles**: Update `ImportContent.component.scss` to customize the UI design.
 - **Localization**: Add translations for new languages in the resource bundle files.
+
+---
+
+## Changelog
+
+### Version 1.1.4
+
+#### Security Enhancements 🔒
+- **Input Validation System**: Comprehensive validation module (`ImportContent.validation.js`)
+  - File size validation (10MB limit) to prevent denial-of-service attacks
+  - File type whitelisting (JSON/CSV only)
+  - Path traversal protection preventing "../" directory manipulation
+  - JCR node name sanitization (removes invalid characters, enforces 32-char limit)
+  - URL validation with protocol whitelisting (https:// only for external resources)
+  - Array size limits to prevent memory exhaustion (max 1000 items)
+  - JSON structure validation with depth checking
+
+- **Secure Logging**: Production-ready logging system (`ImportContent.logger.js`)
+  - Environment-aware logging (verbose in dev, minimal in production)
+  - Automatic sanitization of sensitive data (passwords, tokens, API keys)
+  - Structured error messages without internal detail exposure
+  - Replaces all console.log/error/warn calls
+
+- **XSS Prevention**: String sanitization for user inputs
+  - HTML entity encoding for display values
+  - Script tag removal from user content
+  - Safe URL construction
+
+#### Performance Optimizations ⚡
+- **Performance Utilities Module** (`ImportContent.performance.js`)
+  - Batch processing for large imports (configurable batch size: 50)
+  - Concurrent operation support with Promise.allSettled
+  - Rate limiting to prevent API overload (100ms between calls)
+  - Retry logic with exponential backoff (max 3 attempts)
+  - Memory availability checks before large operations
+  - Debounce/throttle utilities for UI interactions
+  - Performance measurement helpers
+
+- **Resource Management**
+  - Automatic garbage collection hints after large imports
+  - Memory-efficient streaming for large file processing
+  - Configurable limits for batch sizes and concurrent operations
+
+#### Configuration & Constants
+- **Centralized Configuration** (`ImportContent.constants.js`)
+  - All limits, timeouts, and validation rules in one place
+  - Runtime environment detection
+  - Configurable error messages
+  - File type and size constraints
+  - API rate limiting parameters
+  - Batch processing configuration
+
+#### Features
+- **Extended Properties Support**: Added support for displaying and mapping properties from mixin types (`extendedBy`)
+  - GraphQL query now retrieves properties from all mixin types associated with the selected content type
+  - Properties are automatically extracted from mixins like `jmix:tagged`, `jmix:seoHtmlHead`, `jmix:categorized`, etc.
+
+#### UI Enhancements
+- **Properties List**: Enhanced property display with visual separation
+  - Main properties are shown in a dedicated section
+  - Mixin properties are grouped by their mixin type with clear headers
+  - Each mixin group displays the mixin's display name and technical name
+
+- **Field Mapping Panel**: Improved field mapping interface
+  - Organized sections for Main Properties, Mixin Properties, and Extra Fields
+  - Visual section headers with distinct styling for better readability
+  - Consistent alignment across all property sections
+  - Properties from mixins are now fully available for mapping
+
+- **Enhanced Error Reporting**
+  - Detailed validation errors with context
+  - User-friendly error messages
+  - Secure error logging without sensitive data
+
+#### Localization
+- Added new translation keys in all supported languages (EN, FR, DE, ES):
+  - `mainProperties`: Labels for main content type properties
+  - `mixinProperties`: Labels for mixin-specific properties
+  - `extraFields`: Labels for additional fields like tags and categories
+
+#### Technical Improvements
+- Enhanced properties extraction logic to merge main properties with mixin properties
+- Added metadata tracking (`mixinName`, `mixinDisplayName`) for property grouping
+- Improved SCSS styling with new classes for section headers and property groups
+- **Automatic Mixin Management**: Mixins are now automatically added to nodes before setting properties
+  - When creating content, all required mixins are determined from the properties being set
+  - When updating content, missing mixins are automatically added before property updates
+  - Ensures JCR compliance by adding mixins before their properties are set
+  - Updated GraphQL mutations to accept dynamic mixin arrays
+- **Code Quality**: All ESLint errors resolved, production-ready codebase
+- **Production Build**: Verified successful Maven build with webpack optimization
 
 ---
 

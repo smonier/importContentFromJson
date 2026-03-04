@@ -14,28 +14,76 @@ export const GetContentTypeQuery = gql`
     }
 `;
 
+export const PROPERTY_DEFINITION_FIELDS = gql`
+    fragment PropertyDefinitionFields on JCRPropertyDefinition {
+        displayName(language: $language)
+        name
+        internationalized
+        multiple
+        mandatory
+        requiredType
+        constraints
+    }
+`;
+
+export const NODE_TYPE_BASE_FIELDS = gql`
+    fragment NodeTypeBaseFields on JCRNodeType {
+        name
+        displayName(language: $language)
+    }
+`;
+
+export const NODE_TYPE_SUPERTYPE_FIELDS = gql`
+    fragment NodeTypeSupertypeFields on JCRNodeType {
+        ...NodeTypeBaseFields
+        mixin
+    }
+`;
+
 export const GetContentPropertiesQuery = gql`
-    query GetContentPropertiesQuery($type: String!, $language: String!) {
+    ${PROPERTY_DEFINITION_FIELDS}
+    ${NODE_TYPE_BASE_FIELDS}
+
+    query GetContentPropertiesQuery(
+        $type: String!
+        $language: String!
+    ) {
         jcr {
-            nodeTypes(filter: {includeTypes: [$type]}) {
+            nodeTypes(filter: { includeTypes: [$type] }) {
                 nodes {
-                    name
-                    properties(fieldFilter: {filters: [{fieldName: "hidden", value: "false"}]}) {
-                        name
-                        hidden
-                        displayName(language: $language)
-                        internationalized
-                        mandatory
-                        requiredType
-                        constraints
-                        multiple
+                    ...NodeTypeBaseFields
+
+                    properties(
+                        fieldFilter: {
+                            filters: [
+                                { fieldName: "hidden", value: "false" }
+                                { fieldName: "protected", value: "false" }
+                            ]
+                        }
+                    ) {
+                        ...PropertyDefinitionFields
+                    }
+
+                    extendedBy {
+                        nodes {
+                            ...NodeTypeBaseFields
+                            properties(
+                                fieldFilter: {
+                                    filters: [
+                                        { fieldName: "hidden", value: "false" }
+                                        { fieldName: "protected", value: "false" }
+                                    ]
+                                }
+                            ) {
+                                ...PropertyDefinitionFields
+                            }
+                        }
                     }
                 }
             }
         }
     }
 `;
-
 export const FetchContentForCSVQuery = gql`
     query getContentsByContentType(
         $path: String!, 
@@ -99,6 +147,7 @@ export const CreateContentMutation = gql`
         $path: String!
         $name: String!
         $primaryNodeType: String!
+        $mixins: [String]!
         $properties: [InputJCRProperty]!
     ) {
         jcr(workspace: EDIT) {
@@ -106,7 +155,7 @@ export const CreateContentMutation = gql`
                 name: $name
                 parentPathOrId: $path
                 primaryNodeType: $primaryNodeType
-                mixins: ["jmix:editorialContent"]
+                mixins: $mixins
                 properties: $properties
             ) {
                 uuid
@@ -119,9 +168,10 @@ export const CreateContentMutation = gql`
     }`;
 
 export const UpdateContentMutation = gql`
-    mutation UpdateContentMutation($pathOrId: String!, $properties: [InputJCRProperty] = []) {
+    mutation UpdateContentMutation($pathOrId: String!, $mixins: [String] = [], $properties: [InputJCRProperty] = []) {
         jcr(workspace: EDIT) {
             mutateNode(pathOrId: $pathOrId) {
+                addMixins(mixins: $mixins)
                 setPropertiesBatch(properties: $properties) {
                     path
                 }

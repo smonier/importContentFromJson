@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Button} from '@jahia/moonstone';
-import {Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
+import Modal from '~/DesignSystem/Modal';
 
 const ImportReportDialog = ({open, onClose, report, t}) => {
     if (!report) {
@@ -322,27 +322,30 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
     }
 
     return (
-        <Dialog fullWidth open={open} maxWidth="md" onClose={onClose}>
-            <DialogTitle>{t('label.reportTitle')}</DialogTitle>
-            <DialogContent dividers>
-                {sections.map((section, index) => (
-                    <div
-                        key={section.id}
-                        style={{
-                            ...sectionBaseStyle,
-                            backgroundColor: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
-                        }}
-                    >
-                        <div style={sectionTitleStyle}>{section.title}</div>
-                        {section.content}
-                    </div>
-                ))}
-            </DialogContent>
-            <DialogActions>
-                <Button label={t('label.downloadReport')} onClick={handleDownload}/>
-                <Button label={t('label.closeReport')} onClick={onClose}/>
-            </DialogActions>
-        </Dialog>
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={t('label.reportTitle')}
+            maxWidth="md"
+            fullWidth
+            actions={[
+                <Button key="download" label={t('label.downloadReport')} onClick={handleDownload}/>,
+                <Button key="close" label={t('label.closeReport')} onClick={onClose}/>
+            ]}
+        >
+            {sections.map((section, index) => (
+                <div
+                    key={section.id}
+                    style={{
+                        ...sectionBaseStyle,
+                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
+                    }}
+                >
+                    <div style={sectionTitleStyle}>{section.title}</div>
+                    {section.content}
+                </div>
+            ))}
+        </Modal>
     );
 };
 

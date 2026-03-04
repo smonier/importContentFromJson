@@ -11,17 +11,21 @@ $border-color: rgba(0, 0, 0, 0.12);
     --color-accent: #00a0e3;
 }
 
-// Define spacing and typography
-$spacing-unit: 8px;
+// Define spacing and typography - REDUCED SIZES
+$spacing-unit: 6px;
 $border-radius: 4px;
 $font-family: 'Roboto', sans-serif;
+$base-font-size: 0.875rem;  // 14px
+$heading-font-size: 0.95rem; // 15.2px
+$subheading-font-size: 0.875rem; // 14px
+$caption-font-size: 0.8125rem; // 13px
 
 // General Container
 .configContainer {
     display: flex;
     flex-direction: column;
     border-radius: $border-radius;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .layout {
@@ -34,17 +38,16 @@ $font-family: 'Roboto', sans-serif;
     flex: 1;
     display: flex;
     flex-direction: row;
-    margin-top: 16px;
     margin: $spacing-unit * 2;
-    padding: $spacing-unit * 4;
+    padding: $spacing-unit * 3;
     border-radius: $border-radius;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     overflow: hidden;
 }
 
 .leftPanel {
-    flex: 0 0 40%;
-    padding: 16px;
+    flex: 0 0 42%;
+    padding: 12px;
     border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
@@ -53,8 +56,8 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .rightPanel {
-    flex: 0 0 60%;
-    padding: 16px;
+    flex: 0 0 58%;
+    padding: 12px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -62,61 +65,94 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .heading {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+    font-size: $heading-font-size;
+    font-weight: 600;
 }
 
 .propertiesList {
     flex: 1;
     overflow-y: auto;
     border: 1px solid #e0e0e0;
-    padding: 8px;
+    padding: 6px;
     background-color: #f9f9f9;
     min-height: 0;
     min-width: 0;
+    font-size: $base-font-size;
 }
 
 .propertyItem {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.propertyText {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+}
+
+.sectionHeading {
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    color: $secondary-color;
+    font-size: $caption-font-size;
+}
+
+.mixinSection {
+    margin-bottom: 10px;
+    padding-left: 6px;
+    border-left: 2px solid $border-color;
+}
+
+.mixinName {
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 3px;
+    display: block;
+    font-style: italic;
+    font-size: 0.75rem;
 }
 
 .customDropdown {
     border: 1px solid #cccccc;
     border-radius: 4px;
-    padding: 8px;
+    padding: 6px;
     background-color: #ffffff;
-    margin-bottom: 16px; /* Adds spacing at the bottom */
-
+    margin-bottom: 12px;
+    font-size: $base-font-size;
 
     .moonstone-dropdown__control {
         border: none;
-        font-size: 14px;
+        font-size: 0.8125rem;
         color: #666666;
     }
 
     .moonstone-dropdown__placeholder {
         color: #999999;
         font-style: italic;
+        font-size: 0.8125rem;
     }
 
     .moonstone-dropdown__menu {
         border: 1px solid #cccccc;
         border-radius: 4px;
         box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        font-size: 0.8125rem;
     }
 }
 
 .customInput {
     border: 1px solid #cccccc;
     border-radius: 4px;
-    padding: 8px;
+    padding: 6px 8px;
     background-color: #ffffff;
-    font-size: 14px;
+    font-size: 0.8125rem;
     color: #666666;
-    margin-bottom: 16px; /* Adds spacing at the bottom */
-    width: 100%; /* Ensures consistent sizing with the dropdown */
+    margin-bottom: 12px;
+    width: 100%;
 }
 
 .customInput::placeholder {
@@ -126,7 +162,7 @@ $font-family: 'Roboto', sans-serif;
 
 .customInput:focus {
     outline: none;
-    border-color: #999999; /* Optional: Adds focus effect similar to dropdown */
+    border-color: #999999;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -147,46 +183,48 @@ $font-family: 'Roboto', sans-serif;
 
 .fileUpload {
     display: flex;
-    align-items: center; /* Align the label and button vertically */
-    gap: 12px; /* Add spacing between the label and the button */
-    margin-top: 12px;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    margin-bottom: 10px;
 }
 
 .fileInput {
-    display: none; /* Hide the default file input */
+    display: none;
 }
 
 .fileLabel {
-    padding: 8px 16px;
+    padding: 6px 12px;
     background: var(--color-accent);
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
+    font-size: 0.8125rem;
+    transition: background-color 0.2s;
 }
 
 .fileLabel:hover {
-    background: var(--color-accent);
+    background: #0090cc;
 }
 
 .previewContent {
     font-family: "Courier New", Courier, monospace;
-    font-size: 14px;
-    padding: 10px;
+    font-size: 0.75rem;
+    padding: 8px;
     overflow-y: auto;
     white-space: pre-wrap;
     max-height: 600px;
-    border: 1px solid #ddd; /* Subtle border to frame the path section */
-    border-radius: 4px; /* Rounded corners for a polished look */
-    line-height: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    line-height: 1.2rem;
 }
 
 .pathInput {
-    margin-bottom: 16px;
-    width: 100%; /* Adjust width as needed */
-    padding: 8px;
-    font-size: 14px;
+    margin-bottom: 12px;
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.8125rem;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
@@ -194,33 +232,39 @@ $font-family: 'Roboto', sans-serif;
 .pathContainer {
     display: flex;
     align-items: center;
-    gap: 8px; /* Space between base path and input */
-    margin-bottom: 16px; /* Add spacing below the container */
-    padding: 8px; /* Optional padding for the container */
-    background-color: #f9f9f9; /* Light background for better visibility */
-    border: 1px solid #ddd; /* Subtle border to frame the path section */
-    border-radius: 4px; /* Rounded corners for a polished look */
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 6px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 .basePath {
-    color: #555; /* Slightly darker text for base path */
-    font-weight: 500; /* Make base path text stand out */
-    font-size: 14px; /* Match font size with input */
+    color: #555;
+    font-weight: 500;
+    font-size: 0.8125rem;
+}
+
+.baseContentPath {
+    color: #555;
+    font-weight: 500;
+    font-size: 0.8125rem;
 }
 
 .pathSuffixInput {
-    flex: 1; /* Allow the input to take up available space */
-    max-width: 300px; /* Optional: Limit the maximum width of the input */
-    border: 1px solid #ccc; /* Border to distinguish the input */
-    border-radius: 4px; /* Rounded corners for the input */
-    padding: 4px 8px; /* Spacing inside the input */
-    font-size: 14px; /* Match font size with base path */
+    flex: 1;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.8125rem;
 }
 
 .pathSuffixInput:focus {
-    border-color: var(--color-accent); /* Highlight border on focus */
-    outline: none; /* Remove default outline */
-    box-shadow: 0 0 4px rgba(0, 123, 255, 0.5); /* Add subtle focus effect */
+    border-color: var(--color-accent);
+    outline: none;
+    box-shadow: 0 0 3px rgba(0, 123, 255, 0.4);
 }
 
 .loaderOverlay {
@@ -232,8 +276,8 @@ $font-family: 'Roboto', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
-    z-index: 9999; /* Ensure it appears above all other elements */
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
 }
 
 .spinner {
@@ -243,66 +287,37 @@ $font-family: 'Roboto', sans-serif;
 }
 
 .baseContentPathHelp {
-    margin-bottom: 10px; /* Adjust as needed */
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: #666;
 }
+
 .optionsSection {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    padding: 12px;
-    margin-bottom: 24px;
+    padding: 10px;
+    margin-bottom: 16px;
     background-color: #fcfcfc;
 }
 
 .optionsTitle {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    font-size: $caption-font-size;
+    font-weight: 600;
 }
 
 .optionItem {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 
     &:last-child {
         margin-bottom: 0;
     }
 }
+
 .errorMessage {
-    color: red;
-    margin-bottom: 16px;
-}
-
-.tabs {
-    width: 100%;
-    margin-bottom: 16px;
-    border: 1px solid #e0e0e0;
-    border-radius: $border-radius;
-    .MuiTabs-flexContainer {
-        width: 100%;
-    }
-    font-weight: 300 !important;
-    font-size: 1rem !important;
-    line-height: 1.5rem;
-}
-
-.tab {
-    flex: 1;
-    min-width: 0;
-    width: 50%;
-    text-align: center;
-    border-right: 1px solid #e0e0e0;
-    margin: auto !important;
-    &:last-child {
-        border-right: none;
-    }
-    color: var(--secondary-color) !important;
-    font-weight: 300 !important;
-    font-size: 1rem !important;
-    line-height: 1.5rem;
-    text-transform: capitalize !important;
-}
-
-.Mui-selected {
-    color: var(--color-accent) !important;
-    background-color: lighten($accent-color, 40%);
-    border-radius: $border-radius;
+    color: #d32f2f;
+    margin-bottom: 12px;
+    font-size: 0.8125rem;
 }
 
 .tabContent {
