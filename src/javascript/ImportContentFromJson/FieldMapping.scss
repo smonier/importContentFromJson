@@ -1,10 +1,10 @@
 .container {
-    margin-top: 12px;
+    margin-top: var(--spacing-small, 12px);
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    padding: 0 12px;
+    padding: 0 var(--spacing-small, 12px);
 }
 
 .mappingRow {
@@ -12,72 +12,70 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    margin-bottom: 6px;
-    padding: 4px;
+    gap: var(--spacing-nano, 6px);
+    margin-bottom: var(--spacing-nano, 6px);
+    padding: var(--spacing-nano, 4px);
     width: 100%;
+    border-radius: 4px;
 
     &:nth-child(even) {
-        background-color: #f3f3f3;
-    }
-    &:nth-child(odd) {
-        background-color: #ffffff;
+        background-color: var(--color-gray_light20);
     }
 }
 
 .propertyName {
     flex: 1;
     text-align: left;
-    font-size: 0.8125rem;
+    color: var(--color-gray_dark);
 }
 
 .dropdown {
     flex: 1;
     text-align: right;
-    font-size: 0.8125rem;
 }
 
 .headerRow {
     display: flex;
     justify-content: space-between;
-    margin: 12px 0 8px;
-    padding: 0 4px;
+    margin: var(--spacing-small, 12px) 0 var(--spacing-nano, 8px);
+    padding: 0 var(--spacing-nano, 4px);
     width: 100%;
-    font-weight: 600;
 }
 
 .headerLeft {
     flex: 1;
     text-align: left;
-    font-size: 0.8125rem;
+    color: var(--color-gray_dark);
 }
 
 .headerRight {
     flex: 1;
     text-align: right;
-    font-size: 0.8125rem;
+    color: var(--color-gray_dark);
 }
 
 .sectionHeader {
     width: 100%;
-    margin-top: 12px;
-    margin-bottom: 6px;
-    padding: 6px;
-    background-color: #e8e8e8;
-    border-left: 3px solid #00a0e3;
+    margin-top: var(--spacing-small, 12px);
+    margin-bottom: var(--spacing-nano, 6px);
+    padding: var(--spacing-nano, 6px);
+    background-color: var(--color-gray_light20);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 2px;
 }
 
 .sectionLabel {
+    display: block;
     font-weight: 600;
-    color: #333;
-    font-size: 0.75rem;
+    color: var(--color-gray_dark);
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
 .heading {
-    margin-bottom: 6px;
-    font-size: 0.95rem;
+    display: block;
+    margin-bottom: var(--spacing-nano, 6px);
+    color: var(--color-gray_dark);
 }
 
 .section {

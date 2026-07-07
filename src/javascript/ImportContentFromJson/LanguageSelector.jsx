@@ -1,29 +1,24 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Dropdown, Typography} from '@jahia/moonstone';
-import styles from './ImportContent.component.scss';
+import {Dropdown, Field} from '@jahia/moonstone';
 
 /**
- * Dropdown for selecting the language used for the import.
+ * Moonstone Field wrapping the language selection dropdown.
  */
 const LanguageSelector = ({languages, selectedLanguage, onChange, error, t}) => (
-    <>
-        <Typography variant="subheading" className={styles.heading}>
-            {t('label.selectLanguage')}
-        </Typography>
+    <Field
+        id="importLanguageField"
+        label={t('label.selectLanguage')}
+        hasError={Boolean(error)}
+        errorMessage={error ? t('label.loadContentTypesError') : undefined}
+    >
         <Dropdown
             data={languages}
             value={selectedLanguage}
-            className={styles.customDropdown}
             placeholder={t('label.selectPlaceholder')}
-            onChange={(e, item) => { onChange(item.value); console.log('Selected language:', item.value); }}
+            onChange={(e, item) => onChange(item.value)}
         />
-        {error && (
-            <Typography variant="body" className={styles.errorMessage}>
-                {t('label.loadContentTypesError')}
-            </Typography>
-        )}
-    </>
+    </Field>
 );
 
 LanguageSelector.propTypes = {

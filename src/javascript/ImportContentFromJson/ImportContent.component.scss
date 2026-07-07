@@ -1,32 +1,6 @@
-@use "sass:color";
-
-// Define Material UI color variables
-$primary-color: #00a0e3;
-$secondary-color: #424242;
-$accent-color: #f50057;
-$background-color: #f5f5f5;
-$border-color: rgba(0, 0, 0, 0.12);
-
-:root {
-    --color-accent: #00a0e3;
-}
-
-// Define spacing and typography - REDUCED SIZES
-$spacing-unit: 6px;
-$border-radius: 4px;
-$font-family: 'Roboto', sans-serif;
-$base-font-size: 0.875rem;  // 14px
-$heading-font-size: 0.95rem; // 15.2px
-$subheading-font-size: 0.875rem; // 14px
-$caption-font-size: 0.8125rem; // 13px
-
-// General Container
-.configContainer {
-    display: flex;
-    flex-direction: column;
-    border-radius: $border-radius;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
+// Layout and styling for the Import Content UI.
+// Colours and spacing use Moonstone design tokens (--color-*, --spacing-*)
+// so the extension matches the jContent back-office theme.
 
 .layout {
     display: flex;
@@ -38,241 +12,37 @@ $caption-font-size: 0.8125rem; // 13px
     flex: 1;
     display: flex;
     flex-direction: row;
-    margin: $spacing-unit * 2;
-    padding: $spacing-unit * 3;
-    border-radius: $border-radius;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    align-items: flex-start;
+    gap: var(--spacing-medium, 16px);
+    padding: var(--spacing-medium, 16px);
+    background-color: var(--color-gray_light);
+    min-height: 0;
     overflow: hidden;
+}
+
+// Moonstone adds `._moonstone-paper + ._moonstone-paper { margin-top }` for
+// stacked papers; our two papers sit side-by-side, so cancel that top margin
+// (via !important — the Moonstone rule is a two-class selector) to keep both
+// cards flush with the top of the container.
+.leftPanel,
+.rightPanel {
+    margin-top: 0 !important;
 }
 
 .leftPanel {
     flex: 0 0 42%;
-    padding: 12px;
-    border-right: 1px solid #e0e0e0;
+    max-height: 100%;
+    padding: var(--spacing-medium, 16px);
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-medium, 16px);
     overflow-y: auto;
     min-width: 0;
-}
-
-.rightPanel {
-    flex: 0 0 58%;
-    padding: 12px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.heading {
-    margin-bottom: 10px;
-    font-size: $heading-font-size;
-    font-weight: 600;
-}
-
-.propertiesList {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    padding: 6px;
-    background-color: #f9f9f9;
-    min-height: 0;
-    min-width: 0;
-    font-size: $base-font-size;
-}
-
-.propertyItem {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.propertyText {
-    font-size: 0.8125rem;
-    line-height: 1.3;
-}
-
-.sectionHeading {
-    font-weight: 600;
-    margin-top: 10px;
-    margin-bottom: 6px;
-    color: $secondary-color;
-    font-size: $caption-font-size;
-}
-
-.mixinSection {
-    margin-bottom: 10px;
-    padding-left: 6px;
-    border-left: 2px solid $border-color;
-}
-
-.mixinName {
-    font-weight: 500;
-    color: #666;
-    margin-bottom: 3px;
-    display: block;
-    font-style: italic;
-    font-size: 0.75rem;
-}
-
-.customDropdown {
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    padding: 6px;
-    background-color: #ffffff;
-    margin-bottom: 12px;
-    font-size: $base-font-size;
-
-    .moonstone-dropdown__control {
-        border: none;
-        font-size: 0.8125rem;
-        color: #666666;
-    }
-
-    .moonstone-dropdown__placeholder {
-        color: #999999;
-        font-style: italic;
-        font-size: 0.8125rem;
-    }
-
-    .moonstone-dropdown__menu {
-        border: 1px solid #cccccc;
-        border-radius: 4px;
-        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        font-size: 0.8125rem;
-    }
-}
-
-.customInput {
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    padding: 6px 8px;
-    background-color: #ffffff;
-    font-size: 0.8125rem;
-    color: #666666;
-    margin-bottom: 12px;
-    width: 100%;
-}
-
-.customInput::placeholder {
-    color: #999999;
-    font-style: italic;
-}
-
-.customInput:focus {
-    outline: none;
-    border-color: #999999;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
-}
-
-.separatorLine {
-    border: 0;
-    height: 1px;
-    background-color: #cccccc; /* Light gray color for the line */
-    margin: 8px 0; /* Space around the line */
-}
-
-.rightPanel {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px;
-}
-
-
-.fileUpload {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-    margin-bottom: 10px;
-}
-
-.fileInput {
-    display: none;
-}
-
-.fileLabel {
-    padding: 6px 12px;
-    background: var(--color-accent);
-    color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    font-size: 0.8125rem;
-    transition: background-color 0.2s;
-}
-
-.fileLabel:hover {
-    background: #0090cc;
-}
-
-.previewContent {
-    font-family: "Courier New", Courier, monospace;
-    font-size: 0.75rem;
-    padding: 8px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    max-height: 600px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    line-height: 1.2rem;
-}
-
-.pathInput {
-    margin-bottom: 12px;
-    width: 100%;
-    padding: 6px 8px;
-    font-size: 0.8125rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.pathContainer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-    padding: 6px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.basePath {
-    color: #555;
-    font-weight: 500;
-    font-size: 0.8125rem;
-}
-
-.baseContentPath {
-    color: #555;
-    font-weight: 500;
-    font-size: 0.8125rem;
-}
-
-.pathSuffixInput {
-    flex: 1;
-    max-width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 0.8125rem;
-}
-
-.pathSuffixInput:focus {
-    border-color: var(--color-accent);
-    outline: none;
-    box-shadow: 0 0 3px rgba(0, 123, 255, 0.4);
 }
 
 .loaderOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -280,46 +50,142 @@ $caption-font-size: 0.8125rem; // 13px
     z-index: 9999;
 }
 
-.spinner {
+.checkboxRow {
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: var(--spacing-small, 8px);
+    cursor: pointer;
 }
 
-.baseContentPathHelp {
-    margin-bottom: 8px;
-    font-size: 0.75rem;
-    color: #666;
+.bannerRegion {
+    margin: var(--spacing-medium, 16px) var(--spacing-medium, 16px) 0;
 }
 
-.optionsSection {
-    border: 1px solid #e0e0e0;
+.bannerBody {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-medium, 16px);
+}
+
+.inlineBanner {
+    margin-top: var(--spacing-small, 12px);
+}
+
+.rightPanel {
+    flex: 1 1 58%;
+    max-height: 100%;
+    padding: var(--spacing-medium, 16px);
+    // The Tab bar stays put; only the tab content below scrolls (see .tabContent),
+    // so selecting a file cannot scroll the tabs out from under the content.
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.heading {
+    display: block;
+    margin-bottom: var(--spacing-small, 10px);
+    color: var(--color-gray_dark);
+}
+
+.propertiesInfo {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.propertiesList {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--color-gray_light);
     border-radius: 4px;
-    padding: 10px;
-    margin-bottom: 16px;
-    background-color: #fcfcfc;
+    padding: var(--spacing-small, 6px);
+    background-color: var(--color-gray_light20);
+    min-height: 0;
+    min-width: 0;
 }
 
-.optionsTitle {
-    margin-bottom: 6px;
-    font-size: $caption-font-size;
+.propertyItem {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-nano, 6px);
+    margin-bottom: var(--spacing-nano, 6px);
+}
+
+.propertyText {
+    line-height: 1.3;
+    color: var(--color-gray_dark);
+}
+
+.sectionHeading {
+    display: block;
     font-weight: 600;
+    margin-top: var(--spacing-small, 10px);
+    margin-bottom: var(--spacing-nano, 6px);
+    color: var(--color-gray_dark);
 }
 
-.optionItem {
-    margin-bottom: 6px;
+.mixinSection {
+    margin-bottom: var(--spacing-small, 10px);
+    padding-left: var(--spacing-nano, 6px);
+    border-left: 2px solid var(--color-gray_light);
+}
 
-    &:last-child {
-        margin-bottom: 0;
+.mixinName {
+    display: block;
+    font-weight: 500;
+    color: var(--color-gray);
+    margin-bottom: 3px;
+    font-style: italic;
+}
+
+.fileUpload {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-small, 10px);
+    margin-top: var(--spacing-nano, 8px);
+    margin-bottom: var(--spacing-small, 10px);
+}
+
+.fileInput {
+    display: none;
+}
+
+.fileLabel {
+    padding: var(--spacing-nano, 6px) var(--spacing-small, 12px);
+    background: var(--color-accent);
+    color: var(--color-light);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background: var(--color-accent_dark);
     }
 }
 
-.errorMessage {
-    color: #d32f2f;
-    margin-bottom: 12px;
-    font-size: 0.8125rem;
+.previewContent {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.75rem;
+    padding: var(--spacing-nano, 8px);
+    overflow-y: auto;
+    white-space: pre-wrap;
+    max-height: 600px;
+    border: 1px solid var(--color-gray_light);
+    border-radius: 4px;
+    line-height: 1.2rem;
+    background-color: var(--color-gray_light20);
+    color: var(--color-gray_dark);
 }
 
 .tabContent {
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    margin-top: var(--spacing-small, 12px);
 }

@@ -1,0 +1,57 @@
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-small, 12px);
+}
+
+.card {
+    padding: var(--spacing-small, 12px);
+}
+
+.cardTitle {
+    display: block;
+    margin-bottom: var(--spacing-nano, 4px);
+    color: var(--color-gray_dark);
+}
+
+.cardValue {
+    display: block;
+    word-break: break-word;
+    color: var(--color-gray_dark);
+}
+
+.cardMeta {
+    display: block;
+    margin-top: var(--spacing-nano, 2px);
+    color: var(--color-gray);
+}
+
+.statList {
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-small, 8px) 0 0 0;
+}
+
+.statRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-nano, 4px);
+    color: var(--color-gray_dark);
+}
+
+.section {
+    margin-bottom: var(--spacing-medium, 16px);
+}
+
+.sectionTitle {
+    display: block;
+    margin-bottom: var(--spacing-small, 12px);
+    color: var(--color-gray_dark);
+}
+
+.subSectionTitle {
+    display: block;
+    margin: var(--spacing-small, 12px) 0 var(--spacing-small, 8px) 0;
+    color: var(--color-gray_dark);
+}

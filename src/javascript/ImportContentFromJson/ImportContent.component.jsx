@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import PropTypes from 'prop-types';
 import Papa from 'papaparse/papaparse.min.js';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {
@@ -19,11 +20,25 @@ import {
 } from '~/gql-queries/ImportContent.gql-queries';
 import {runImport} from '~/ImportContentFromJson/ImportEngine';
 
-import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
-import Modal from '~/DesignSystem/Modal';
-import {Tabs, Tab} from '~/DesignSystem/Tabs';
-import {Checkbox} from '~/DesignSystem/Checkbox';
-import {LoaderOverlay} from '~/DesignSystem/LoaderOverlay';
+import {
+    Button,
+    Header,
+    Dropdown,
+    Typography,
+    Input,
+    Paper,
+    Banner,
+    Field,
+    Fieldset,
+    Checkbox,
+    Tab,
+    TabItem,
+    Loader,
+    Modal,
+    ModalHeader,
+    ModalBody,
+    ModalFooter
+} from '@jahia/moonstone';
 import styles from './ImportContent.component.scss';
 import FieldMapping from './FieldMapping.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
@@ -44,6 +59,23 @@ import {
 import logger from '~/ImportContentFromJson/ImportContent.logger';
 import {ERROR_MESSAGES} from '~/ImportContentFromJson/ImportContent.constants';
 
+/**
+ * A Moonstone Checkbox paired with a clickable Typography label.
+ * `onChange` receives the new checked boolean.
+ */
+const LabeledCheckbox = ({checked, label, onChange}) => (
+    <label className={styles.checkboxRow}>
+        <Checkbox checked={checked} onChange={(event, value, isChecked) => onChange(isChecked)}/>
+        <Typography variant="body">{label}</Typography>
+    </label>
+);
+
+LabeledCheckbox.propTypes = {
+    checked: PropTypes.bool,
+    label: PropTypes.string,
+    onChange: PropTypes.func
+};
+
 export default () => {
     const {t} = useTranslation('importContentFromJson');
 
@@ -62,6 +94,9 @@ export default () => {
     const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [report, setReport] = useState(null);
+    // Dismissible page-level feedback (replaces the old alert() calls).
+    const [banner, setBanner] = useState(null);
+    const showError = message => setBanner({variant: 'danger', message});
 
     // --- Content type & properties -----------------------------------------
     const [selectedContentType, setSelectedContentType] = useState(null);
@@ -296,7 +331,7 @@ export default () => {
         const validation = validateFile(file);
         if (!validation.valid) {
             logger.error('File validation failed', {error: validation.error});
-            alert(validation.error);
+            showError(validation.error);
             return;
         }
 
@@ -319,7 +354,7 @@ export default () => {
                     const sizeValidation = validateArraySize(rows);
                     if (!sizeValidation.valid) {
                         logger.error('CSV size validation failed', {error: sizeValidation.error});
-                        alert(sizeValidation.error);
+                        showError(sizeValidation.error);
                         return;
                     }
 
@@ -334,7 +369,7 @@ export default () => {
                     const sizeValidation = validateArraySize(dataArray);
                     if (!sizeValidation.valid) {
                         logger.error('JSON size validation failed', {error: sizeValidation.error});
-                        alert(sizeValidation.error);
+                        showError(sizeValidation.error);
                         return;
                     }
 
@@ -346,13 +381,13 @@ export default () => {
             } catch (error) {
                 logger.error('Error parsing file', {error: error.message});
                 setIsValidJson(false);
-                alert(ERROR_MESSAGES.INVALID_JSON);
+                showError(ERROR_MESSAGES.INVALID_JSON);
             }
         };
 
         reader.onerror = () => {
             console.error('Error reading file');
-            alert('Error reading file. Please try again.');
+            showError('Error reading file. Please try again.');
         };
 
         reader.readAsText(file); // Read the content of the new file
@@ -372,7 +407,7 @@ export default () => {
 
         const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
         if (!isJson) {
-            alert(t('label.invalidFile'));
+            showError(t('label.invalidFile'));
             return;
         }
 
@@ -412,7 +447,7 @@ export default () => {
                     console.log('Generated JSON validation succeeded');
                 }
             } catch (e) {
-                alert('Invalid file.');
+                showError('Invalid file.');
             }
         };
 
@@ -428,9 +463,9 @@ export default () => {
 
         if (!uploadedFileContent || !selectedContentType) {
             if (!uploadedFileContent) {
-                alert(ERROR_MESSAGES.NO_FILE_UPLOADED);
+                showError(ERROR_MESSAGES.NO_FILE_UPLOADED);
             } else if (!selectedContentType) {
-                alert(ERROR_MESSAGES.NO_CONTENT_TYPE);
+                showError(ERROR_MESSAGES.NO_CONTENT_TYPE);
             }
 
             return;
@@ -485,7 +520,7 @@ export default () => {
 
             if (!result.ok) {
                 const message = result.message || ERROR_MESSAGES[result.error] || ERROR_MESSAGES.UNKNOWN_ERROR;
-                alert(message);
+                showError(message);
                 return;
             }
 
@@ -493,7 +528,7 @@ export default () => {
             setIsReportOpen(true);
         } catch (error) {
             logger.error('Error during import', {error: error.message});
-            alert(ERROR_MESSAGES.UNKNOWN_ERROR);
+            showError(ERROR_MESSAGES.UNKNOWN_ERROR);
         } finally {
             setIsLoading(false);
             setIsPreviewOpen(false);
@@ -552,12 +587,9 @@ export default () => {
 
     return (
         <>
-
             {isLoading && (
                 <div className={styles.loaderOverlay}>
-                    <div className={styles.spinner}>
-                        <LoaderOverlay status={isLoading}/>
-                    </div>
+                    <Loader size="big"/>
                 </div>
             )}
 
@@ -580,49 +612,50 @@ export default () => {
                     />
                 ]}
             />
+                {banner && (
+                    <div className={styles.bannerRegion}>
+                        <Banner
+                            variant={banner.variant}
+                            title={t('label.errorTitle')}
+                        >
+                            <div className={styles.bannerBody}>
+                                <Typography variant="body">{banner.message}</Typography>
+                                <Button variant="ghost" size="small" label={t('label.dismiss')} onClick={() => setBanner(null)}/>
+                            </div>
+                        </Banner>
+                    </div>
+                )}
                 <div className={styles.container}>
-                    <div className={styles.leftPanel}>
-                        <Typography variant="subheading" className={styles.heading}>
-                            {t('label.path')}
-                        </Typography>
-                        <div className={styles.pathContainer}>
-                            <Typography variant="body" className={styles.baseContentPath}>
-                                {baseContentPath}/
-                            </Typography>
+                    <Paper className={styles.leftPanel}>
+                        <Field
+                            id="importPathField"
+                            label={t('label.path')}
+                            helper={`${baseContentPath}/  ·  ${t('label.enterPathSuffixHelp')}`}
+                            buttons={<Button label={t('label.selectFolder')} onClick={handleOpenPathPicker}/>}
+                        >
                             <Input
                                 value={pathSuffix}
                                 placeholder={t('label.enterPathSuffix')}
-                                className={styles.pathSuffixInput}
                                 onChange={e => setPathSuffix(e.target.value)}
                             />
-                            <Button
-                                label={t('label.selectFolder')}
-                                onClick={handleOpenPathPicker}
-                            />
-                        </div>
-                        <Typography variant="body" className={`${styles.baseContentPath} ${styles.baseContentPathHelp}`}>
-                            {t('label.enterPathSuffixHelp')}
-                        </Typography>
-                        <div className={styles.optionsSection}>
-                            <Typography variant="caption" className={styles.optionsTitle}>
-                                {t('label.options')}
-                            </Typography>
-                            <Checkbox
+                        </Field>
+                        <Fieldset id="importOptionsFieldset" label={t('label.options')}>
+                            <LabeledCheckbox
                                 checked={overrideExisting}
                                 label={t('label.overrideExisting')}
-                                onChange={e => setOverrideExisting(e.target.checked)}
+                                onChange={setOverrideExisting}
                             />
-                            <Checkbox
+                            <LabeledCheckbox
                                 checked={createVanityUrl}
                                 label={t('label.createVanityUrl')}
-                                onChange={e => setCreateVanityUrl(e.target.checked)}
+                                onChange={setCreateVanityUrl}
                             />
-                            <Checkbox
+                            <LabeledCheckbox
                                 checked={publishAfterImport}
                                 label={t('label.publishAfterImport')}
-                                onChange={e => setPublishAfterImport(e.target.checked)}
+                                onChange={setPublishAfterImport}
                             />
-                        </div>
+                        </Fieldset>
                         <LanguageSelector
                             languages={siteLanguages}
                             selectedLanguage={selectedLanguage}
@@ -630,31 +663,37 @@ export default () => {
                             t={t}
                             onChange={setSelectedLanguage}
                         />
-                        <Typography variant="subheading" className={styles.heading}>
-                            {t('label.selectContentType')}
-                        </Typography>
-                        <Dropdown
-                            data={contentTypes}
-                            value={selectedContentType}
-                            className={styles.customDropdown}
-                            placeholder={t('label.selectPlaceholder')}
-                            onChange={(e, item) => handleContentTypeChange(item.value)}
-                        />
-                        {contentTypeError && (
-                            <Typography variant="body" className={styles.errorMessage}>
-                                {t('label.loadContentTypesError')}
-                            </Typography>
-                        )}
+                        <Field
+                            id="contentTypeField"
+                            label={t('label.selectContentType')}
+                            hasError={Boolean(contentTypeError)}
+                            errorMessage={contentTypeError ? t('label.loadContentTypesError') : undefined}
+                        >
+                            <Dropdown
+                                data={contentTypes}
+                                value={selectedContentType}
+                                placeholder={t('label.selectPlaceholder')}
+                                onChange={(e, item) => handleContentTypeChange(item.value)}
+                            />
+                        </Field>
                         {selectedContentType && (
                             <PropertiesList properties={properties} error={propertiesError} t={t}/>
                         )}
-                    </div>
+                    </Paper>
 
-                    <div className={styles.rightPanel}>
-                        <Tabs value={activeTab} onChange={handleTabChange}>
-                            <Tab label={t('label.manualMapping')}/>
-                            <Tab label={t('label.reImportGeneratedFile')}/>
-                        </Tabs>
+                    <Paper className={styles.rightPanel}>
+                        <Tab>
+                            <TabItem
+                                label={t('label.manualMapping')}
+                                isSelected={activeTab === 0}
+                                onClick={() => handleTabChange(null, 0)}
+                            />
+                            <TabItem
+                                label={t('label.reImportGeneratedFile')}
+                                isSelected={activeTab === 1}
+                                onClick={() => handleTabChange(null, 1)}
+                            />
+                        </Tab>
                         {activeTab === 0 && (
                         <div className={styles.tabContent}>
                             <Typography variant="subheading" className={styles.heading}>
@@ -692,29 +731,32 @@ export default () => {
                                 onChange={handleGeneratedFileUpload}
                             />
                             {generatedFileError && (
-                                <Typography variant="body" className={styles.errorMessage}>
-                                    {generatedFileError}
-                                </Typography>
+                                <Banner variant="danger" title={t('label.errorTitle')} className={styles.inlineBanner}>
+                                    <Typography variant="body">{generatedFileError}</Typography>
+                                </Banner>
                             )}
                             {generatedFileContent && (
                                 <pre className={styles.previewContent}>{JSON.stringify(generatedFileContent, null, 2)}</pre>
                             )}
                         </div>
                     )}
-                    </div>
+                    </Paper>
                 </div>
             </div>
             <Modal
-                fullWidth
-                open={isFilePreviewOpen}
-                title={t('label.filePreviewTitle')}
-                maxWidth="md"
-                actions={[
-                    <Button key="close" label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
-                ]}
-                onClose={() => setIsFilePreviewOpen(false)}
+                isOpen={isFilePreviewOpen}
+                size="large"
+                onOpenChange={open => !open && setIsFilePreviewOpen(false)}
             >
-                <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
+                <>
+                    <ModalHeader title={t('label.filePreviewTitle')}/>
+                    <ModalBody>
+                        <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
+                    </ModalFooter>
+                </>
             </Modal>
             <ImportPreviewDialog
                 open={isPreviewOpen}

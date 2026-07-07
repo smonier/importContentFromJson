@@ -25,6 +25,8 @@
     "options": "Options",
     "createVanityUrl": "Create vanity URLs (/<folder>/<systemName>)",
     "publishAfterImport": "Publish imported content (and images) to live",
+    "errorTitle": "Import error",
+    "dismiss": "Dismiss",
     "selectLanguage": "Select the target language for import",
     "fieldMapping": "Field mapping",
     "previewTitle": "Generated JSON preview",
