@@ -30,7 +30,7 @@
 }
 
 .leftPanel {
-    flex: 0 0 42%;
+    flex: 1 1 42%;
     max-height: 100%;
     padding: var(--spacing-medium, 16px);
     display: flex;
@@ -188,4 +188,29 @@
     min-height: 0;
     overflow-y: auto;
     margin-top: var(--spacing-small, 12px);
+}
+
+// Below ~900px the two side-by-side papers get too cramped and their
+// contents overlap; stack them vertically and let the whole container
+// scroll instead of each panel.
+@media (max-width: 900px) {
+    .container {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .leftPanel,
+    .rightPanel {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: none;
+    }
+
+    .rightPanel {
+        overflow: visible;
+    }
+
+    .tabContent {
+        overflow-y: visible;
+    }
 }
