@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
+import {act} from 'react-dom/test-utils';
+import {createRoot} from 'react-dom/client';
 import ImportReportDialog from './ImportReportDialog.jsx';
 import en from '../../main/resources/javascript/locales/en.json';
 
@@ -16,6 +17,19 @@ describe('ImportReportDialog', () => {
         }
 
         return template;
+    };
+
+    // The Moonstone Modal portals its content to document.body, so render into a
+    // real (jsdom) DOM and assert against the whole document body.
+    const renderDialog = report => {
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        act(() => {
+            createRoot(container).render(
+                <ImportReportDialog open onClose={() => {}} report={report} t={t}/>
+            );
+        });
+        return document.body.innerHTML;
     };
 
     test('renders enhanced summary information', () => {
@@ -44,9 +58,7 @@ describe('ImportReportDialog', () => {
             }
         };
 
-        const html = ReactDOMServer.renderToStaticMarkup(
-            <ImportReportDialog open={true} onClose={() => {}} report={report} t={t}/>
-        );
+        const html = renderDialog(report);
 
         expect(html).toContain(en.label.reportSummaryTitle);
         expect(html).toContain('Article');

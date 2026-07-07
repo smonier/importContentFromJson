@@ -1,7 +1,39 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Button} from '@jahia/moonstone';
-import Modal from '~/DesignSystem/Modal';
+import {
+    Button,
+    Chip,
+    Paper,
+    Typography,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableHeadCell,
+    TableBodyCell,
+    Modal,
+    ModalHeader,
+    ModalBody,
+    ModalFooter
+} from '@jahia/moonstone';
+import styles from './ImportReportDialog.scss';
+
+/**
+ * Map an import status to a semantic Moonstone Chip colour.
+ */
+const STATUS_COLOR = {
+    created: 'success',
+    updated: 'accent',
+    'already exists': 'default',
+    skipped: 'warning',
+    failed: 'danger'
+};
+
+const StatusChip = ({status}) => (
+    <Chip label={status || '—'} color={STATUS_COLOR[status] || 'default'}/>
+);
+
+StatusChip.propTypes = {status: PropTypes.string};
 
 const ImportReportDialog = ({open, onClose, report, t}) => {
     if (!report) {
@@ -18,119 +50,28 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         contentType
     } = report;
 
-    const summaryGridStyle = {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '12px'
-    };
-    const summaryBlockStyle = {
-        border: '1px solid #dcdcdc',
-        borderRadius: '8px',
-        padding: '12px',
-        background: '#fafafa'
-    };
-    const summaryTitleStyle = {fontWeight: 600, marginBottom: '4px', fontSize: '0.9rem'};
-    const summaryValueStyle = {fontSize: '0.95rem', wordBreak: 'break-word'};
-    const summaryMetaStyle = {fontSize: '0.8rem', color: '#555'};
-    const summaryListStyle = {listStyle: 'none', padding: 0, margin: '8px 0 0 0', fontSize: '0.85rem'};
-    const summaryListItemStyle = {display: 'flex', justifyContent: 'space-between', marginBottom: '4px'};
-    const sectionBaseStyle = {padding: '16px', borderRadius: '12px', marginBottom: '16px'};
-    const sectionTitleStyle = {fontWeight: 700, marginBottom: '16px', fontSize: '1rem'};
-    const subSectionTitleStyle = {fontWeight: 600, marginBottom: '8px'};
-    const tableStyle = {width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem'};
-    const headerCellStyle = {textAlign: 'left', borderBottom: '1px solid #ccc', padding: '6px 8px'};
-    const cellStyle = {padding: '6px 8px'};
-
-    const renderTable = (items, firstHeader) => (
-        <table style={tableStyle}>
-            <thead>
-                <tr>
-                    <th style={headerCellStyle}>{firstHeader}</th>
-                    <th style={headerCellStyle}>{t('label.nodePath')}</th>
-                    <th style={headerCellStyle}>{t('label.status')}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {items.map((item, index) => (
-                    <tr key={index}>
-                        <td style={cellStyle}>{item.name}</td>
-                        <td style={cellStyle}>{item.node || ''}</td>
-                        <td style={cellStyle}>{item.status}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-
-    const renderErrorTable = items => (
-        <table style={tableStyle}>
-            <thead>
-                <tr>
-                    <th style={headerCellStyle}>{t('label.node')}</th>
-                    <th style={headerCellStyle}>{t('label.reason')}</th>
-                    <th style={headerCellStyle}>{t('label.details')}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {items.map((item, index) => (
-                    <tr key={index}>
-                        <td style={cellStyle}>{item.node}</td>
-                        <td style={cellStyle}>{item.reason}</td>
-                        <td style={cellStyle}>{item.details}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-
-    const computeNodeFallback = () => {
-        const validNodes = nodes.filter(item => item?.name && item.name !== 'import');
-        return validNodes.reduce((acc, item) => {
-            switch (item.status) {
-                case 'created':
-                    acc.created++;
-                    break;
-                case 'updated':
-                    acc.updated++;
-                    break;
-                case 'already exists':
-                    acc.skipped++;
-                    break;
-                case 'failed':
-                    acc.failed++;
-                    break;
-                default:
-                    break;
-            }
-
-            acc.processed = (acc.processed || 0) + 1;
-            acc.total = (acc.total || 0) + 1;
-            return acc;
-        }, {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
-    };
-
-    const computeImageFallback = () => images.reduce((acc, item) => {
-        switch (item.status) {
-            case 'created':
-                acc.created++;
-                break;
-            case 'updated':
-                acc.updated++;
-                break;
-            case 'already exists':
-                acc.skipped++;
-                break;
-            case 'failed':
-                acc.failed++;
-                break;
-            default:
-                break;
+    const tallyStatus = (acc, status) => {
+        if (status === 'created') {
+            acc.created++;
+        } else if (status === 'updated') {
+            acc.updated++;
+        } else if (status === 'already exists') {
+            acc.skipped++;
+        } else if (status === 'failed') {
+            acc.failed++;
         }
 
         acc.total++;
         acc.processed++;
         return acc;
-    }, {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
+    };
+
+    const computeNodeFallback = () => nodes
+        .filter(item => item?.name && item.name !== 'import')
+        .reduce((acc, item) => tallyStatus(acc, item.status), {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
+
+    const computeImageFallback = () => images
+        .reduce((acc, item) => tallyStatus(acc, item.status), {created: 0, updated: 0, failed: 0, skipped: 0, total: 0, processed: 0});
 
     const computeCreatedCategoriesFallback = () => categories.reduce((acc, item) => {
         if (item.status === 'created') {
@@ -168,183 +109,169 @@ const ImportReportDialog = ({open, onClose, report, t}) => {
         URL.revokeObjectURL(url);
     };
 
-    const sections = [
-        {
-            id: 'summary',
-            title: t('label.reportSummaryTitle'),
-            content: (
-                <div style={summaryGridStyle}>
-                    <div style={summaryBlockStyle}>
-                        <div style={summaryTitleStyle}>{t('label.summaryContentType')}</div>
-                        <div style={summaryValueStyle}>{contentTypeName || t('label.notAvailable')}</div>
-                    </div>
-                    <div style={summaryBlockStyle}>
-                        <div style={summaryTitleStyle}>{t('label.summaryImportPath')}</div>
-                        <div style={summaryValueStyle}>{importPath || t('label.notAvailable')}</div>
-                    </div>
-                    <div style={summaryBlockStyle}>
-                        <div style={summaryTitleStyle}>{t('label.summaryNodesTitle')}</div>
-                        <div style={summaryValueStyle}>{t('label.summaryTotalFound', {count: nodeSummary.total || 0})}</div>
-                        {typeof nodeSummary.processed === 'number' && nodeSummary.total !== nodeSummary.processed && (
-                            <div style={summaryMetaStyle}>{t('label.summaryProcessed', {count: nodeSummary.processed || 0})}</div>
-                        )}
-                        <ul style={summaryListStyle}>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryCreated')}</span>
-                                <strong>{nodeSummary.created || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryUpdated')}</span>
-                                <strong>{nodeSummary.updated || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryFailed')}</span>
-                                <strong>{nodeSummary.failed || 0}</strong>
-                            </li>
-                            {nodeSummary.skipped ? (
-                                <li style={summaryListItemStyle}>
-                                    <span>{t('label.summarySkipped')}</span>
-                                    <strong>{nodeSummary.skipped}</strong>
-                                </li>
-                            ) : null}
-                        </ul>
-                    </div>
-                    <div style={summaryBlockStyle}>
-                        <div style={summaryTitleStyle}>{t('label.summaryImagesTitle')}</div>
-                        <div style={summaryValueStyle}>{t('label.summaryImagesTotal', {count: imageSummary.total || 0})}</div>
-                        {typeof imageSummary.processed === 'number' && imageSummary.total !== imageSummary.processed && (
-                            <div style={summaryMetaStyle}>{t('label.summaryProcessed', {count: imageSummary.processed || 0})}</div>
-                        )}
-                        <ul style={summaryListStyle}>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryCreated')}</span>
-                                <strong>{imageSummary.created || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryUpdated')}</span>
-                                <strong>{imageSummary.updated || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryFailed')}</span>
-                                <strong>{imageSummary.failed || 0}</strong>
-                            </li>
-                            {imageSummary.skipped ? (
-                                <li style={summaryListItemStyle}>
-                                    <span>{t('label.summarySkipped')}</span>
-                                    <strong>{imageSummary.skipped}</strong>
-                                </li>
-                            ) : null}
-                        </ul>
-                    </div>
-                    <div style={summaryBlockStyle}>
-                        <div style={summaryTitleStyle}>{t('label.summaryVanityUrlsTitle')}</div>
-                        <div style={summaryValueStyle}>{vanityStatusLabel}</div>
-                        <ul style={summaryListStyle}>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryCreated')}</span>
-                                <strong>{vanitySummary.created || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summaryFailed')}</span>
-                                <strong>{vanitySummary.failed || 0}</strong>
-                            </li>
-                            <li style={summaryListItemStyle}>
-                                <span>{t('label.summarySkipped')}</span>
-                                <strong>{vanitySummary.skipped || 0}</strong>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            )
-        }
-    ];
+    const StatRow = ({labelKey, value}) => (
+        <li className={styles.statRow}>
+            <Typography variant="caption">{t(labelKey)}</Typography>
+            <Typography variant="caption" weight="bold">{value || 0}</Typography>
+        </li>
+    );
 
-    if (nodes.length > 0) {
-        sections.push({
-            id: 'nodes',
-            title: t('label.reportNodesTitle'),
-            content: renderTable(nodes, t('label.node'))
-        });
-    }
+    const renderStatusTable = (items, firstHeader) => (
+        <Table>
+            <TableHead>
+                <TableRow>
+                    <TableHeadCell>{firstHeader}</TableHeadCell>
+                    <TableHeadCell>{t('label.nodePath')}</TableHeadCell>
+                    <TableHeadCell>{t('label.status')}</TableHeadCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {items.map((item, index) => (
+                    <TableRow key={index}>
+                        <TableBodyCell>{item.name}</TableBodyCell>
+                        <TableBodyCell>{item.node || ''}</TableBodyCell>
+                        <TableBodyCell><StatusChip status={item.status}/></TableBodyCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
 
-    if (errors.length > 0) {
-        sections.push({
-            id: 'errors',
-            title: t('label.reportErrorsTitle'),
-            content: renderErrorTable(errors)
-        });
-    }
-
-    if (images.length > 0) {
-        sections.push({
-            id: 'images',
-            title: t('label.reportImagesTitle'),
-            content: renderTable(images, t('label.image'))
-        });
-    }
-
-    if (categoryEntries.length > 0 || categories.length > 0) {
-        sections.push({
-            id: 'categories',
-            title: t('label.reportCategoriesTitle'),
-            content: (
-                <div>
-                    {categoryEntries.length > 0 && (
-                        <div style={{marginBottom: categories.length > 0 ? '16px' : 0}}>
-                            <div style={subSectionTitleStyle}>{t('label.categorySummaryTitle')}</div>
-                            <table style={tableStyle}>
-                                <thead>
-                                    <tr>
-                                        <th style={headerCellStyle}>{t('label.category')}</th>
-                                        <th style={{...headerCellStyle, textAlign: 'right'}}>{t('label.createdCount')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {categoryEntries.map(([categoryName, count]) => (
-                                        <tr key={categoryName}>
-                                            <td style={cellStyle}>{categoryName}</td>
-                                            <td style={{...cellStyle, textAlign: 'right'}}>{count}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    {categories.length > 0 && (
-                        <div>
-                            <div style={subSectionTitleStyle}>{t('label.reportCategoriesDetailsTitle')}</div>
-                            {renderTable(categories, t('label.category'))}
-                        </div>
-                    )}
-                </div>
-            )
-        });
-    }
+    const renderErrorTable = items => (
+        <Table>
+            <TableHead>
+                <TableRow>
+                    <TableHeadCell>{t('label.node')}</TableHeadCell>
+                    <TableHeadCell>{t('label.reason')}</TableHeadCell>
+                    <TableHeadCell>{t('label.details')}</TableHeadCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {items.map((item, index) => (
+                    <TableRow key={index}>
+                        <TableBodyCell>{item.node}</TableBodyCell>
+                        <TableBodyCell>{item.reason}</TableBodyCell>
+                        <TableBodyCell>{item.details}</TableBodyCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
 
     return (
-        <Modal
-            open={open}
-            onClose={onClose}
-            title={t('label.reportTitle')}
-            maxWidth="md"
-            fullWidth
-            actions={[
-                <Button key="download" label={t('label.downloadReport')} onClick={handleDownload}/>,
-                <Button key="close" label={t('label.closeReport')} onClick={onClose}/>
-            ]}
-        >
-            {sections.map((section, index) => (
-                <div
-                    key={section.id}
-                    style={{
-                        ...sectionBaseStyle,
-                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
-                    }}
-                >
-                    <div style={sectionTitleStyle}>{section.title}</div>
-                    {section.content}
+        <Modal isOpen={open} size="large" onOpenChange={isOpen => !isOpen && onClose()}>
+            <>
+                <ModalHeader title={t('label.reportTitle')}/>
+                <ModalBody>
+                    {/* Summary */}
+            <div className={styles.section}>
+                <Typography variant="subheading" weight="bold" className={styles.sectionTitle}>
+                    {t('label.reportSummaryTitle')}
+                </Typography>
+                <div className={styles.summaryGrid}>
+                    <Paper className={styles.card}>
+                        <Typography variant="caption" weight="bold" className={styles.cardTitle}>{t('label.summaryContentType')}</Typography>
+                        <Typography variant="body" className={styles.cardValue}>{contentTypeName}</Typography>
+                    </Paper>
+                    <Paper className={styles.card}>
+                        <Typography variant="caption" weight="bold" className={styles.cardTitle}>{t('label.summaryImportPath')}</Typography>
+                        <Typography variant="body" className={styles.cardValue}>{importPath || t('label.notAvailable')}</Typography>
+                    </Paper>
+                    <Paper className={styles.card}>
+                        <Typography variant="caption" weight="bold" className={styles.cardTitle}>{t('label.summaryNodesTitle')}</Typography>
+                        <Typography variant="body" className={styles.cardValue}>{t('label.summaryTotalFound', {count: nodeSummary.total || 0})}</Typography>
+                        <ul className={styles.statList}>
+                            <StatRow labelKey="label.summaryCreated" value={nodeSummary.created}/>
+                            <StatRow labelKey="label.summaryUpdated" value={nodeSummary.updated}/>
+                            <StatRow labelKey="label.summaryFailed" value={nodeSummary.failed}/>
+                            {nodeSummary.skipped ? <StatRow labelKey="label.summarySkipped" value={nodeSummary.skipped}/> : null}
+                        </ul>
+                    </Paper>
+                    <Paper className={styles.card}>
+                        <Typography variant="caption" weight="bold" className={styles.cardTitle}>{t('label.summaryImagesTitle')}</Typography>
+                        <Typography variant="body" className={styles.cardValue}>{t('label.summaryImagesTotal', {count: imageSummary.total || 0})}</Typography>
+                        <ul className={styles.statList}>
+                            <StatRow labelKey="label.summaryCreated" value={imageSummary.created}/>
+                            <StatRow labelKey="label.summaryUpdated" value={imageSummary.updated}/>
+                            <StatRow labelKey="label.summaryFailed" value={imageSummary.failed}/>
+                            {imageSummary.skipped ? <StatRow labelKey="label.summarySkipped" value={imageSummary.skipped}/> : null}
+                        </ul>
+                    </Paper>
+                    <Paper className={styles.card}>
+                        <Typography variant="caption" weight="bold" className={styles.cardTitle}>{t('label.summaryVanityUrlsTitle')}</Typography>
+                        <Typography variant="body" className={styles.cardValue}>{vanityStatusLabel}</Typography>
+                        <ul className={styles.statList}>
+                            <StatRow labelKey="label.summaryCreated" value={vanitySummary.created}/>
+                            <StatRow labelKey="label.summaryFailed" value={vanitySummary.failed}/>
+                            <StatRow labelKey="label.summarySkipped" value={vanitySummary.skipped}/>
+                        </ul>
+                    </Paper>
                 </div>
-            ))}
+            </div>
+
+            {/* Nodes */}
+            {nodes.length > 0 && (
+                <div className={styles.section}>
+                    <Typography variant="subheading" weight="bold" className={styles.sectionTitle}>{t('label.reportNodesTitle')}</Typography>
+                    {renderStatusTable(nodes, t('label.node'))}
+                </div>
+            )}
+
+            {/* Errors */}
+            {errors.length > 0 && (
+                <div className={styles.section}>
+                    <Typography variant="subheading" weight="bold" className={styles.sectionTitle}>{t('label.reportErrorsTitle')}</Typography>
+                    {renderErrorTable(errors)}
+                </div>
+            )}
+
+            {/* Images */}
+            {images.length > 0 && (
+                <div className={styles.section}>
+                    <Typography variant="subheading" weight="bold" className={styles.sectionTitle}>{t('label.reportImagesTitle')}</Typography>
+                    {renderStatusTable(images, t('label.image'))}
+                </div>
+            )}
+
+            {/* Categories */}
+            {(categoryEntries.length > 0 || categories.length > 0) && (
+                <div className={styles.section}>
+                    <Typography variant="subheading" weight="bold" className={styles.sectionTitle}>{t('label.reportCategoriesTitle')}</Typography>
+                    {categoryEntries.length > 0 && (
+                        <>
+                            <Typography variant="body" weight="bold" className={styles.subSectionTitle}>{t('label.categorySummaryTitle')}</Typography>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableHeadCell>{t('label.category')}</TableHeadCell>
+                                        <TableHeadCell textAlign="right">{t('label.createdCount')}</TableHeadCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {categoryEntries.map(([categoryName, count]) => (
+                                        <TableRow key={categoryName}>
+                                            <TableBodyCell>{categoryName}</TableBodyCell>
+                                            <TableBodyCell textAlign="right">{count}</TableBodyCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </>
+                    )}
+                    {categories.length > 0 && (
+                        <>
+                            <Typography variant="body" weight="bold" className={styles.subSectionTitle}>{t('label.reportCategoriesDetailsTitle')}</Typography>
+                            {renderStatusTable(categories, t('label.category'))}
+                        </>
+                    )}
+                </div>
+            )}
+                </ModalBody>
+                <ModalFooter>
+                    <Button label={t('label.downloadReport')} onClick={handleDownload}/>
+                    <Button color="accent" label={t('label.closeReport')} onClick={onClose}/>
+                </ModalFooter>
+            </>
         </Modal>
     );
 };
