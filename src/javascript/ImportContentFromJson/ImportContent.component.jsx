@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState} from 'react';
 import Papa from 'papaparse/papaparse.min.js';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {
@@ -14,9 +14,10 @@ import {
     AddCategories,
     UpdateContentMutation,
     AddVanityUrl,
+    PublishNode,
     GET_SITE_LANGUAGES
 } from '~/gql-queries/ImportContent.gql-queries';
-import {handleMultipleImages, handleMultipleValues, handleSingleImage} from '~/Services/Services';
+import {runImport} from '~/ImportContentFromJson/ImportEngine';
 
 import {Button, Header, Dropdown, Typography, Input} from '@jahia/moonstone';
 import Modal from '~/DesignSystem/Modal';
@@ -33,23 +34,15 @@ import ImportReportDialog from './ImportReportDialog.jsx';
 import {useTranslation} from 'react-i18next';
 import {extractAndFormatContentTypeData} from '~/ImportContentFromJson/ImportContent.utils.jsx';
 import {
-    ensurePathExists,
-    flattenCategoryTree,
     generatePreviewData,
-    nodeExists,
     extractFileFields
 } from '~/ImportContentFromJson/ImportContent.utils.js';
 import {
     validateFile,
-    sanitizeNodeName,
-    validatePath,
-    sanitizePath,
-    validateArraySize,
-    validateImageUrl
+    validateArraySize
 } from '~/ImportContentFromJson/ImportContent.validation';
 import logger from '~/ImportContentFromJson/ImportContent.logger';
-import {processBatch, checkMemoryAvailability} from '~/ImportContentFromJson/ImportContent.performance';
-import {MAX_FILE_SIZE, ERROR_MESSAGES} from '~/ImportContentFromJson/ImportContent.constants';
+import {ERROR_MESSAGES} from '~/ImportContentFromJson/ImportContent.constants';
 
 export default () => {
     const {t} = useTranslation('importContentFromJson');
@@ -95,18 +88,19 @@ export default () => {
     const [isValidJson, setIsValidJson] = useState(false);
 
     // --- Path & categories --------------------------------------------------
-    const siteKey = window.contextJsParameters.siteKey;
+    const siteKey = window.contextJsParameters?.siteKey;
     const baseContentPath = `/sites/${siteKey}/contents`;
     const baseFilePath = `/sites/${siteKey}/files`;
     const [pathSuffix, setPathSuffix] = useState('');
-    const [categoryTree, setCategoryTree] = useState(null);
 
     // Override existing content option
     const [overrideExisting, setOverrideExisting] = useState(false);
     const [createVanityUrl, setCreateVanityUrl] = useState(true);
+    // Publish imported content (and referenced files) to the live workspace.
+    const [publishAfterImport, setPublishAfterImport] = useState(true);
 
     // --- Languages ----------------------------------------------------------
-    const initialLanguage = window.contextJsParameters.uilang;
+    const initialLanguage = window.contextJsParameters?.uilang;
     const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage);
     const [siteLanguages, setSiteLanguages] = useState([]);
     const [languageError, setLanguageError] = useState(null);
@@ -125,18 +119,6 @@ export default () => {
         onError: error => {
             logger.error('GetContentProperties error', {error: error.message});
             setPropertiesError(error);
-        }
-    });
-
-    const [fetchCategories, {data: categoryData}] = useLazyQuery(CheckIfCategoryExists, {
-        fetchPolicy: 'network-only', // Ensures we get fresh data once
-        onCompleted: data => {
-            if (data?.jcr?.nodeByPath?.children?.nodes) {
-                setCategoryTree(data.jcr.nodeByPath.children.nodes);
-            }
-        },
-        onError: error => {
-            logger.error('Fetch categories error', {error: error.message});
         }
     });
 
@@ -197,6 +179,12 @@ export default () => {
             throw error;
         }
     });
+    const [publishNode] = useMutation(PublishNode, {
+        onError: error => {
+            logger.error('PublishNode error', {error: error.message});
+            throw error;
+        }
+    });
     const [fetchSiteLanguages, {data: siteLanguagesData}] = useLazyQuery(GET_SITE_LANGUAGES, {
         variables: {workspace: 'EDIT', scope: `/sites/${siteKey}`},
         fetchPolicy: 'network-only',
@@ -237,7 +225,7 @@ export default () => {
         if (propertiesData?.jcr?.nodeTypes?.nodes?.[0]) {
             const nodeType = propertiesData.jcr.nodeTypes.nodes[0];
             const mainProperties = nodeType.properties || [];
-            
+
             // Collect properties from extendedBy mixins
             const extendedProperties = [];
             if (nodeType.extendedBy?.nodes) {
@@ -254,7 +242,7 @@ export default () => {
                     }
                 });
             }
-            
+
             // Combine main properties and extended properties
             const allProperties = [...mainProperties, ...extendedProperties];
             setProperties(allProperties);
@@ -287,24 +275,6 @@ export default () => {
             });
         }
     }, [properties, extraFields, fileFields, TAG_LIST_FIELD, DEFAULT_CATEGORY_FIELD]);
-
-    const categoryCache = useRef(new Map()); // Store categories as { name: uuid }
-
-    const fetchCategoriesOnce = async () => {
-        if (categoryCache.current.size > 0) {
-            return;
-        }
-
-        try {
-            const {data} = await checkIfCategoryExists();
-            if (data?.jcr?.nodeByPath?.children?.nodes) {
-                logger.debug('Category Tree Loaded', {count: data.jcr.nodeByPath.children.nodes.length});
-                flattenCategoryTree(data.jcr.nodeByPath.children.nodes, categoryCache.current);
-            }
-        } catch (error) {
-            logger.error('GraphQL Category Fetch Error', {error: error.message});
-        }
-    };
 
     const handleContentTypeChange = selectedType => {
         setSelectedContentType(selectedType);
@@ -344,7 +314,7 @@ export default () => {
                 if (isCsv) {
                     const result = Papa.parse(event.target.result, {header: true});
                     const rows = result.data.filter(row => Object.values(row).some(val => val));
-                    
+
                     // Validate array size
                     const sizeValidation = validateArraySize(rows);
                     if (!sizeValidation.valid) {
@@ -352,14 +322,14 @@ export default () => {
                         alert(sizeValidation.error);
                         return;
                     }
-                    
+
                     setUploadedFileContent(rows);
                     setFileFields(result.meta?.fields || Object.keys(rows[0] || {}));
                     setIsValidJson(false);
                 } else {
                     const jsonData = JSON.parse(event.target.result);
                     const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];
-                    
+
                     // Validate array size
                     const sizeValidation = validateArraySize(dataArray);
                     if (!sizeValidation.valid) {
@@ -367,7 +337,7 @@ export default () => {
                         alert(sizeValidation.error);
                         return;
                     }
-                    
+
                     setUploadedFileContent(jsonData);
                     const firstItem = dataArray[0];
                     setFileFields(extractFileFields(firstItem || {}));
@@ -480,483 +450,50 @@ export default () => {
     const startImport = async (previewData = jsonPreview) => {
         logger.info('Starting import');
         setIsLoading(true);
-        
-        // Validate and sanitize path
-        const pathValidation = validatePath(pathSuffix);
-        if (!pathValidation.valid) {
-            logger.error('Path validation failed', {error: pathValidation.error});
-            alert(pathValidation.error);
-            setIsLoading(false);
-            return;
-        }
-        
-        const sanitizedPath = sanitizePath(pathSuffix);
-        const fullContentPath = sanitizedPath ? `${baseContentPath}/${sanitizedPath}` : baseContentPath;
-        const fullFilePath = sanitizedPath ? `${baseFilePath}/${sanitizedPath}` : baseFilePath;
 
-        // === Pre-import Validation ===
-        logger.group('=== Pre-import Validation ===');
-        let contentPathExists = false;
-        let filePathExists = false;
-
-        try {
-            const {exists} = await nodeExists(fullContentPath, checkPath);
-            contentPathExists = exists;
-        } catch (e) {
-            if (e?.message?.includes('PathNotFoundException')) {
-                logger.debug('Content path not found (expected)', {path: fullContentPath});
-            } else {
-                logger.error('Unexpected error checking content path', {path: fullContentPath, error: e.message});
-            }
-        }
-
-        try {
-            const {exists} = await nodeExists(fullFilePath, checkPath);
-            filePathExists = exists;
-        } catch (e) {
-            if (e?.message?.includes('PathNotFoundException')) {
-                logger.debug('File path not found (expected)', {path: fullFilePath});
-            } else {
-                logger.error('Unexpected error checking file path', {path: fullFilePath, error: e.message});
-            }
-        }
-
-        // Now create if needed
-        if (!contentPathExists) {
-            logger.info('Creating content path', {path: fullContentPath});
-            await ensurePathExists(fullContentPath, 'jnt:contentFolder', checkPath, createPath);
-        } else {
-            logger.debug('Content path exists', {path: fullContentPath});
-        }
-
-        if (!filePathExists) {
-            logger.info('Creating file path', {path: fullFilePath});
-            await ensurePathExists(fullFilePath, 'jnt:folder', checkPath, createPath);
-        } else {
-            logger.debug('File path exists', {path: fullFilePath});
-        }
-
-        logger.groupEnd();
-        // === END Pre-import Validation ===
-
-        const errorReport = [];
-        let successCount = 0;
-        let skippedCount = 0;
-        let imageSuccessCount = 0;
-        let imageFailCount = 0;
-        let categorySuccessCount = 0;
-        let categoryFailCount = 0;
-        let vanitySuccessCount = 0;
-        let vanityFailCount = 0;
-        const selectedContentTypeOption = contentTypes.find(type => type.value === selectedContentType);
-        const reportData = {
-            nodes: [],
-            images: [],
-            categories: [],
-            errors: [],
-            path: fullContentPath,
-            contentType: {
-                value: selectedContentType || '',
-                label: selectedContentTypeOption?.label || selectedContentType || ''
-            }
+        const config = {
+            pathSuffix,
+            baseContentPath,
+            baseFilePath,
+            selectedContentType,
+            selectedContentTypeOption: contentTypes.find(type => type.value === selectedContentType),
+            selectedLanguage,
+            overrideExisting,
+            createVanityUrl,
+            publishAfterImport,
+            propertyDefinitions: properties,
+            tagListField: TAG_LIST_FIELD,
+            defaultCategoryField: DEFAULT_CATEGORY_FIELD
         };
-        let totalAttempts = 0;
-        const computeSummary = () => {
-            const validNodeEntries = reportData.nodes.filter(item => item?.name && item.name !== 'import');
-            const nodeSummary = validNodeEntries.reduce((acc, item) => {
-                switch (item.status) {
-                    case 'created':
-                        acc.created++;
-                        break;
-                    case 'updated':
-                        acc.updated++;
-                        break;
-                    case 'already exists':
-                        acc.skipped++;
-                        break;
-                    case 'failed':
-                        acc.failed++;
-                        break;
-                    default:
-                        break;
-                }
 
-                return acc;
-            }, {created: 0, updated: 0, failed: 0, skipped: 0});
-
-            const imageSummary = reportData.images.reduce((acc, item) => {
-                if (!item) {
-                    return acc;
-                }
-
-                switch (item.status) {
-                    case 'created':
-                        acc.created++;
-                        break;
-                    case 'updated':
-                        acc.updated++;
-                        break;
-                    case 'already exists':
-                        acc.skipped++;
-                        break;
-                    case 'failed':
-                        acc.failed++;
-                        break;
-                    default:
-                        break;
-                }
-
-                return acc;
-            }, {created: 0, updated: 0, failed: 0, skipped: 0});
-
-            const categorySummary = reportData.categories.reduce((acc, item) => {
-                if (!item) {
-                    return acc;
-                }
-
-                const categoryName = item.name || t('label.unknownCategory');
-
-                switch (item.status) {
-                    case 'created':
-                        acc.created++;
-                        acc.createdByName[categoryName] = (acc.createdByName[categoryName] || 0) + 1;
-                        break;
-                    case 'already exists':
-                        acc.skipped++;
-                        break;
-                    case 'failed':
-                        acc.failed++;
-                        break;
-                    default:
-                        break;
-                }
-
-                return acc;
-            }, {created: 0, failed: 0, skipped: 0, createdByName: {}});
-
-            const vanitySkipped = createVanityUrl ?
-                Math.max(totalAttempts - (vanitySuccessCount + vanityFailCount), 0) :
-                totalAttempts;
-
-            reportData.summary = {
-                contentType: reportData.contentType,
-                path: fullContentPath,
-                nodes: {
-                    processed: validNodeEntries.length,
-                    total: totalAttempts,
-                    ...nodeSummary
-                },
-                images: {
-                    processed: reportData.images.length,
-                    total: reportData.images.length,
-                    ...imageSummary
-                },
-                categories: {
-                    processed: reportData.categories.length,
-                    ...categorySummary
-                },
-                vanityUrls: {
-                    enabled: createVanityUrl,
-                    created: vanitySuccessCount,
-                    failed: vanityFailCount,
-                    skipped: vanitySkipped
-                }
-            };
+        const ops = {
+            checkPath,
+            createPath,
+            createContent,
+            updateContent,
+            checkImageExists,
+            addFileToJcr,
+            addTags,
+            addCategories,
+            checkIfCategoryExists,
+            addVanityUrl,
+            publishNode
         };
 
         try {
-            if (!previewData) {
-                alert(ERROR_MESSAGES.NO_FILE_UPLOADED);
+            const result = await runImport({previewData, isValidJson, config, ops, t});
+
+            if (!result.ok) {
+                const message = result.message || ERROR_MESSAGES[result.error] || ERROR_MESSAGES.UNKNOWN_ERROR;
+                alert(message);
                 return;
             }
 
-            if (!isValidJson) {
-                alert(ERROR_MESSAGES.INVALID_JSON);
-                return;
-            }
-
-            if (!selectedContentType) {
-                alert(ERROR_MESSAGES.NO_CONTENT_TYPE);
-                return;
-            }
-
-            const propertyDefinitions = properties;
-
-            if (!Array.isArray(previewData)) {
-                logger.error('Invalid preview data format', {isArray: Array.isArray(previewData)});
-                alert(ERROR_MESSAGES.INVALID_JSON);
-                return;
-            }
-
-            for (const mappedEntry of previewData) {
-                const contentName = sanitizeNodeName(
-                    mappedEntry['jcr:title'] || mappedEntry.name || `content_${Date.now()}`
-                );
-                const fullNodePath = `${fullContentPath}/${contentName}`;
-                const nodeReport = {name: fullNodePath, status: 'created'};
-
-                const {exists, uuid: existingUuid} = await nodeExists(fullNodePath, checkPath);
-                if (exists && !overrideExisting) {
-                    reportData.nodes.push({name: fullNodePath, status: 'already exists'});
-                    skippedCount++;
-                    errorReport.push({node: fullNodePath, reason: 'Node already exists', details: ''});
-                    continue;
-                }
-
-                const imageResultsBuffer = [];
-                const categoryResultsBuffer = [];
-
-                const propertiesToSend = await Promise.all(
-                    Object.keys(mappedEntry).map(async key => {
-                        if (key === TAG_LIST_FIELD || key === DEFAULT_CATEGORY_FIELD) {
-                            return null;
-                        }
-
-                        const propertyDefinition = propertyDefinitions.find(prop => prop.name === key);
-                        if (!propertyDefinition) {
-                            return null;
-                        }
-
-                        let value = mappedEntry[key];
-                        const isImage = propertyDefinition.constraints?.includes('{http://www.jahia.org/jahia/mix/1.0}image');
-                        const isDate = propertyDefinition.requiredType === 'DATE';
-                        const isMultiple = propertyDefinition.multiple;
-
-                        if (isDate && value) {
-                            const date = new Date(value);
-                            if (!isNaN(date.getTime())) {
-                                value = date.toISOString();
-                            }
-                        }
-
-                        if (isMultiple) {
-                            let values = '';
-                            if (isImage) {
-                                const imgRes = await handleMultipleImages(value, key, propertyDefinition, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
-                                imgRes.forEach(r => {
-                                    imageResultsBuffer.push({name: r.name, status: r.status, node: nodeReport.name});
-                                });
-                                imageSuccessCount += imgRes.filter(r => r.status !== 'failed').length;
-                                imageFailCount += imgRes.filter(r => r.status === 'failed').length;
-                                values = imgRes.map(r => r.uuid).filter(Boolean);
-                            } else {
-                                values = handleMultipleValues(value, key);
-                            }
-
-                            return {
-                                name: key,
-                                values: values,
-                                language: propertyDefinition?.internationalized ? selectedLanguage : undefined
-                            };
-                        }
-
-                        if (isImage) {
-                            try {
-                                const imgRes = await handleSingleImage(value, key, checkImageExists, addFileToJcr, baseFilePath, pathSuffix.trim());
-                                imageResultsBuffer.push({name: imgRes.name, status: imgRes.status, node: nodeReport.name});
-                                if (imgRes.status !== 'failed') {
-                                    imageSuccessCount++;
-                                } else {
-                                    imageFailCount++;
-                                }
-
-                                return {
-                                    name: key,
-                                    value: imgRes.uuid,
-                                    language: propertyDefinition?.internationalized ? selectedLanguage : undefined
-                                };
-                            } catch (err) {
-                                imageFailCount++;
-                                errorReport.push({node: contentName, reason: 'Image import failed', details: err.message});
-                                return null;
-                            }
-                        }
-
-                        return {
-                            name: key,
-                            value: value,
-                            language: propertyDefinition?.internationalized ? selectedLanguage : undefined
-                        };
-                    })
-                ).then(results => results.filter(Boolean));
-                reportData.images.push(...imageResultsBuffer);
-
-                // Determine required mixins based on properties being set
-                const requiredMixins = new Set(['jmix:editorialContent']);
-                propertiesToSend.forEach(prop => {
-                    const propertyDef = propertyDefinitions.find(p => p.name === prop.name);
-                    if (propertyDef && propertyDef.mixinName) {
-                        requiredMixins.add(propertyDef.mixinName);
-                    }
-                });
-                const mixinsArray = Array.from(requiredMixins);
-
-                let contentUuid = null;
-                try {
-                    if (exists && overrideExisting) {
-                        const {data: updateData} = await updateContent({
-                            variables: {
-                                pathOrId: existingUuid,
-                                mixins: mixinsArray,
-                                properties: propertiesToSend
-                            }
-                        });
-                        contentUuid = updateData?.jcr?.mutateNode?.uuid || existingUuid;
-                        if (!contentUuid) {
-                            throw new Error('Update mutation did not return a node UUID.');
-                        }
-
-                        nodeReport.status = 'updated';
-                        console.info(`Content updated: ${fullNodePath}`);
-                    } else {
-                        const {data: contentData} = await createContent({
-                            variables: {
-                                path: fullContentPath,
-                                name: contentName,
-                                primaryNodeType: selectedContentType,
-                                mixins: mixinsArray,
-                                properties: propertiesToSend
-                            }
-                        });
-                        contentUuid = contentData?.jcr?.addNode?.uuid;
-                        if (!contentUuid) {
-                            throw new Error('Create mutation did not return a node UUID.');
-                        }
-
-                        nodeReport.status = 'created';
-                        console.info(`Content created: ${fullNodePath}`);
-                    }
-
-                    successCount++;
-                } catch (error) {
-                    const action = exists && overrideExisting ? 'update' : 'creation';
-                    nodeReport.status = 'failed';
-                    errorReport.push({
-                        node: `${fullContentPath}/${contentName}`,
-                        reason: `Content ${action} failed`,
-                        details: error.message
-                    });
-                    reportData.nodes.push(nodeReport);
-                    continue;
-                }
-
-                reportData.nodes.push(nodeReport);
-
-                if (contentUuid && Array.isArray(mappedEntry[TAG_LIST_FIELD]) && mappedEntry[TAG_LIST_FIELD].length > 0) {
-                    try {
-                        await addTags({variables: {path: contentUuid, tags: mappedEntry[TAG_LIST_FIELD]}});
-                    } catch (error) {
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding tags',
-                            details: error.message
-                        });
-                    }
-                }
-
-                if (contentUuid && Array.isArray(mappedEntry[DEFAULT_CATEGORY_FIELD]) && mappedEntry[DEFAULT_CATEGORY_FIELD].length > 0) {
-                    try {
-                        await fetchCategoriesOnce();
-
-                        let defaultCategoryUuids = [];
-                        if (Array.isArray(mappedEntry[DEFAULT_CATEGORY_FIELD])) {
-                            for (let categoryName of mappedEntry[DEFAULT_CATEGORY_FIELD]) {
-                                categoryName = categoryName.toLowerCase().replace(/\s+/g, '-');
-                                const categoryUuid = categoryCache.current.get(categoryName);
-                                if (categoryUuid) {
-                                    defaultCategoryUuids.push(categoryUuid);
-                                }
-                            }
-                        }
-
-                        if (defaultCategoryUuids.length > 0) {
-                            try {
-                                await addCategories({variables: {path: contentUuid, categories: defaultCategoryUuids}});
-                                categorySuccessCount += defaultCategoryUuids.length;
-                                mappedEntry[DEFAULT_CATEGORY_FIELD].forEach(cat => {
-                                    categoryResultsBuffer.push({name: cat, status: 'created', node: nodeReport.name});
-                                });
-                            } catch (err) {
-                                categoryFailCount += defaultCategoryUuids.length;
-                                mappedEntry[DEFAULT_CATEGORY_FIELD].forEach(cat => {
-                                    categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
-                                });
-                                errorReport.push({node: contentName, reason: 'Error adding categories', details: err.message});
-                            }
-                        } else {
-                            categoryFailCount += (mappedEntry[DEFAULT_CATEGORY_FIELD] || []).length;
-                            (mappedEntry[DEFAULT_CATEGORY_FIELD] || []).forEach(cat => {
-                                categoryResultsBuffer.push({name: cat, status: 'failed', node: nodeReport.name});
-                            });
-                            errorReport.push({node: contentName, reason: 'No matching category UUID found', details: ''});
-                        }
-                    } catch (error) {
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding categories',
-                            details: error.message
-                        });
-                    }
-                }
-
-                reportData.categories.push(...categoryResultsBuffer);
-
-                if (contentUuid && createVanityUrl) {
-                    try {
-                        const cleanUrl = `/${pathSuffix.trim()}/${contentName.replace(/_/g, '-')}`;
-                        await addVanityUrl({variables: {pathOrId: contentUuid, language: selectedLanguage, url: cleanUrl}});
-                        vanitySuccessCount++;
-                    } catch (error) {
-                        vanityFailCount++;
-                        errorReport.push({
-                            node: `${fullContentPath}/${contentName}`,
-                            reason: 'Error adding vanity URL',
-                            details: error.message
-                        });
-                    }
-                }
-            }
-
-            // Final import summary report
-            totalAttempts = previewData.length;
-            const failedCount = errorReport.filter(e => e.reason !== 'Node already exists').length;
-            const skippedNodes = errorReport.filter(e => e.reason === 'Node already exists').length;
-
-            console.group('=== Import Summary ===');
-            console.info(`✅ Success: ${successCount}`);
-            if (skippedNodes > 0) {
-                console.info(`⏭️ Skipped: ${skippedNodes}`);
-            }
-
-            console.warn(`❌ Failed: ${failedCount}`);
-
-            // Detailed summary
-            if (errorReport.length > 0) {
-                console.warn(`❌ ${failedCount} failed nodes${skippedNodes ? `, ${skippedNodes} skipped` : ''}:`);
-                errorReport.forEach(e => console.warn(`• ${e.node} → ${e.reason}`));
-
-                console.table(errorReport.map(entry => ({
-                    Node: entry.node,
-                    Reason: entry.reason,
-                    Details: entry.details || ''
-                })));
-            }
-
-            console.info(`🖼️ Images: ${imageSuccessCount} success, ${imageFailCount} failed`);
-            console.info(`🏷️ Categories: ${categorySuccessCount} success, ${categoryFailCount} failed`);
-            console.groupEnd();
-
-            computeSummary();
-            reportData.errors = errorReport;
-            setReport(reportData);
+            setReport(result.reportData);
             setIsReportOpen(true);
         } catch (error) {
-            console.error('Error during import:', error.message);
-            reportData.errors.push({node: 'import', reason: 'Unexpected error', details: error.message});
-            reportData.nodes.push({name: 'import', status: 'failed'});
-            computeSummary();
-            setReport(reportData);
-            setIsReportOpen(true);
+            logger.error('Error during import', {error: error.message});
+            alert(ERROR_MESSAGES.UNKNOWN_ERROR);
         } finally {
             setIsLoading(false);
             setIsPreviewOpen(false);
@@ -991,13 +528,18 @@ export default () => {
 
     // --- Folder Picker Handler ---
     const handleOpenPathPicker = () => {
+        if (!window.CE_API?.openPicker) {
+            logger.error('CE_API.openPicker is not available in this host');
+            return;
+        }
+
         const initialPath = pathSuffix ? `${baseContentPath}/${pathSuffix}` : baseContentPath;
 
         window.CE_API.openPicker({
             type: 'editorial',
             initialSelectedItem: [initialPath],
-            site: window.jahiaGWTParameters.siteKey,
-            lang: window.jahiaGWTParameters.uilang,
+            site: window.jahiaGWTParameters?.siteKey,
+            lang: window.jahiaGWTParameters?.uilang,
             isMultiple: false,
             setValue: ([selected]) => {
                 if (selected?.path) {
@@ -1067,13 +609,18 @@ export default () => {
                             </Typography>
                             <Checkbox
                                 checked={overrideExisting}
-                                onChange={e => setOverrideExisting(e.target.checked)}
                                 label={t('label.overrideExisting')}
+                                onChange={e => setOverrideExisting(e.target.checked)}
                             />
                             <Checkbox
                                 checked={createVanityUrl}
-                                onChange={e => setCreateVanityUrl(e.target.checked)}
                                 label={t('label.createVanityUrl')}
+                                onChange={e => setCreateVanityUrl(e.target.checked)}
+                            />
+                            <Checkbox
+                                checked={publishAfterImport}
+                                label={t('label.publishAfterImport')}
+                                onChange={e => setPublishAfterImport(e.target.checked)}
                             />
                         </div>
                         <LanguageSelector
@@ -1105,8 +652,8 @@ export default () => {
 
                     <div className={styles.rightPanel}>
                         <Tabs value={activeTab} onChange={handleTabChange}>
-                            <Tab label={t('label.manualMapping')} />
-                            <Tab label={t('label.reImportGeneratedFile')} />
+                            <Tab label={t('label.manualMapping')}/>
+                            <Tab label={t('label.reImportGeneratedFile')}/>
                         </Tabs>
                         {activeTab === 0 && (
                         <div className={styles.tabContent}>
@@ -1158,14 +705,14 @@ export default () => {
                 </div>
             </div>
             <Modal
+                fullWidth
                 open={isFilePreviewOpen}
-                onClose={() => setIsFilePreviewOpen(false)}
                 title={t('label.filePreviewTitle')}
                 maxWidth="md"
-                fullWidth
                 actions={[
                     <Button key="close" label={t('label.close')} onClick={() => setIsFilePreviewOpen(false)}/>
                 ]}
+                onClose={() => setIsFilePreviewOpen(false)}
             >
                 <pre className={styles.previewContent}>{JSON.stringify(uploadedFileContent, null, 2)}</pre>
             </Modal>

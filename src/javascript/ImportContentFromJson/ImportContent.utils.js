@@ -51,9 +51,13 @@ export const nodeExists = async (fullPath, checkPath) => {
  * @param {Map} cache Map instance used to store name => uuid pairs.
  */
 export const flattenCategoryTree = (nodes, cache) => {
+    if (!Array.isArray(nodes)) {
+        return;
+    }
+
     for (const node of nodes) {
         cache.set(node.name, node.uuid);
-        if (node.children?.nodes.length > 0) {
+        if (node.children?.nodes?.length > 0) {
             flattenCategoryTree(node.children.nodes, cache);
         }
     }

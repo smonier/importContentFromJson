@@ -24,6 +24,7 @@
     "overrideExisting": "Écraser le contenu existant",
     "options": "Options",
     "createVanityUrl": "Créer des URL simplifiées (/<dossier>/<nomSystème>)",
+    "publishAfterImport": "Publier le contenu importé (et les images) en ligne",
     "selectLanguage": "Sélectionnez la langue de destination pour l'import",
     "fieldMapping": "Correspondance des champs",
     "previewTitle": "Aperçu du JSON généré",

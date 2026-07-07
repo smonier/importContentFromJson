@@ -86,4 +86,22 @@ describe('image handlers', () => {
         ]);
         expect(fetch).toHaveBeenCalledTimes(1);
     });
+
+    test('handleSingleImage infers application/pdf for local file urls without blob mime type', async () => {
+        global.fetch = jest.fn(() => Promise.resolve({
+            ok: true,
+            blob: () => Promise.resolve(new Blob(['pdf-content'], {type: ''}))
+        }));
+
+        const checkImageExists = jest.fn(() => Promise.resolve({data: {jcr: {nodeByPath: null}}}));
+        const addFileToJcr = jest.fn(() => Promise.resolve({data: {jcr: {addNode: {uuid: 'uuid-pdf'}}}}));
+
+        const res = await handleSingleImage('file:///var/jahia/import-assets/products/main-product.pdf', 'document', checkImageExists, addFileToJcr, '/files', 'products');
+
+        expect(res.uuid).toBe('uuid-pdf');
+        expect(res.status).toBe('created');
+        expect(fetch).toHaveBeenCalledWith('/local-file-proxy/?path=%2Fvar%2Fjahia%2Fimport-assets%2Fproducts%2Fmain-product.pdf');
+        expect(addFileToJcr.mock.calls[0][0].variables.mimeType).toBe('application/pdf');
+        expect(addFileToJcr.mock.calls[0][0].variables.fileHandle.name).toBe('main-product.pdf');
+    });
 });

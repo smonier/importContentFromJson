@@ -61,11 +61,13 @@ This module implements enterprise-grade security and performance features suitab
   - Structured error messages without exposing internal details
   - No credentials or tokens logged
 
-- **URL & Image Security**
-  - Whitelist-based protocol validation (https:// only for external images)
-  - Image URL validation before fetching
-  - Proxy servlet for CORS-safe image downloads
-  - Prevention of SSRF attacks through URL sanitization
+- **Proxy servlet security** (server-side, authoritative)
+  - Both `/image-proxy/*` and `/local-file-proxy` require an authenticated (non-guest) Jahia session
+  - Image proxy: only `http`/`https` targets; loopback, link-local, site-local (private) and any-local
+    addresses are rejected (blocks `localhost`, internal services and cloud-metadata endpoints); optional
+    `imageProxy.allowedHosts` allow-list; server-side redirects are not followed (anti-SSRF)
+  - Local-file proxy: reads are confined to the directories listed in `localFileProxy.allowedRoots`
+    and fail closed when none are configured; error responses never echo absolute server paths
 
 ### Performance Optimizations
 
@@ -395,8 +397,20 @@ Example of the Field Mapping interface showing JCR properties mapped to CSV colu
 Create or edit the file `org.jahia.se.modules.importContentFromJson.cfg` under `META-INF/configurations`:
 
 ```properties
+# Set at deployment time — never commit a real key.
 unsplash.accessKey=YOUR-UNSPLASH-ACCESS-KEY
+
+# Directories the local-file proxy may read from (comma-separated, absolute).
+# Empty = local-file reads disabled (fail closed).
+localFileProxy.allowedRoots=/var/jahia/import-assets
+
+# Optional allow-list of remote hosts the image proxy may fetch from.
+# Empty = any public host (private/loopback/link-local always blocked).
+imageProxy.allowedHosts=
 ```
+
+> **Security:** the `.cfg` shipped in the bundle carries an empty `unsplash.accessKey`. Provide the
+> real key on the server (edit the deployed `.cfg` or provision it) so no secret lives in version control.
 
 Once set, the importer resolves Unsplash images based on the provided `query` field and stores them in the JCR.
 
@@ -414,12 +428,16 @@ Example JSON snippet:
 ### Image Proxy Servlet
 - External images are downloaded through `/image-proxy/*` provided by `ImageProxyServlet.java`.
 - This proxy endpoint avoids CORS issues when fetching images before they are uploaded.
+- **Security:** requires an authenticated (non-guest) session; only `http`/`https` targets are allowed;
+  private, loopback and link-local addresses are blocked; redirects are not followed. Restrict further
+  with `imageProxy.allowedHosts`.
 
 ### Local File Proxy Servlet
-- Local server files can be imported using the `file://` protocol through `/local-file-proxy/*` provided by `LocalFileProxyServlet.java`.
+- Local server files can be imported using the `file://` protocol through `/local-file-proxy` provided by `LocalFileProxyServlet.java`.
 - This allows importing images and files directly from the server's filesystem without external downloads.
-- **Security:** Path traversal protection is enforced to prevent unauthorized file access.
-- Example: `"url": "file:///var/jahia/import-assets/product.jpg"`
+- **Security:** requires an authenticated (non-guest) session; reads are confined to `localFileProxy.allowedRoots`
+  and disabled entirely when that setting is empty. The configured root(s) must contain the files you import.
+- Example: with `localFileProxy.allowedRoots=/var/jahia/import-assets`, use `"url": "file:///var/jahia/import-assets/product.jpg"`
 
 ---
 
