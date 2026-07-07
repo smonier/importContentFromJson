@@ -24,6 +24,7 @@
     "overrideExisting": "Sobrescribir contenido existente",
     "options": "Opciones",
     "createVanityUrl": "Crear URL personalizadas (/<carpeta>/<nombreSistema>)",
+    "publishAfterImport": "Publicar el contenido importado (e imágenes) en vivo",
     "selectLanguage": "Seleccione el idioma de destino para la importación",
     "fieldMapping": "Mapeo de campos",
     "previewTitle": "Vista previa del JSON generado",

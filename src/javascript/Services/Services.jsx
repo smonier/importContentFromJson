@@ -2,7 +2,17 @@ import {ApolloError} from '@apollo/client';
 import {createApi} from 'unsplash-js';
 
 const proxyServer = '/image-proxy?url=';
-const localFileProxyServer = '/local-file-proxy?path=';
+const localFileProxyServer = '/local-file-proxy/?path=';
+
+const MIME_TYPE_BY_EXTENSION = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml'
+};
 
 /**
  * Check if URL is a local file path (file:// protocol)
@@ -58,6 +68,19 @@ const extractFileName = (url, index) => {
     const fileNameWithParams = url.substring(url.lastIndexOf('/') + 1); // Get last part after "/"
     const cleanFileName = fileNameWithParams.split('?')[0]; // Remove query parameters
     return cleanFileName || `image_${index + 1}`; // Fallback if empty
+};
+
+const inferMimeTypeFromFileName = fileName => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (!extension) {
+        return null;
+    }
+
+    return MIME_TYPE_BY_EXTENSION[extension] || null;
+};
+
+const resolveMimeType = (binaryBlob, fileName) => {
+    return binaryBlob.type || inferMimeTypeFromFileName(fileName) || 'application/octet-stream';
 };
 
 const fetchUnsplashImages = async (query, perPage = 10) => {
@@ -164,7 +187,7 @@ export const handleMultipleImages = async (value, key, propertyDefinition, check
             }
 
             const binaryBlob = await binaryResponse.blob();
-            const mimeType = binaryBlob.type || 'application/octet-stream';
+            const mimeType = resolveMimeType(binaryBlob, fileName);
             const fileHandle = new File([binaryBlob], fileName, {type: mimeType});
             const uploadPath = `${baseFilePath}/${pathSuffix}`;
 
@@ -240,7 +263,7 @@ export const handleSingleImage = async (value, key, checkImageExists, addFileToJ
         }
 
         const binaryBlob = await binaryResponse.blob();
-        const mimeType = binaryBlob.type || 'application/octet-stream';
+        const mimeType = resolveMimeType(binaryBlob, fileName);
         const fileHandle = new File([binaryBlob], fileName, {type: mimeType});
         const uploadPath = `${baseFilePath}/${pathSuffix}`;
 

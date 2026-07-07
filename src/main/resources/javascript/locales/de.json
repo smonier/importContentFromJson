@@ -24,6 +24,7 @@
     "overrideExisting": "Vorhandenen Inhalt überschreiben",
     "options": "Optionen",
     "createVanityUrl": "Vanity-URLs erstellen (/<Ordner>/<Systemname>)",
+    "publishAfterImport": "Importierte Inhalte (und Bilder) live veröffentlichen",
     "selectLanguage": "Zielsprache für den Import auswählen",
     "fieldMapping": "Feldzuordnung",
     "previewTitle": "Vorschau des generierten JSON",

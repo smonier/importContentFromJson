@@ -223,7 +223,7 @@ export const CheckImageExists = gql`
 
 export const AddTags = gql`
     mutation addTags($path:String!, $tags:[String]!) {
-        jcr {
+        jcr(workspace: EDIT) {
             mutateNode(pathOrId: $path) {
                 addMixins(mixins:["jmix:tagged"])
                 mutateProperty(name:"j:tagList") {
@@ -236,13 +236,22 @@ export const AddTags = gql`
 
 export const AddCategories = gql`
     mutation addCategories($path:String!, $categories:[String]!) {
-        jcr {
+        jcr(workspace: EDIT) {
             mutateNode(pathOrId: $path) {
                 addMixins(mixins:["jmix:categorized"])
                 mutateProperty(name:"j:defaultCategory") {
                     setValues(values:$categories)
                 }
                 uuid
+            }
+        }
+    }`;
+
+export const PublishNode = gql`
+    mutation publishNode($pathOrId: String!, $languages: [String]) {
+        jcr(workspace: EDIT) {
+            mutateNode(pathOrId: $pathOrId) {
+                publish(languages: $languages, publishSubNodes: true)
             }
         }
     }`;
