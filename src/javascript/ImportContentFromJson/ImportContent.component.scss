@@ -110,14 +110,21 @@
 
 .propertyItem {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--spacing-nano, 6px);
-    margin-bottom: var(--spacing-nano, 6px);
+    margin-bottom: var(--spacing-nano, 4px);
+    min-width: 0;
 }
 
 .propertyText {
-    line-height: 1.3;
+    // Smaller, wrapping text so long "name - (type[])" lines don't squeeze
+    // and overlap when the panel narrows.
+    font-size: 0.75rem;
+    line-height: 1.4;
     color: var(--color-gray_dark);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .sectionHeading {
